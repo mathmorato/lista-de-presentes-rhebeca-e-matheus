@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Presentes de Casamento | Rhebeca & Matheus</title>
+  <meta name="description" content="Lista de presentes de casamento e cotas de lua de mel de Rhebeca & Matheus. Compartilhe esse momento especial conosco.">
+
+  <!-- Fontes Tipográficas: Playfair Display (Serifa Editorial) e Inter (Sem serifa moderna) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Estilos da Aplicação -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Supabase JS Client (Carregamento para persistência em nuvem) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- ==================== HEADER E NAVEGAÇÃO ==================== -->
+  <header class="site-header">
+    <div class="container">
+      <nav class="nav-wrapper">
+        <a href="#inicio" class="brand-monogram" aria-label="Início">
+          <div class="brand-crest">R&M</div>
+          <div class="brand-names">
+            <span class="title">Rhebeca & Matheus</span>
+            <span class="subtitle">Lista de Casamento</span>
+          </div>
+        </a>
+
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#inicio" class="nav-link active">Início</a></li>
+          <li><a href="#catalogo" class="nav-link">Lista de Presentes</a></li>
+          <li><a href="#mensagens" class="nav-link">Mural de Carinho</a></li>
+          <li><a href="#rsvp" class="nav-link">Confirmar Presença</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <!-- Alternador de Tema Claro / Escuro -->
+          <button id="themeToggleBtn" class="btn-icon" title="Alternar Modo Claro / Escuro" aria-label="Alternar tema">
+            <svg id="iconThemeMoon" class="icon-line" viewBox="0 0 24 24">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg id="iconThemeSun" class="icon-line" viewBox="0 0 24 24" style="display: none;">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </button>
+
+          <!-- Acesso ao Painel dos Noivos -->
+          <button id="btnOpenAdmin" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;" title="Painel de Gestão dos Noivos">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Noivos
+          </button>
+
+          <!-- Menu Mobile Toggle -->
+          <button id="mobileMenuToggle" class="btn-icon mobile-menu-toggle" aria-label="Abrir menu">
+            <svg class="icon-line" viewBox="0 0 24 24">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ==================== HERO SECTION ==================== -->
+  <section id="inicio" class="hero-section">
+    <div class="container">
+      <div class="hero-ornament"></div>
+      <h1 class="hero-title">Rhebeca & Matheus</h1>
+      <p class="hero-subtitle">
+        Com a bênção de Deus e a alegria de compartilhar nossa história com as pessoas mais especiais de nossas vidas.
+      </p>
+
+      <div class="wedding-meta-pills">
+        <div class="meta-pill">
+          <svg class="icon-line sm" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span>21 de Novembro de 2026</span>
+        </div>
+        <div class="meta-pill">
+          <svg class="icon-line sm" viewBox="0 0 24 24">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <span>Cerimônia & Recepção</span>
+        </div>
+      </div>
+
+      <!-- Contagem Regressiva -->
+      <div class="countdown-box">
+        <div class="countdown-item">
+          <span class="countdown-number" id="countdownDays">00</span>
+          <span class="countdown-label">Dias</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="countdownHours">00</span>
+          <span class="countdown-label">Horas</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="countdownMins">00</span>
+          <span class="countdown-label">Minutos</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="countdownSecs">00</span>
+          <span class="countdown-label">Segundos</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== RESUMO E DESTAQUES ==================== -->
+  <section class="summary-strip">
+    <div class="container">
+      <div class="summary-cards-grid">
+        <div class="summary-card">
+          <div class="summary-card-icon">
+            <svg class="icon-line" viewBox="0 0 24 24">
+              <path d="M20 12V22H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zm0 0h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+            </svg>
+          </div>
+          <div class="summary-card-info">
+            <h4>Total de Itens na Lista</h4>
+            <div class="summary-card-val" id="statTotalGifts">0</div>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-icon">
+            <svg class="icon-line" viewBox="0 0 24 24">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div class="summary-card-info">
+            <h4>Presentes Reservados</h4>
+            <div class="summary-card-val" id="statReservedGifts">0</div>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-icon">
+            <svg class="icon-line" viewBox="0 0 24 24">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <div class="summary-card-info">
+            <h4>Arrecadado para a Lua de Mel</h4>
+            <div class="summary-card-val" id="statTotalRaised">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CATÁLOGO DE PRESENTES ==================== -->
+  <section id="catalogo" class="catalog-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Lista de Presentes</span>
+        <h2 class="section-title">Escolha Como Nos Presentear</h2>
+        <p class="section-desc">
+          Você pode reservar itens físicos para montar nosso novo lar ou nos presentear com cotas em nossa lua de mel via Pix.
+        </p>
+      </div>
+
+      <!-- Barra de Filtros e Busca -->
+      <div class="filter-toolbar">
+        <div class="category-chips">
+          <button class="chip-btn active" data-category="all">Todos os Itens</button>
+          <button class="chip-btn" data-category="cozinha">Cozinha</button>
+          <button class="chip-btn" data-category="quarto">Quarto & Banho</button>
+          <button class="chip-btn" data-category="eletro">Eletros</button>
+          <button class="chip-btn" data-category="cotas">Cotas Lua de Mel</button>
+        </div>
+
+        <div class="search-box">
+          <svg class="icon-line sm" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="giftSearchInput" placeholder="Buscar presentes..." autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Grid de Presentes -->
+      <div class="gifts-grid" id="giftsGrid">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MURAL DE MENSAGENS ==================== -->
+  <section id="mensagens" class="messages-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Carinho & Bênçãos</span>
+        <h2 class="section-title">Mural dos Noivos</h2>
+        <p class="section-desc">Deixe uma mensagem especial para Rhebeca e Matheus lerem e guardarem para sempre.</p>
+      </div>
+
+      <div class="messages-layout">
+        <!-- Formulário de Mensagem -->
+        <div class="message-form-card">
+          <h3 style="margin-bottom: 1.25rem; font-size: 1.3rem;">Deixe seu Recado</h3>
+          <form id="guestMessageForm">
+            <div class="form-group">
+              <label class="form-label" for="msgAuthorInput">Seu Nome / Família</label>
+              <input type="text" id="msgAuthorInput" class="form-input" placeholder="Ex.: Tios Roberto e Lúcia" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="msgTextInput">Sua Mensagem de Felicitações</label>
+              <textarea id="msgTextInput" class="form-textarea" rows="4" placeholder="Escreva aqui palavras de amor e votos de felicidade..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              <svg class="icon-line sm" viewBox="0 0 24 24">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+              Publicar Mensagem no Mural
+            </button>
+          </form>
+        </div>
+
+        <!-- Mural de Recados Recentes -->
+        <div>
+          <h3 style="margin-bottom: 1.25rem; font-size: 1.3rem;">Mensagens dos Convidados</h3>
+          <div class="messages-wall" id="messagesWall">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== RSVP (CONFIRMAÇÃO DE PRESENÇA) ==================== -->
+  <section id="rsvp" class="rsvp-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Presença</span>
+        <h2 class="section-title">Confirme sua Presença</h2>
+        <p class="section-desc">Por favor, confirme se você estará presente conosco para organizarmos tudo com carinho.</p>
+      </div>
+
+      <div class="rsvp-box">
+        <form id="rsvpForm">
+          <div class="form-group">
+            <label class="form-label" for="rsvpName">Nome Completo</label>
+            <input type="text" id="rsvpName" class="form-input" placeholder="Seu nome completo" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="rsvpPhone">WhatsApp / Celular</label>
+              <input type="tel" id="rsvpPhone" class="form-input" placeholder="(00) 00000-0000">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvpEmail">E-mail</label>
+              <input type="email" id="rsvpEmail" class="form-input" placeholder="seu@email.com">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rsvpCompanions">Número de Acompanhantes (além de você)</label>
+            <select id="rsvpCompanions" class="form-select">
+              <option value="0">Apenas eu (0 acompanhante)</option>
+              <option value="1">1 acompanhante</option>
+              <option value="2">2 acompanhantes</option>
+              <option value="3">3 acompanhantes</option>
+              <option value="4">4 acompanhantes</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Você comparecerá ao casamento?</label>
+            <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="radio" name="rsvpStatus" value="confirmed" checked>
+                <span>Sim, com certeza estarei lá!</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="radio" name="rsvpStatus" value="declined">
+                <span>Infelizmente não poderei ir</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rsvpDietary">Restrições alimentares ou observações (opcional)</label>
+            <input type="text" id="rsvpDietary" class="form-input" placeholder="Ex.: Vegetariano, intolerância à lactose...">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Confirmar Minha Resposta
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MODAL DE RESERVA DE PRESENTE FÍSICO ==================== -->
+  <div id="reserveModal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="reserveGiftTitle">Reservar Presente</h3>
+        <button class="modal-close" aria-label="Fechar modal">
+          <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <form id="reserveGiftForm">
+        <div class="modal-body">
+          <input type="hidden" id="reserveGiftId">
+          <p style="margin-bottom: 1.25rem;">
+            Você está reservando este presente para os noivos. Ao reservar, o item não poderá ser escolhido por outro convidado.
+          </p>
+
+          <div style="background: var(--color-cream); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 500;">Valor de Referência:</span>
+            <span id="reserveGiftPrice" style="font-weight: 700; color: var(--color-olive-primary); font-size: 1.1rem;">R$ 0,00</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reserveGuestName">Seu Nome Completo *</label>
+            <input type="text" id="reserveGuestName" class="form-input" required placeholder="Quem está presenteando">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reserveGuestPhone">Telefone / WhatsApp</label>
+            <input type="tel" id="reserveGuestPhone" class="form-input" placeholder="(00) 00000-0000">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reserveGuestMessage">Mensagem carinhosa de felicitações</label>
+            <textarea id="reserveGuestMessage" class="form-textarea" rows="3" placeholder="Escreva uma mensagem para os noivos..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Confirmar Reserva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL DE COTA VIA PIX ==================== -->
+  <div id="cotaModal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="cotaGiftTitle">Contribuir com Cota</h3>
+        <button class="modal-close" aria-label="Fechar modal">
+          <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <form id="cotaForm">
+        <div class="modal-body">
+          <input type="hidden" id="cotaGiftId">
+          
+          <div class="pix-details-card">
+            <p style="font-size: 0.85rem; margin-bottom: 0.75rem; color: var(--color-olive-muted);">Escaneie o QR Code abaixo pelo aplicativo do seu banco:</p>
+            <div class="qr-wrapper">
+              <img id="pixQrCodeImg" src="" alt="QR Code Pix" width="180" height="180">
+            </div>
+
+            <div style="font-size: 0.85rem; text-align: left; margin-bottom: 0.5rem;">
+              <strong>Favorecido:</strong> <span id="pixHolderDisplay">Rhebeca e Matheus</span>
+            </div>
+
+            <div class="pix-copy-box">
+              <div id="pixKeyDisplay" style="flex: 1; padding: 0.5rem 0.75rem; background: var(--color-white); border: 1px solid var(--color-olive-border); border-radius: var(--radius-sm); font-size: 0.82rem; word-break: break-all; text-align: left;">
+                rhebecaematheuscasamento@gmail.com
+              </div>
+              <button type="button" id="btnCopyPix" class="btn btn-outline" style="padding: 0.5rem 0.85rem; font-size: 0.82rem;" title="Copiar chave Pix">
+                Copiar Chave
+              </button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="cotaCountInput">Quantidade de Cotas</label>
+              <input type="number" id="cotaCountInput" class="form-input" min="1" max="50" value="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total a Pagar</label>
+              <div style="padding: 0.75rem; background: var(--color-cream); border-radius: var(--radius-sm); font-weight: 700; color: var(--color-olive-primary);" id="cotaCalculatedTotal">
+                R$ 0,00
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cotaGuestName">Seu Nome *</label>
+            <input type="text" id="cotaGuestName" class="form-input" required placeholder="Quem está presenteando">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cotaGuestPhone">Telefone / WhatsApp</label>
+            <input type="tel" id="cotaGuestPhone" class="form-input" placeholder="(00) 00000-0000">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cotaGuestMessage">Mensagem de felicitações</label>
+            <textarea id="cotaGuestMessage" class="form-textarea" rows="2" placeholder="Deixe seus votos para os noivos..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close">Fechar</button>
+          <button type="submit" class="btn btn-primary">Registrar Pagamento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS ==================== -->
+  <div id="adminModal" class="modal-backdrop">
+    <div class="modal-content lg">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <h3>Painel de Gestão dos Noivos</h3>
+          <!-- Versão visível no painel administrativo -->
+          <span class="admin-badge">Versão: v.1.0.0</span>
+        </div>
+        <button class="modal-close" aria-label="Fechar painel">
+          <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="admin-tabs">
+          <button class="admin-tab-btn active" data-tab="gifts">Gerenciar Presentes</button>
+          <button class="admin-tab-btn" data-tab="rsvps">Lista RSVP</button>
+          <button class="admin-tab-btn" data-tab="settings">Configurações & Nuvem</button>
+        </div>
+
+        <!-- ABA 1: GERENCIAR PRESENTES -->
+        <div id="adminTabGifts" class="admin-tab-content">
+          <!-- Formulário Adicionar/Editar -->
+          <div style="background: var(--color-cream); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 2rem; border: 1px solid var(--color-olive-border);">
+            <h4 id="adminGiftFormTitle" style="margin-bottom: 1rem; font-size: 1.15rem;">Novo Presente ou Cota</h4>
+            <form id="adminGiftForm">
+              <input type="hidden" id="adminGiftId">
+
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="adminGiftTitle">Título do Presente *</label>
+                  <input type="text" id="adminGiftTitle" class="form-input" placeholder="Ex.: Jogo de Taças de Cristal" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="adminGiftCategory">Categoria</label>
+                  <select id="adminGiftCategory" class="form-select">
+                    <option value="cozinha">Cozinha</option>
+                    <option value="quarto">Quarto & Banho</option>
+                    <option value="eletro">Eletros</option>
+                    <option value="cotas">Cotas Lua de Mel</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="adminGiftPrice">Valor Total Estimado (R$)</label>
+                  <input type="number" step="0.01" id="adminGiftPrice" class="form-input" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="adminGiftImage">URL da Imagem</label>
+                  <input type="url" id="adminGiftImage" class="form-input" placeholder="https://exemplo.com/foto.jpg">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="adminGiftDesc">Descrição Curta</label>
+                <input type="text" id="adminGiftDesc" class="form-input" placeholder="Detalhes ou preferência de modelo...">
+              </div>
+
+              <div class="form-group" style="margin-top: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="adminGiftIsCota">
+                  <span style="font-weight: 600;">Este item será arrecadado em Cotas (Lua de Mel / Presente Coletivo)</span>
+                </label>
+              </div>
+
+              <div id="adminCotaFields" style="display: none; background: var(--color-white); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); margin-bottom: 1rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label" for="adminGiftQuotaVal">Valor de Cada Cota (R$)</label>
+                    <input type="number" step="0.01" id="adminGiftQuotaVal" class="form-input" placeholder="Ex: 150.00">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="adminGiftQuotaTotal">Total de Cotas Desejadas</label>
+                    <input type="number" id="adminGiftQuotaTotal" class="form-input" placeholder="Ex: 10">
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button type="button" id="adminGiftCancelBtn" class="btn btn-secondary" style="display: none;" onclick="AdminController.resetGiftForm()">Cancelar Edição</button>
+                <button type="submit" id="adminGiftSubmitBtn" class="btn btn-primary">Adicionar à Lista</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabela de Itens Existentes -->
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Categoria</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="adminGiftsTableBody">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ABA 2: LISTA RSVP -->
+        <div id="adminTabRsvps" class="admin-tab-content" style="display: none;">
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Convidado</th>
+                  <th>Contato</th>
+                  <th>Convidados</th>
+                  <th>Status</th>
+                  <th>Observações</th>
+                </tr>
+              </thead>
+              <tbody id="adminRsvpsTableBody">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ABA 3: CONFIGURAÇÕES & SUPABASE -->
+        <div id="adminTabSettings" class="admin-tab-content" style="display: none;">
+          <form id="adminSettingsForm">
+            <h4 style="margin-bottom: 1rem;">Dados para Pagamento via Pix</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="settingPixKey">Chave Pix dos Noivos</label>
+                <input type="text" id="settingPixKey" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settingPixName">Nome do Titular da Chave</label>
+                <input type="text" id="settingPixName" class="form-input" required>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="settingPixCity">Cidade do Titular</label>
+                <input type="text" id="settingPixCity" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settingWeddingDate">Data do Casamento</label>
+                <input type="datetime-local" id="settingWeddingDate" class="form-input">
+              </div>
+            </div>
+
+            <h4 style="margin: 1.5rem 0 1rem;">Sincronização em Nuvem (Supabase)</h4>
+            <p style="font-size: 0.85rem; color: var(--color-olive-muted); margin-bottom: 1rem;">
+              A aplicação opera offline com IndexedDB. Para sincronizar em tempo real entre múltiplos convidados e dispositivos, insira suas credenciais do projeto Supabase:
+            </p>
+
+            <div class="form-group">
+              <label class="form-label" for="settingSupabaseUrl">Supabase Project URL</label>
+              <input type="url" id="settingSupabaseUrl" class="form-input" placeholder="https://xyzcompany.supabase.co">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settingSupabaseKey">Supabase Anon Public Key</label>
+              <input type="password" id="settingSupabaseKey" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6...">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Salvar Configurações</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CONTAINER DE TOASTS ==================== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ==================== RODAPÉ OBRIGATÓRIO COM VERSÃO ==================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-monogram">Rhebeca & Matheus</div>
+      <p class="footer-quote">"O amor tudo sofre, tudo crê, tudo espera, tudo suporta."</p>
+      
+      <div class="footer-bottom">
+        <div>Feito com carinho para celebrar nosso casamento</div>
+        <!-- Versão visível obrigatória v.X.Y.Z -->
+        <div class="footer-version-badge">
+          <span>Versão:</span>
+          <strong>v.1.0.0</strong>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts da Aplicação -->
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
