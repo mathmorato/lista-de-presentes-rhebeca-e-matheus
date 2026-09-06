@@ -1,12 +1,20 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
    Versão: v.1.0.0
-   Módulo: Aplicação Principal e Controle de Interface
+   Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Inicializar Banco de Dados Híbrido
-  await window.weddingDB.init();
+  // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
+  await window.weddingDB.init((changeType) => {
+    console.log('[App v.1.0.0] Mudança em tempo real recebida:', changeType);
+    if (changeType === 'gifts') {
+      CatalogController.refresh();
+      AdminController.renderGiftsTable();
+    } else if (changeType === 'messages') {
+      MessagesController.refresh();
+    }
+  });
 
   // 2. Inicializar Módulos do Sistema
   ThemeController.init();
@@ -33,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* ==========================================================================
-   GERENCIADOR DE TEMAS (Claro Padrão / Escuro Musgo Elegante)
+   GERENCIADOR DE TEMAS (Modo Claro Padrão / Escuro Musgo Elegante)
    ========================================================================== */
 const ThemeController = {
   init() {
@@ -110,10 +118,13 @@ const CountdownController = {
 };
 
 /* ==========================================================================
-   CATÁLOGO DE PRESENTES E COTAS
+   VITRINE PÚBLICA PARA CONVIDADOS (Busca, Filtros Avançados e Ordenação)
    ========================================================================== */
 const CatalogController = {
-  currentFilter: 'all',
+  currentCategory: 'all',
+  currentPriceRange: 'all',
+  currentAvailability: 'all',
+  currentSort: 'featured',
   searchQuery: '',
   allGifts: [],
 
@@ -123,17 +134,17 @@ const CatalogController = {
   },
 
   setupListeners() {
-    // Filtro de Categorias
-    document.querySelectorAll('.chip-btn').forEach(btn => {
+    // 1. Filtro por Categoria
+    document.querySelectorAll('.category-chips .chip-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.category-chips .chip-btn').forEach(b => b.classList.remove('active'));
         e.target.classList.add('active');
-        this.currentFilter = e.target.getAttribute('data-category');
+        this.currentCategory = e.target.getAttribute('data-category');
         this.render();
       });
     });
 
-    // Busca de Presentes
+    // 2. Busca Dinâmica por Nome ou Descrição
     const searchInput = document.getElementById('giftSearchInput');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
@@ -142,7 +153,34 @@ const CatalogController = {
       });
     }
 
-    // Modal Fechamentos
+    // 3. Filtro por Faixa de Preço
+    const priceSelect = document.getElementById('filterPriceRange');
+    if (priceSelect) {
+      priceSelect.addEventListener('change', (e) => {
+        this.currentPriceRange = e.target.value;
+        this.render();
+      });
+    }
+
+    // 4. Filtro por Disponibilidade
+    const availSelect = document.getElementById('filterAvailability');
+    if (availSelect) {
+      availSelect.addEventListener('change', (e) => {
+        this.currentAvailability = e.target.value;
+        this.render();
+      });
+    }
+
+    // 5. Ordenação
+    const sortSelect = document.getElementById('sortGifts');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        this.currentSort = e.target.value;
+        this.render();
+      });
+    }
+
+    // 6. Fechamento de Modais
     document.querySelectorAll('.modal-close, .modal-backdrop').forEach(el => {
       el.addEventListener('click', (e) => {
         if (e.target === el) {
@@ -161,8 +199,6 @@ const CatalogController = {
   updateSummaryStrip() {
     const totalCount = this.allGifts.length;
     const reservedCount = this.allGifts.filter(g => g.status === 'reserved' || g.status === 'completed').length;
-    
-    // Total arrecadado em cotas
     const totalRaised = this.allGifts.reduce((sum, g) => sum + (g.amountRaised || 0), 0);
 
     const totalEl = document.getElementById('statTotalGifts');
@@ -178,23 +214,72 @@ const CatalogController = {
     const grid = document.getElementById('giftsGrid');
     if (!grid) return;
 
+    // 1. Filtragem
     let filtered = this.allGifts.filter(gift => {
-      const matchesCat = this.currentFilter === 'all' || gift.category === this.currentFilter;
-      const matchesSearch = !this.searchQuery || 
+      // Categoria
+      const matchCat = this.currentCategory === 'all' || gift.category === this.currentCategory;
+      
+      // Busca Textual
+      const matchSearch = !this.searchQuery || 
         gift.title.toLowerCase().includes(this.searchQuery) ||
         (gift.description && gift.description.toLowerCase().includes(this.searchQuery));
-      return matchesCat && matchesSearch;
+
+      // Faixa de Preço
+      let matchPrice = true;
+      const effectivePrice = gift.isCota ? (gift.quotaValue || gift.price) : gift.price;
+      if (this.currentPriceRange === 'under100') {
+        matchPrice = effectivePrice <= 100;
+      } else if (this.currentPriceRange === '100to300') {
+        matchPrice = effectivePrice > 100 && effectivePrice <= 300;
+      } else if (this.currentPriceRange === '300to600') {
+        matchPrice = effectivePrice > 300 && effectivePrice <= 600;
+      } else if (this.currentPriceRange === 'above600') {
+        matchPrice = effectivePrice > 600;
+      }
+
+      // Disponibilidade
+      let matchAvail = true;
+      const isReservedOrCompleted = gift.status === 'reserved' || gift.status === 'completed';
+      if (this.currentAvailability === 'available') {
+        matchAvail = !isReservedOrCompleted;
+      } else if (this.currentAvailability === 'reserved') {
+        matchAvail = isReservedOrCompleted;
+      }
+
+      return matchCat && matchSearch && matchPrice && matchAvail;
     });
 
+    // 2. Ordenação
+    filtered.sort((a, b) => {
+      const priceA = a.isCota ? (a.quotaValue || a.price) : a.price;
+      const priceB = b.isCota ? (b.quotaValue || b.price) : b.price;
+
+      if (this.currentSort === 'featured') {
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        return 0;
+      } else if (this.currentSort === 'price_asc') {
+        return priceA - priceB;
+      } else if (this.currentSort === 'price_desc') {
+        return priceB - priceA;
+      } else if (this.currentSort === 'name_asc') {
+        return a.title.localeCompare(b.title);
+      } else if (this.currentSort === 'name_desc') {
+        return b.title.localeCompare(a.title);
+      }
+      return 0;
+    });
+
+    // 3. Renderização
     if (filtered.length === 0) {
       grid.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem;">
+        <div style="grid-column: 1 / -1; text-align: center; padding: 4.5rem 1rem;">
           <svg class="icon-line lg" style="color: var(--color-olive-muted); margin-bottom: 1rem;" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <h3 style="margin-bottom: 0.5rem;">Nenhum item encontrado</h3>
-          <p>Tente ajustar os termos de pesquisa ou selecionar outra categoria.</p>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.3rem;">Nenhum presente encontrado</h3>
+          <p>Tente ajustar os filtros de pesquisa, faixa de preço ou categoria selecionada.</p>
         </div>
       `;
       return;
@@ -215,14 +300,25 @@ const CatalogController = {
     const isReserved = gift.status === 'reserved';
     const isCompleted = gift.status === 'completed';
 
-    let badgeHTML = '';
+    // Badge de status e cota
+    let statusBadgeHTML = '';
     if (gift.isCota) {
-      badgeHTML = `<span class="gift-badge badge-cota">Cota Lua de Mel</span>`;
+      statusBadgeHTML = `<span class="gift-badge badge-cota">Cota Lua de Mel</span>`;
     } else if (isReserved) {
-      badgeHTML = `<span class="gift-badge badge-reserved">Reservado</span>`;
+      statusBadgeHTML = `<span class="gift-badge badge-reserved">Reservado</span>`;
     } else {
-      badgeHTML = `<span class="gift-badge badge-available">Disponível</span>`;
+      statusBadgeHTML = `<span class="gift-badge badge-available">Disponível</span>`;
     }
+
+    // Badge Dourada "Mais Desejado"
+    const featuredBadgeHTML = gift.isFeatured 
+      ? `<span class="badge-featured">
+           <svg class="icon-line sm" style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+           </svg>
+           Mais Desejado
+         </span>`
+      : '';
 
     let pricingHTML = '';
     let actionBtnHTML = '';
@@ -268,7 +364,7 @@ const CatalogController = {
         actionBtnHTML = `
           <button class="btn btn-secondary btn-block" disabled>
             <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
-            Já Reservado por Convidado
+            Já Reservado com Carinho
           </button>
         `;
       } else {
@@ -281,6 +377,18 @@ const CatalogController = {
       }
     }
 
+    // Botão de link para a loja original
+    const storeLinkHTML = gift.productUrl 
+      ? `<a href="${escapeHTML(gift.productUrl)}" target="_blank" rel="noopener noreferrer" class="btn-store-link">
+           <svg class="icon-line sm" style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+             <polyline points="15 3 21 3 21 9"></polyline>
+             <line x1="10" y1="14" x2="21" y2="3"></line>
+           </svg>
+           Ver na loja original
+         </a>`
+      : '';
+
     const fallbackImg = `
       <div class="gift-card-placeholder">
         <svg class="icon-line lg" viewBox="0 0 24 24"><path d="M20 12V22H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zm0 0h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
@@ -289,22 +397,24 @@ const CatalogController = {
     `;
 
     const imgTag = gift.imageUrl 
-      ? `<img src="${gift.imageUrl}" alt="${escapeHTML(gift.title)}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='${fallbackImg.replace(/"/g, "'")}';" />`
+      ? `<img src="${escapeHTML(gift.imageUrl)}" alt="${escapeHTML(gift.title)}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='${fallbackImg.replace(/"/g, "'")}';" />`
       : fallbackImg;
 
     return `
       <div class="gift-card" id="card_${gift.id}">
         <div class="gift-card-media">
           ${imgTag}
-          ${badgeHTML}
+          ${featuredBadgeHTML}
+          ${statusBadgeHTML}
         </div>
         <div class="gift-card-body">
           <div class="gift-category">${escapeHTML(gift.category)}</div>
           <h3 class="gift-title">${escapeHTML(gift.title)}</h3>
           <p class="gift-desc">${escapeHTML(gift.description || '')}</p>
           ${pricingHTML}
-          <div style="margin-top: auto;">
+          <div class="card-actions-wrapper">
             ${actionBtnHTML}
+            ${storeLinkHTML}
           </div>
         </div>
       </div>
@@ -352,13 +462,13 @@ const CatalogController = {
 
     const updateCalculatedTotal = () => {
       const count = parseInt(countInput.value) || 1;
-      const total = count * gift.quotaValue;
+      const total = count * (gift.quotaValue || gift.price);
       document.getElementById('cotaCalculatedTotal').innerText = formatCurrency(total);
     };
     countInput.oninput = updateCalculatedTotal;
     updateCalculatedTotal();
 
-    // Pix Key info
+    // Dados Pix
     document.getElementById('pixKeyDisplay').innerText = settings.pixKey;
     document.getElementById('pixHolderDisplay').innerText = settings.pixName;
 
@@ -376,10 +486,10 @@ const CatalogController = {
 };
 
 /* ==========================================================================
-   RESERVA E COTAS (Submissão e Feedback)
+   SUBMISSÃO DE RESERVAS E COTAS PIX
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Formulário de Reserva de Presente Físico
+  // 1. Reserva de Presente Físico
   const reserveForm = document.getElementById('reserveGiftForm');
   if (reserveForm) {
     reserveForm.addEventListener('submit', async (e) => {
@@ -406,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 2. Formulário de Cota Pix
+  // 2. Pagamento de Cota Pix
   const cotaForm = document.getElementById('cotaForm');
   if (cotaForm) {
     cotaForm.addEventListener('submit', async (e) => {
@@ -424,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const gift = await window.weddingDB.getGiftById(giftId);
-        const amount = count * gift.quotaValue;
+        const amount = count * (gift.quotaValue || gift.price);
 
         await window.weddingDB.contributeCota(giftId, amount, count, { guestName, phone, message });
         document.getElementById('cotaModal').classList.remove('active');
@@ -446,7 +556,6 @@ document.addEventListener('DOMContentLoaded', () => {
         await navigator.clipboard.writeText(pixKey);
         showToast('Chave Pix copiada com sucesso!', 'success');
       } catch (err) {
-        // Fallback
         const tempInput = document.createElement('input');
         tempInput.value = pixKey;
         document.body.appendChild(tempInput);
@@ -460,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   MURAL DE MENSAGENS DE FELICITAÇÕES
+   MURAL DE MENSAGENS DE CARINHO
    ========================================================================== */
 const MessagesController = {
   async init() {
@@ -494,7 +603,7 @@ const MessagesController = {
 
     if (messages.length === 0) {
       wall.innerHTML = `
-        <div style="text-align: center; padding: 2rem; color: var(--color-olive-muted);">
+        <div style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">
           <p>Seja o primeiro a deixar uma mensagem de carinho para Rhebeca e Matheus!</p>
         </div>
       `;
@@ -508,7 +617,7 @@ const MessagesController = {
           <span class="message-time">${formatDate(msg.createdAt)}</span>
         </div>
         <p class="message-text">"${escapeHTML(msg.text)}"</p>
-        ${msg.giftTitle ? `<div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-olive-primary); font-weight: 600;">Presente: ${escapeHTML(msg.giftTitle)}</div>` : ''}
+        ${msg.giftTitle ? `<div style="margin-top: 0.5rem; font-size: 0.78rem; color: var(--color-olive-primary); font-weight: 600;">Presente: ${escapeHTML(msg.giftTitle)}</div>` : ''}
       </div>
     `).join('');
   }
@@ -552,7 +661,7 @@ const RsvpController = {
 };
 
 /* ==========================================================================
-   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.0)
+   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.0) COM EXTRATOR DE LINKS
    ========================================================================== */
 const AdminController = {
   currentTab: 'gifts',
@@ -568,7 +677,7 @@ const AdminController = {
       });
     }
 
-    // Tabs
+    // Navegação de Abas
     document.querySelectorAll('.admin-tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
@@ -578,7 +687,84 @@ const AdminController = {
       });
     });
 
-    // Formulário de Adicionar / Editar Item
+    // 1. Extrator Inteligente por Link (Módulo A)
+    const btnExtract = document.getElementById('btnExtractUrl');
+    const urlInput = document.getElementById('extractUrlInput');
+    if (btnExtract && urlInput) {
+      btnExtract.addEventListener('click', async () => {
+        const url = urlInput.value.trim();
+        if (!url) {
+          showToast('Cole o link do produto de qualquer loja virtual.', 'error');
+          return;
+        }
+
+        const originalBtnText = btnExtract.innerHTML;
+        btnExtract.disabled = true;
+        btnExtract.innerHTML = `
+          <svg class="icon-line sm" style="animation: spin 1s linear infinite;" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="16"></circle>
+          </svg>
+          Extraindo...
+        `;
+
+        try {
+          showToast('Analisando link e extraindo dados do produto...', 'info');
+          const data = await window.LinkExtractor.extractFromUrl(url);
+
+          // Preencher formulário pré-salvamento
+          document.getElementById('adminGiftId').value = '';
+          document.getElementById('adminGiftTitle').value = data.title;
+          document.getElementById('adminGiftPrice').value = data.price > 0 ? data.price : '';
+          document.getElementById('adminGiftImage').value = data.imageUrl;
+          document.getElementById('adminGiftProductUrl').value = data.productUrl;
+          document.getElementById('adminGiftDesc').value = data.description;
+
+          // Sugerir categoria com base no título
+          const lowerTitle = (data.title + ' ' + url).toLowerCase();
+          const categorySelect = document.getElementById('adminGiftCategory');
+          if (lowerTitle.includes('jogo de cama') || lowerTitle.includes('lençol') || lowerTitle.includes('toalha')) {
+            categorySelect.value = 'quarto';
+          } else if (lowerTitle.includes('panela') || lowerTitle.includes('prato') || lowerTitle.includes('faqueiro') || lowerTitle.includes('copo') || lowerTitle.includes('taça')) {
+            categorySelect.value = 'cozinha';
+          } else if (lowerTitle.includes('fritadeira') || lowerTitle.includes('aspirador') || lowerTitle.includes('cafeteira') || lowerTitle.includes('micro') || lowerTitle.includes('ar')) {
+            categorySelect.value = 'eletro';
+          } else if (lowerTitle.includes('lua de mel') || lowerTitle.includes('viagem') || lowerTitle.includes('voo') || lowerTitle.includes('passeio')) {
+            categorySelect.value = 'cotas';
+          } else {
+            categorySelect.value = 'sala';
+          }
+
+          // Atualizar preview da imagem
+          this.updateImagePreview(data.imageUrl);
+
+          // Rolar até o formulário de pré-salvamento
+          document.getElementById('adminGiftFormTitle').innerText = 'Revisar & Salvar Presente Extraído';
+          document.getElementById('adminGiftSubmitBtn').innerText = 'Salvar Item na Lista';
+          document.getElementById('adminGiftForm').scrollIntoView({ behavior: 'smooth' });
+
+          if (!data.title || data.price === 0) {
+            showToast('Dados básicos extraídos. Por favor, confira o título e o valor antes de salvar.', 'info');
+          } else {
+            showToast('Produto extraído com sucesso! Revise e salve.', 'success');
+          }
+        } catch (err) {
+          showToast(err.message || 'Erro ao extrair link.', 'error');
+        } finally {
+          btnExtract.disabled = false;
+          btnExtract.innerHTML = originalBtnText;
+        }
+      });
+    }
+
+    // Atualização de preview de imagem em tempo real no input de URL de imagem
+    const imgInput = document.getElementById('adminGiftImage');
+    if (imgInput) {
+      imgInput.addEventListener('input', (e) => {
+        this.updateImagePreview(e.target.value.trim());
+      });
+    }
+
+    // Formulário Adicionar / Editar
     const giftForm = document.getElementById('adminGiftForm');
     if (giftForm) {
       giftForm.addEventListener('submit', async (e) => {
@@ -606,8 +792,17 @@ const AdminController = {
     }
   },
 
+  updateImagePreview(url) {
+    const previewBox = document.getElementById('adminImagePreviewBox');
+    if (!previewBox) return;
+    if (url) {
+      previewBox.innerHTML = `<img src="${escapeHTML(url)}" alt="Preview" onerror="this.parentElement.innerHTML='<span style=\\'font-size: 0.8rem; color: var(--color-olive-muted);\\'>Falha ao carregar imagem</span>';">`;
+    } else {
+      previewBox.innerHTML = `<span style="font-size: 0.8rem; color: var(--color-olive-muted);">Nenhuma imagem selecionada</span>`;
+    }
+  },
+
   async render() {
-    // Esconder todas as abas
     document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
 
     if (this.currentTab === 'gifts') {
@@ -629,19 +824,31 @@ const AdminController = {
     const gifts = await window.weddingDB.getAllGifts();
 
     if (gifts.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem;">Nenhum item cadastrado.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem;">Nenhum item cadastrado ainda. Use o extrator por link acima para começar!</td></tr>`;
       return;
     }
 
     tbody.innerHTML = gifts.map(g => `
       <tr>
-        <td><strong>${escapeHTML(g.title)}</strong></td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <button class="btn-icon btn-admin-star" data-id="${g.id}" title="${g.isFeatured ? 'Remover dos Mais Desejados' : 'Marcar como Mais Desejado'}" style="width: 28px; height: 28px; border: none; background: none; color: ${g.isFeatured ? 'var(--color-gold-accent)' : 'var(--color-olive-muted)'}; cursor: pointer;">
+              <svg class="icon-line sm" viewBox="0 0 24 24" style="${g.isFeatured ? 'fill: var(--color-gold-accent);' : ''}">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </button>
+            <strong>${escapeHTML(g.title)}</strong>
+          </div>
+        </td>
         <td>${escapeHTML(g.category)}</td>
         <td>${g.isCota ? `${formatCurrency(g.quotaValue)}/cota (${g.quotaCurrent || 0}/${g.quotaTotal})` : formatCurrency(g.price)}</td>
         <td>
-          <span class="gift-badge ${g.status === 'reserved' ? 'badge-reserved' : 'badge-available'}">
+          <span class="gift-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}">
             ${g.status === 'reserved' ? `Reservado (${escapeHTML(g.reservedBy || '')})` : (g.status === 'completed' ? 'Concluído' : 'Disponível')}
           </span>
+        </td>
+        <td>
+          ${g.productUrl ? `<a href="${escapeHTML(g.productUrl)}" target="_blank" title="Abrir link original" style="color: var(--color-olive-primary); font-size: 0.8rem; text-decoration: underline;">Loja</a>` : '-'}
         </td>
         <td>
           <button class="btn btn-outline btn-admin-edit" data-id="${g.id}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; margin-right: 0.3rem;">Editar</button>
@@ -650,7 +857,16 @@ const AdminController = {
       </tr>
     `).join('');
 
-    // Ações
+    // Ações na tabela
+    tbody.querySelectorAll('.btn-admin-star').forEach(b => {
+      b.addEventListener('click', async () => {
+        const id = b.getAttribute('data-id');
+        await window.weddingDB.toggleFeatured(id);
+        await this.renderGiftsTable();
+        await CatalogController.refresh();
+      });
+    });
+
     tbody.querySelectorAll('.btn-admin-edit').forEach(b => {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-id');
@@ -661,7 +877,7 @@ const AdminController = {
     tbody.querySelectorAll('.btn-admin-del').forEach(b => {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-id');
-        if (confirm('Tem certeza que deseja excluir permanentemente este item?')) {
+        if (confirm('Tem certeza que deseja excluir permanentemente este item? A exclusão removerá os dados no cache local e no Supabase.')) {
           await window.weddingDB.deleteGift(id);
           showToast('Item excluído da lista e sincronizado.', 'success');
           await this.renderGiftsTable();
@@ -681,6 +897,8 @@ const AdminController = {
     document.getElementById('adminGiftPrice').value = gift.price;
     document.getElementById('adminGiftDesc').value = gift.description || '';
     document.getElementById('adminGiftImage').value = gift.imageUrl || '';
+    document.getElementById('adminGiftProductUrl').value = gift.productUrl || '';
+    document.getElementById('adminGiftFeatured').checked = !!gift.isFeatured;
 
     const isCotaCheck = document.getElementById('adminGiftIsCota');
     isCotaCheck.checked = !!gift.isCota;
@@ -690,9 +908,12 @@ const AdminController = {
       document.getElementById('adminGiftQuotaTotal').value = gift.quotaTotal || '';
     }
 
+    this.updateImagePreview(gift.imageUrl);
+
     document.getElementById('adminGiftSubmitBtn').innerText = 'Salvar Alterações';
     document.getElementById('adminGiftCancelBtn').style.display = 'inline-flex';
     document.getElementById('adminGiftFormTitle').innerText = 'Editar Item da Lista';
+    document.getElementById('adminGiftForm').scrollIntoView({ behavior: 'smooth' });
   },
 
   resetGiftForm() {
@@ -702,7 +923,8 @@ const AdminController = {
     document.getElementById('adminCotaFields').style.display = 'none';
     document.getElementById('adminGiftSubmitBtn').innerText = 'Adicionar à Lista';
     document.getElementById('adminGiftCancelBtn').style.display = 'none';
-    document.getElementById('adminGiftFormTitle').innerText = 'Novo Presente ou Cota';
+    document.getElementById('adminGiftFormTitle').innerText = 'Cadastrar Novo Presente ou Cota';
+    this.updateImagePreview('');
   },
 
   async handleSaveGift() {
@@ -712,6 +934,8 @@ const AdminController = {
     const price = parseFloat(document.getElementById('adminGiftPrice').value) || 0;
     const description = document.getElementById('adminGiftDesc').value.trim();
     const imageUrl = document.getElementById('adminGiftImage').value.trim();
+    const productUrl = document.getElementById('adminGiftProductUrl').value.trim();
+    const isFeatured = document.getElementById('adminGiftFeatured').checked;
     const isCota = document.getElementById('adminGiftIsCota').checked;
 
     if (!title) {
@@ -732,6 +956,8 @@ const AdminController = {
     giftData.price = price;
     giftData.description = description;
     giftData.imageUrl = imageUrl;
+    giftData.productUrl = productUrl;
+    giftData.isFeatured = isFeatured;
     giftData.isCota = isCota;
 
     if (isCota) {
@@ -760,10 +986,10 @@ const AdminController = {
       <tr>
         <td><strong>${escapeHTML(r.guestName)}</strong></td>
         <td>${escapeHTML(r.phone || '-')} / ${escapeHTML(r.email || '-')}</td>
-        <td>${r.companions + 1} pessoa(s)</td>
+        <td>${(r.companions || 0) + 1} pessoa(s)</td>
         <td>
           <span class="gift-badge ${r.status === 'confirmed' ? 'badge-available' : 'badge-reserved'}">
-            ${r.status === 'confirmed' ? 'Confirmado' : 'Não poderá ir'}
+            ${r.status === 'confirmed' ? 'Confirmado' : 'Não poderá comparecer'}
           </span>
         </td>
         <td>${escapeHTML(r.dietary || '-')}</td>
@@ -777,8 +1003,9 @@ const AdminController = {
     document.getElementById('settingPixName').value = settings.pixName || '';
     document.getElementById('settingPixCity').value = settings.pixCity || '';
     document.getElementById('settingWeddingDate').value = settings.weddingDate ? settings.weddingDate.substring(0, 16) : '';
-    document.getElementById('settingSupabaseUrl').value = settings.supabaseUrl || '';
-    document.getElementById('settingSupabaseKey').value = settings.supabaseKey || '';
+    document.getElementById('settingWelcomeMsg').value = settings.welcomeMessage || '';
+    document.getElementById('settingSupabaseUrl').value = settings.supabaseUrl || 'https://ttggcvricfkoqlorbmnv.supabase.co';
+    document.getElementById('settingSupabaseKey').value = settings.supabaseKey || 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN';
   },
 
   async handleSaveSettings() {
@@ -787,11 +1014,19 @@ const AdminController = {
       pixName: document.getElementById('settingPixName').value.trim(),
       pixCity: document.getElementById('settingPixCity').value.trim(),
       weddingDate: document.getElementById('settingWeddingDate').value,
+      welcomeMessage: document.getElementById('settingWelcomeMsg').value.trim(),
       supabaseUrl: document.getElementById('settingSupabaseUrl').value.trim(),
       supabaseKey: document.getElementById('settingSupabaseKey').value.trim()
     };
 
     await window.weddingDB.saveSettings(newSettings);
+    
+    // Atualizar mensagem na capa se houver
+    const heroSubtitle = document.querySelector('.hero-subtitle');
+    if (heroSubtitle && newSettings.welcomeMessage) {
+      heroSubtitle.innerText = newSettings.welcomeMessage;
+    }
+
     showToast('Configurações salvas e integradas com sucesso!', 'success');
     await CountdownController.init();
   }
@@ -824,9 +1059,14 @@ function showToast(message, type = 'success') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
 
-  const iconSvg = type === 'success' 
-    ? `<svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>`
-    : `<svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+  let iconSvg = '';
+  if (type === 'success') {
+    iconSvg = `<svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>`;
+  } else if (type === 'error') {
+    iconSvg = `<svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+  } else {
+    iconSvg = `<svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+  }
 
   toast.innerHTML = `
     ${iconSvg}
@@ -842,5 +1082,5 @@ function showToast(message, type = 'success') {
     setTimeout(() => {
       if (toast.parentElement) toast.parentElement.removeChild(toast);
     }, 300);
-  }, 4000);
+  }, 4500);
 }
