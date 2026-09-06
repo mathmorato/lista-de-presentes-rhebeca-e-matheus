@@ -5,33 +5,49 @@
    ========================================================================== */
 
 const DB_NAME = 'WeddingGiftList_RhebecaMatheus';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 class WeddingDB {
   constructor() {
     this.db = null;
     this.supabaseClient = null;
     this.isInitialized = false;
+    this.onDataChangeCallback = null;
   }
 
-  async init() {
+  async init(onDataChange) {
+    if (onDataChange) {
+      this.onDataChangeCallback = onDataChange;
+    }
+
     if (this.isInitialized) return this;
 
     // 1. Inicializar IndexedDB Local
     await this._initIndexedDB();
 
-    // 2. Carregar configurações locais (incluindo credenciais Supabase se houver)
+    // 2. Carregar configurações locais e inicializar Supabase com credenciais padrão ou salvas
     const settings = await this.getSettings();
-    if (settings && settings.supabaseUrl && settings.supabaseKey && window.supabase) {
+    const supabaseUrl = settings.supabaseUrl || 'https://ttggcvricfkoqlorbmnv.supabase.co';
+    const supabaseKey = settings.supabaseKey || 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN';
+
+    if (window.supabase && supabaseUrl && supabaseKey) {
       try {
-        this.supabaseClient = window.supabase.createClient(settings.supabaseUrl, settings.supabaseKey);
-        console.log('[WeddingDB v.1.0.0] Supabase conectado com sucesso.');
+        this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('[WeddingDB v.1.0.0] Supabase client inicializado:', supabaseUrl);
+
+        // Ativar Supabase Realtime para sincronização instantânea
+        this._setupRealtimeListeners();
+
+        // Sincronizar em background da nuvem para o IndexedDB
+        this.syncFromSupabase().catch(err => {
+          console.warn('[WeddingDB v.1.0.0] Sincronização inicial do Supabase em background falhou (usando IndexedDB local):', err);
+        });
       } catch (err) {
-        console.warn('[WeddingDB v.1.0.0] Falha ao conectar no Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.0.0] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
-    // 3. Popular dados iniciais se vazio
+    // 3. Popular dados iniciais se banco local estiver vazio
     const currentGifts = await this.getAllGifts();
     if (!currentGifts || currentGifts.length === 0) {
       await this._seedInitialData();
@@ -52,6 +68,7 @@ class WeddingDB {
           const giftsStore = db.createObjectStore('gifts', { keyPath: 'id' });
           giftsStore.createIndex('category', 'category', { unique: false });
           giftsStore.createIndex('status', 'status', { unique: false });
+          giftsStore.createIndex('isFeatured', 'isFeatured', { unique: false });
         }
 
         if (!db.objectStoreNames.contains('messages')) {
@@ -81,6 +98,105 @@ class WeddingDB {
     });
   }
 
+  _setupRealtimeListeners() {
+    if (!this.supabaseClient) return;
+
+    try {
+      this.supabaseClient
+        .channel('wedding-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'gifts' }, async (payload) => {
+          console.log('[WeddingDB Realtime] Mudança em gifts detectada no Supabase:', payload.eventType);
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            await this._saveGiftLocalOnly(this._mapFromSupabaseGift(payload.new));
+          } else if (payload.eventType === 'DELETE') {
+            await this._deleteGiftLocalOnly(payload.old.id);
+          }
+          if (this.onDataChangeCallback) this.onDataChangeCallback('gifts');
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async (payload) => {
+          console.log('[WeddingDB Realtime] Nova mensagem detectada no Supabase:', payload);
+          if (payload.eventType === 'INSERT') {
+            await this._saveMessageLocalOnly({
+              id: payload.new.id,
+              author: payload.new.author,
+              text: payload.new.text,
+              giftTitle: payload.new.gift_title,
+              createdAt: payload.new.created_at
+            });
+            if (this.onDataChangeCallback) this.onDataChangeCallback('messages');
+          }
+        })
+        .subscribe();
+    } catch (e) {
+      console.warn('[WeddingDB] Não foi possível ativar canal Realtime:', e);
+    }
+  }
+
+  async syncFromSupabase() {
+    if (!this.supabaseClient) return;
+    try {
+      const { data: remoteGifts, error } = await this.supabaseClient.from('gifts').select('*');
+      if (error) throw error;
+      if (remoteGifts && remoteGifts.length > 0) {
+        for (const rg of remoteGifts) {
+          await this._saveGiftLocalOnly(this._mapFromSupabaseGift(rg));
+        }
+        if (this.onDataChangeCallback) this.onDataChangeCallback('gifts');
+      }
+    } catch (e) {
+      console.warn('[WeddingDB] Erro ao sincronizar presentes remotos do Supabase:', e.message);
+    }
+  }
+
+  _mapFromSupabaseGift(remote) {
+    return {
+      id: remote.id,
+      title: remote.title,
+      category: remote.category,
+      price: parseFloat(remote.price) || 0,
+      isCota: !!remote.is_cota,
+      quotaValue: parseFloat(remote.quota_value) || 0,
+      quotaTotal: parseInt(remote.quota_total) || 0,
+      quotaCurrent: parseInt(remote.quota_current) || 0,
+      amountRaised: parseFloat(remote.amount_raised) || 0,
+      status: remote.status || 'available',
+      description: remote.description || '',
+      imageUrl: remote.image_url || '',
+      productUrl: remote.product_url || '',
+      isFeatured: !!remote.is_featured,
+      reservedBy: remote.reserved_by,
+      guestPhone: remote.guest_phone,
+      guestMessage: remote.guest_message,
+      reservedAt: remote.reserved_at,
+      contributions: remote.contributions || []
+    };
+  }
+
+  _mapToSupabaseGift(local) {
+    return {
+      id: local.id,
+      title: local.title,
+      category: local.category,
+      price: local.price,
+      is_cota: !!local.isCota,
+      quota_value: local.quotaValue || null,
+      quota_total: local.quotaTotal || null,
+      quota_current: local.quotaCurrent || 0,
+      amount_raised: local.amountRaised || 0,
+      status: local.status || 'available',
+      description: local.description || '',
+      image_url: local.imageUrl || '',
+      product_url: local.productUrl || '',
+      is_featured: !!local.isFeatured,
+      reserved_by: local.reservedBy || null,
+      guest_phone: local.guestPhone || null,
+      guest_message: local.guestMessage || null,
+      reserved_at: local.reservedAt || null,
+      contributions: local.contributions || [],
+      updated_at: new Date().toISOString()
+    };
+  }
+
   // --- MÉTODOS DE PRESENTES (GIFTS) ---
 
   async getAllGifts() {
@@ -105,20 +221,36 @@ class WeddingDB {
     });
   }
 
-  async saveGift(gift) {
-    // 1. Grava no IndexedDB
-    await new Promise((resolve, reject) => {
+  async _saveGiftLocalOnly(gift) {
+    return new Promise((resolve, reject) => {
       const tx = this.db.transaction('gifts', 'readwrite');
       const store = tx.objectStore('gifts');
       const request = store.put(gift);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
+  }
 
-    // 2. Sincroniza com Supabase se configurado
+  async _deleteGiftLocalOnly(id) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('gifts', 'readwrite');
+      const store = tx.objectStore('gifts');
+      const request = store.delete(id);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async saveGift(gift) {
+    // 1. Grava no IndexedDB imediatamente
+    await this._saveGiftLocalOnly(gift);
+
+    // 2. Sincroniza com Supabase
     if (this.supabaseClient) {
       try {
-        await this.supabaseClient.from('gifts').upsert(gift);
+        const payload = this._mapToSupabaseGift(gift);
+        const { error } = await this.supabaseClient.from('gifts').upsert(payload);
+        if (error) console.warn('[WeddingDB Supabase Sync Error]:', error.message);
       } catch (err) {
         console.warn('[WeddingDB] Erro de sincronização com Supabase (saveGift):', err);
       }
@@ -129,13 +261,7 @@ class WeddingDB {
 
   async deleteGift(id) {
     // 1. Exclui do IndexedDB local
-    await new Promise((resolve, reject) => {
-      const tx = this.db.transaction('gifts', 'readwrite');
-      const store = tx.objectStore('gifts');
-      const request = store.delete(id);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    await this._deleteGiftLocalOnly(id);
 
     // 2. Cascata no Supabase
     if (this.supabaseClient) {
@@ -145,6 +271,14 @@ class WeddingDB {
         console.warn('[WeddingDB] Erro de exclusão no Supabase (deleteGift):', err);
       }
     }
+  }
+
+  async toggleFeatured(id) {
+    const gift = await this.getGiftById(id);
+    if (!gift) return null;
+    gift.isFeatured = !gift.isFeatured;
+    await this.saveGift(gift);
+    return gift;
   }
 
   async reserveGift(id, reservationData) {
@@ -163,7 +297,6 @@ class WeddingDB {
 
     await this.saveGift(gift);
 
-    // Se houver mensagem de felicitações, salva no mural também
     if (reservationData.message && reservationData.message.trim() !== '') {
       await this.addMessage({
         id: 'msg_' + Date.now(),
@@ -230,21 +363,31 @@ class WeddingDB {
     });
   }
 
-  async addMessage(msg) {
-    if (!msg.id) msg.id = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-    if (!msg.createdAt) msg.createdAt = new Date().toISOString();
-
-    await new Promise((resolve, reject) => {
+  async _saveMessageLocalOnly(msg) {
+    return new Promise((resolve, reject) => {
       const tx = this.db.transaction('messages', 'readwrite');
       const store = tx.objectStore('messages');
       const request = store.put(msg);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
+  }
+
+  async addMessage(msg) {
+    if (!msg.id) msg.id = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    if (!msg.createdAt) msg.createdAt = new Date().toISOString();
+
+    await this._saveMessageLocalOnly(msg);
 
     if (this.supabaseClient) {
       try {
-        await this.supabaseClient.from('messages').upsert(msg);
+        await this.supabaseClient.from('messages').upsert({
+          id: msg.id,
+          author: msg.author,
+          text: msg.text,
+          gift_title: msg.giftTitle || null,
+          created_at: msg.createdAt
+        });
       } catch (err) {
         console.warn('[WeddingDB] Erro Supabase addMessage:', err);
       }
@@ -279,7 +422,16 @@ class WeddingDB {
 
     if (this.supabaseClient) {
       try {
-        await this.supabaseClient.from('rsvps').upsert(rsvp);
+        await this.supabaseClient.from('rsvps').upsert({
+          id: rsvp.id,
+          guest_name: rsvp.guestName,
+          email: rsvp.email || null,
+          phone: rsvp.phone || null,
+          companions: rsvp.companions || 0,
+          status: rsvp.status || 'confirmed',
+          dietary: rsvp.dietary || null,
+          created_at: rsvp.createdAt
+        });
       } catch (err) {
         console.warn('[WeddingDB] Erro Supabase saveRsvp:', err);
       }
@@ -287,7 +439,7 @@ class WeddingDB {
     return rsvp;
   }
 
-  // --- CONFIGURAÇÕES ---
+  // --- CONFIGURAÇÕES DO CASAMENTO ---
 
   async getSettings() {
     return new Promise((resolve) => {
@@ -315,38 +467,46 @@ class WeddingDB {
 
   _defaultSettings() {
     return {
+      groomName: 'Matheus',
+      brideName: 'Rhebeca',
+      coupleTitle: 'Rhebeca & Matheus',
+      welcomeMessage: 'Com a bênção de Deus e a alegria de compartilhar nossa história com as pessoas mais especiais de nossas vidas.',
       pixKey: 'rhebecaematheuscasamento@gmail.com',
       pixName: 'Rhebeca e Matheus',
       pixCity: 'São Paulo',
       weddingDate: '2026-11-21T16:30:00',
-      supabaseUrl: '',
-      supabaseKey: ''
+      supabaseUrl: 'https://ttggcvricfkoqlorbmnv.supabase.co',
+      supabaseKey: 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN'
     };
   }
 
-  // --- DADOS INICIAIS ---
+  // --- DADOS INICIAIS DE EXCESSO ELEGANTE ---
 
   async _seedInitialData() {
     const initialGifts = [
       {
         id: 'gift_1',
-        title: 'Faqueiro 101 Peças em Aço Inox',
+        title: 'Faqueiro 101 Peças em Aço Inox Nobre',
         category: 'cozinha',
         price: 850.00,
         isCota: false,
         status: 'available',
-        description: 'Conjunto completo de talheres em aço inox com acabamento espelhado e estojo em madeira nobre.',
-        imageUrl: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=600&q=80'
+        isFeatured: true,
+        description: 'Conjunto completo de talheres em aço inox com acabamento espelhado e estojo nobre.',
+        imageUrl: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=600&q=80',
+        productUrl: 'https://www.amazon.com.br'
       },
       {
         id: 'gift_2',
-        title: 'Jogo de Panelas Cerâmica Antiaderente',
+        title: 'Jogo de Panelas Cerâmica Antiaderente Verde Oliva',
         category: 'cozinha',
         price: 1200.00,
         isCota: false,
         status: 'available',
-        description: 'Linha premium em cerâmica atóxica verde oliva com pegadores em aço escovado.',
-        imageUrl: 'https://images.unsplash.com/photo-1556911073-38141963c9e0?auto=format&fit=crop&w=600&q=80'
+        isFeatured: true,
+        description: 'Linha premium em cerâmica atóxica com pegadores em aço escovado e tampas de vidro temperado.',
+        imageUrl: 'https://images.unsplash.com/photo-1556911073-38141963c9e0?auto=format&fit=crop&w=600&q=80',
+        productUrl: 'https://www.magazineluiza.com.br'
       },
       {
         id: 'gift_3',
@@ -355,42 +515,50 @@ class WeddingDB {
         price: 1450.00,
         isCota: false,
         status: 'available',
-        description: 'Bomba italiana de 19 bar com vaporizador integrado para cappuccinos e lattes perfeitos.',
-        imageUrl: 'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?auto=format&fit=crop&w=600&q=80'
+        isFeatured: true,
+        description: 'Bomba italiana de 19 bar com vaporizador integrado para expressos, cappuccinos e lattes cremosos.',
+        imageUrl: 'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?auto=format&fit=crop&w=600&q=80',
+        productUrl: 'https://www.mercadolivre.com.br'
       },
       {
         id: 'gift_4',
-        title: 'Jogo de Cama 400 Fios Cetim de Algodão',
+        title: 'Jogo de Cama 400 Fios Cetim de Algodão Egípcio',
         category: 'quarto',
         price: 680.00,
         isCota: false,
         status: 'available',
-        description: 'Conforto e maciez com toque acetinado na cor pérola e detalhes em ponto ajour.',
-        imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80'
+        isFeatured: false,
+        description: 'Toque acetinado ultra macio na tonalidade pérola com detalhes elegantes em ponto ajour.',
+        imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80',
+        productUrl: ''
       },
       {
         id: 'gift_5',
-        title: 'Fritadeira Elétrica Air Fryer 5.5L',
+        title: 'Fritadeira Elétrica Air Fryer Digital 5.5L',
         category: 'eletro',
         price: 520.00,
         isCota: false,
         status: 'available',
-        description: 'Painel digital touch, acabamento inox escovado e cesto antiaderente para refeições saudáveis.',
-        imageUrl: 'https://images.unsplash.com/photo-1585659722983-3a675dabf23d?auto=format&fit=crop&w=600&q=80'
+        isFeatured: false,
+        description: 'Painel digital sensível ao toque, cesto antiaderente e acabamento em inox escovado.',
+        imageUrl: 'https://images.unsplash.com/photo-1585659722983-3a675dabf23d?auto=format&fit=crop&w=600&q=80',
+        productUrl: ''
       },
       {
         id: 'gift_6',
         title: 'Aparelho de Jantar 30 Peças em Porcelana',
-        category: 'cozinha',
+        category: 'sala',
         price: 980.00,
         isCota: false,
         status: 'available',
-        description: 'Porcelana nobre esmaltada com filete dourado fosco e design atemporal.',
-        imageUrl: 'https://images.unsplash.com/photo-1615529182904-14819c35db37?auto=format&fit=crop&w=600&q=80'
+        isFeatured: false,
+        description: 'Porcelana nobre esmaltada com suave filete dourado fosco e pratos de sobremesa refinados.',
+        imageUrl: 'https://images.unsplash.com/photo-1615529182904-14819c35db37?auto=format&fit=crop&w=600&q=80',
+        productUrl: ''
       },
       {
         id: 'gift_7',
-        title: 'Lava e Seca Inteligente 11kg',
+        title: 'Lava e Seca Inteligente 11kg Inverter',
         category: 'eletro',
         price: 3600.00,
         isCota: true,
@@ -399,8 +567,10 @@ class WeddingDB {
         quotaCurrent: 3,
         amountRaised: 1080.00,
         status: 'available',
-        description: 'Motor inverter silencioso com conectividade Wi-Fi e inteligência artificial para cuidados com os tecidos.',
-        imageUrl: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=600&q=80'
+        isFeatured: true,
+        description: 'Motor inverter silencioso com inteligência artificial para cuidados com roupas e conectividade Wi-Fi.',
+        imageUrl: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=600&q=80',
+        productUrl: ''
       },
       {
         id: 'gift_8',
@@ -413,12 +583,14 @@ class WeddingDB {
         quotaCurrent: 2,
         amountRaised: 320.00,
         status: 'available',
-        description: 'Experiência gastronômica a dois em restaurante com vista panorâmica à luz de velas.',
-        imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80'
+        isFeatured: true,
+        description: 'Experiência gastronômica inesquecível em bistrô panorâmico com menu de 5 tempos à luz de velas.',
+        imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80',
+        productUrl: ''
       },
       {
         id: 'gift_9',
-        title: 'Passeio Inesquecível de Barco ao Pôr do Sol',
+        title: 'Passeio Exclusivo de Veleiro ao Pôr do Sol',
         category: 'cotas',
         price: 900.00,
         isCota: true,
@@ -427,8 +599,10 @@ class WeddingDB {
         quotaCurrent: 1,
         amountRaised: 150.00,
         status: 'available',
-        description: 'Navegação pelas águas cristalinas com brinde de espumante e frutas frescas.',
-        imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80'
+        isFeatured: false,
+        description: 'Navegação por enseadas de águas calmas com brinde de espumante e frutas frescas.',
+        imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80',
+        productUrl: ''
       },
       {
         id: 'gift_10',
@@ -441,8 +615,10 @@ class WeddingDB {
         quotaCurrent: 8,
         amountRaised: 1600.00,
         status: 'available',
-        description: 'Ajude os noivos a voarem rumo ao destino dos sonhos para iniciar essa linda jornada.',
-        imageUrl: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80'
+        isFeatured: true,
+        description: 'Ajude os noivos a voarem rumo ao destino dos sonhos para celebrar o início dessa nova família.',
+        imageUrl: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80',
+        productUrl: ''
       }
     ];
 

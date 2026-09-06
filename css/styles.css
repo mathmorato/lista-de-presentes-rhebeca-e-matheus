@@ -1,28 +1,28 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
    Versão: v.1.0.0
-   Design System: Paleta Branco e Verde Oliva
+   Design System: Paleta Branco e Verde Oliva Nobre
    ========================================================================== */
 
 :root {
   /* Paleta Branco e Off-White */
   --color-white: #ffffff;
-  --color-pearl: #fafaf8;
+  --color-pearl: #fafaf7;
   --color-cream: #f4f5f0;
-  --color-surface-translucent: rgba(255, 255, 255, 0.85);
+  --color-surface-translucent: rgba(255, 255, 255, 0.9);
 
-  /* Paleta Verde Oliva */
-  --color-olive-primary: #606c38;
-  --color-olive-hover: #4f5a2d;
-  --color-olive-botanical: #556b2f;
-  --color-olive-light: #e8ece0;
-  --color-olive-border: rgba(96, 108, 56, 0.2);
+  /* Paleta Verde Oliva Nobre e Suportes */
   --color-olive-deep: #283618;
+  --color-olive-primary: #606c38;
+  --color-olive-hover: #4d572b;
+  --color-olive-light: #e8ece0;
+  --color-olive-border: rgba(96, 108, 56, 0.22);
   --color-olive-muted: #5e6b52;
+  
+  /* Dourado Champagne & Estados */
   --color-gold-accent: #dda15e;
+  --color-gold-hover: #c98e4b;
   --color-gold-soft: #bc6c25;
-
-  /* Cores de Estado */
   --color-success: #588157;
   --color-success-light: #eaf2ea;
   --color-warning: #dda15e;
@@ -31,7 +31,7 @@
   --color-error-light: #faece5;
 
   /* Sombras e Molduras */
-  --shadow-sm: 0 2px 8px rgba(40, 54, 24, 0.05);
+  --shadow-sm: 0 2px 10px rgba(40, 54, 24, 0.05);
   --shadow-md: 0 8px 24px rgba(40, 54, 24, 0.08);
   --shadow-lg: 0 16px 40px rgba(40, 54, 24, 0.12);
   --radius-sm: 8px;
@@ -43,24 +43,25 @@
   --font-serif: 'Playfair Display', Cormorant Garamond, Georgia, serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Modo Escuro Sofisticado (Verde Musgo Profundo) */
 [data-theme="dark"] {
   --color-white: #1a2312;
-  --color-pearl: #141c0e;
-  --color-cream: #1f2a17;
-  --color-surface-translucent: rgba(26, 35, 18, 0.88);
+  --color-pearl: #131a0d;
+  --color-cream: #1f2b16;
+  --color-surface-translucent: rgba(26, 35, 18, 0.92);
 
+  --color-olive-deep: #f7f9f3;
   --color-olive-primary: #8fa358;
   --color-olive-hover: #a3b86b;
-  --color-olive-botanical: #98ad64;
-  --color-olive-light: #2c3a21;
+  --color-olive-light: #2c3c20;
   --color-olive-border: rgba(143, 163, 88, 0.3);
-  --color-olive-deep: #f4f5f0;
-  --color-olive-muted: #c2ceb3;
+  --color-olive-muted: #c4d0b7;
+  
   --color-gold-accent: #e5b376;
+  --color-gold-hover: #f0c592;
   --color-gold-soft: #cca062;
 
   --color-success: #74a673;
@@ -99,13 +100,13 @@ body {
   overflow-x: hidden;
 }
 
-/* Padrão de Linhas nos Ícones SVG */
+/* Padrão Estrito de Linhas nos Ícones SVG */
 .icon-line {
   display: inline-block;
   width: 20px;
   height: 20px;
   stroke: currentColor;
-  stroke-width: 1.75;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
@@ -143,7 +144,7 @@ a {
 /* Containers */
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
@@ -170,20 +171,20 @@ a {
 .brand-monogram {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .brand-crest {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1.5px solid var(--color-olive-primary);
+  border: 1.8px solid var(--color-olive-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-serif);
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: var(--color-olive-primary);
   background: var(--color-cream);
   letter-spacing: 1px;
@@ -195,9 +196,10 @@ a {
 }
 
 .brand-names .title {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  color: var(--color-olive-deep);
 }
 
 .brand-names .subtitle {
@@ -280,13 +282,13 @@ a {
   position: relative;
   padding: 4.5rem 0 3.5rem;
   text-align: center;
-  background: radial-gradient(circle at 50% 10%, var(--color-olive-light) 0%, var(--color-pearl) 70%);
+  background: radial-gradient(circle at 50% 10%, var(--color-olive-light) 0%, var(--color-pearl) 75%);
   border-bottom: 1px solid var(--color-olive-border);
   overflow: hidden;
 }
 
 .hero-ornament {
-  width: 70px;
+  width: 80px;
   height: 2px;
   background: var(--color-gold-accent);
   margin: 0 auto 1.5rem;
@@ -296,27 +298,27 @@ a {
 .hero-ornament::before, .hero-ornament::after {
   content: '✦';
   position: absolute;
-  top: -10px;
-  font-size: 0.9rem;
+  top: -11px;
+  font-size: 0.95rem;
   color: var(--color-gold-accent);
 }
 
-.hero-ornament::before { left: -14px; }
-.hero-ornament::after { right: -14px; }
+.hero-ornament::before { left: -16px; }
+.hero-ornament::after { right: -16px; }
 
 .hero-title {
-  font-size: 3.2rem;
+  font-size: 3.4rem;
   font-weight: 700;
   color: var(--color-olive-deep);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
   letter-spacing: -0.5px;
 }
 
 .hero-subtitle {
-  font-size: 1.25rem;
+  font-size: 1.22rem;
   font-weight: 400;
-  max-width: 620px;
-  margin: 0 auto 2rem;
+  max-width: 660px;
+  margin: 0 auto 2.2rem;
   line-height: 1.6;
 }
 
@@ -332,12 +334,12 @@ a {
 .meta-pill {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.25rem;
+  gap: 0.55rem;
+  padding: 0.65rem 1.35rem;
   background: var(--color-white);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-full);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 500;
   color: var(--color-olive-deep);
   box-shadow: var(--shadow-sm);
@@ -348,7 +350,7 @@ a {
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
-  max-width: 480px;
+  max-width: 500px;
   margin: 0 auto;
 }
 
@@ -356,14 +358,14 @@ a {
   background: var(--color-white);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
-  min-width: 80px;
+  padding: 0.85rem 1rem;
+  min-width: 85px;
   box-shadow: var(--shadow-sm);
 }
 
 .countdown-number {
   font-family: var(--font-serif);
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--color-olive-primary);
   display: block;
@@ -372,11 +374,11 @@ a {
 .countdown-label {
   font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   color: var(--color-olive-muted);
 }
 
-/* Seção de Resumo & Destaques de Cotas */
+/* Resumo & Métricas */
 .summary-strip {
   padding: 2.5rem 0;
   background: var(--color-white);
@@ -393,7 +395,7 @@ a {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  padding: 1.25rem 1.5rem;
+  padding: 1.35rem 1.6rem;
   background: var(--color-cream);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-md);
@@ -407,8 +409,8 @@ a {
 }
 
 .summary-card-icon {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: var(--color-white);
   color: var(--color-olive-primary);
@@ -426,12 +428,12 @@ a {
 }
 
 .summary-card-info .summary-card-val {
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--color-olive-deep);
 }
 
-/* Catálogo de Presentes */
+/* Seção do Catálogo com Filtros Avançados */
 .catalog-section {
   padding: 4rem 0 5rem;
   flex: 1;
@@ -446,39 +448,45 @@ a {
   display: inline-block;
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-olive-primary);
   background: var(--color-olive-light);
-  padding: 0.35rem 0.9rem;
+  padding: 0.35rem 0.95rem;
   border-radius: var(--radius-full);
   margin-bottom: 0.75rem;
 }
 
 .section-title {
-  font-size: 2.4rem;
+  font-size: 2.5rem;
   margin-bottom: 0.75rem;
 }
 
 .section-desc {
-  max-width: 580px;
+  max-width: 620px;
   margin: 0 auto;
-  font-size: 1.05rem;
+  font-size: 1.08rem;
 }
 
-/* Barra de Filtro e Busca */
-.filter-toolbar {
+/* Painel de Filtros e Busca Completo */
+.advanced-filters-panel {
+  background: var(--color-white);
+  border: 1px solid var(--color-olive-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.filter-row-top {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
-  background: var(--color-white);
-  padding: 1rem 1.5rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-olive-border);
-  box-shadow: var(--shadow-sm);
+  gap: 1rem;
 }
 
 .category-chips {
@@ -488,10 +496,10 @@ a {
 }
 
 .chip-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.1rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--color-olive-border);
-  background: transparent;
+  background: var(--color-cream);
   color: var(--color-olive-deep);
   font-size: 0.88rem;
   font-weight: 500;
@@ -505,30 +513,69 @@ a {
   border-color: var(--color-olive-primary);
 }
 
-.search-box {
+.search-box-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   background: var(--color-cream);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-full);
-  padding: 0.45rem 1rem;
-  min-width: 240px;
+  padding: 0.5rem 1.1rem;
+  min-width: 280px;
 }
 
-.search-box input {
+.search-box-wrapper input {
   border: none;
   background: transparent;
   outline: none;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: var(--color-olive-deep);
   width: 100%;
+}
+
+.filter-row-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-olive-border);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.filter-group-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-olive-muted);
+}
+
+.filter-select {
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-olive-border);
+  background: var(--color-cream);
+  color: var(--color-olive-deep);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.filter-select:focus {
+  border-color: var(--color-olive-primary);
 }
 
 /* Grid de Presentes */
 .gifts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: 2rem;
 }
 
@@ -553,7 +600,7 @@ a {
 .gift-card-media {
   position: relative;
   width: 100%;
-  height: 210px;
+  height: 220px;
   background-color: var(--color-cream);
   display: flex;
   align-items: center;
@@ -582,6 +629,7 @@ a {
   opacity: 0.85;
 }
 
+/* Badges e Destaque */
 .gift-badge {
   position: absolute;
   top: 12px;
@@ -593,6 +641,23 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   backdrop-filter: blur(8px);
+}
+
+.badge-featured {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(135deg, var(--color-gold-accent), #c28848);
+  color: #ffffff;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  box-shadow: 0 2px 8px rgba(221, 161, 94, 0.4);
 }
 
 .badge-available {
@@ -614,7 +679,7 @@ a {
 }
 
 .gift-card-body {
-  padding: 1.35rem;
+  padding: 1.4rem;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -623,7 +688,7 @@ a {
 .gift-category {
   font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   color: var(--color-gold-accent);
   font-weight: 600;
   margin-bottom: 0.4rem;
@@ -633,6 +698,7 @@ a {
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
   color: var(--color-olive-deep);
+  line-height: 1.35;
 }
 
 .gift-desc {
@@ -659,6 +725,29 @@ a {
 .price-sub {
   font-size: 0.8rem;
   color: var(--color-olive-muted);
+}
+
+.card-actions-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.btn-store-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--color-olive-muted);
+  text-decoration: underline;
+  padding: 0.2rem;
+  transition: var(--transition-smooth);
+}
+
+.btn-store-link:hover {
+  color: var(--color-olive-primary);
 }
 
 /* Progresso de Cotas */
@@ -867,7 +956,7 @@ a {
 }
 
 .rsvp-box {
-  max-width: 600px;
+  max-width: 620px;
   margin: 0 auto;
   background: var(--color-white);
   border: 1px solid var(--color-olive-border);
@@ -905,7 +994,7 @@ a {
   border: 1px solid var(--color-olive-border);
   box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
@@ -914,7 +1003,7 @@ a {
 }
 
 .modal-content.lg {
-  max-width: 860px;
+  max-width: 900px;
 }
 
 .modal-backdrop.active .modal-content {
@@ -984,6 +1073,44 @@ a {
   margin-top: 0.75rem;
 }
 
+/* Caixa do Extrator Inteligente de Links */
+.smart-extractor-box {
+  background: var(--color-cream);
+  border: 1px solid var(--color-olive-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.extractor-input-group {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.extractor-input-group input {
+  flex: 1;
+}
+
+.preview-image-box {
+  width: 100%;
+  height: 160px;
+  border-radius: var(--radius-sm);
+  background: var(--color-cream);
+  border: 1px dashed var(--color-olive-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.preview-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Painel dos Noivos */
 .admin-badge {
   font-size: 0.75rem;
@@ -993,6 +1120,7 @@ a {
   background: var(--color-olive-light);
   color: var(--color-olive-primary);
   border: 1px solid var(--color-olive-border);
+  font-family: monospace;
 }
 
 .admin-tabs {
@@ -1055,9 +1183,9 @@ a {
 
 .footer-quote {
   font-style: italic;
-  max-width: 450px;
+  max-width: 480px;
   margin: 0 auto 1.5rem;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
 }
 
 .footer-bottom {
@@ -1067,7 +1195,7 @@ a {
   gap: 0.75rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--color-olive-border);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: var(--color-olive-muted);
 }
 
@@ -1075,7 +1203,7 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.25rem 0.75rem;
+  padding: 0.3rem 0.85rem;
   background: var(--color-cream);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-full);
@@ -1107,7 +1235,7 @@ a {
   align-items: center;
   gap: 0.75rem;
   animation: slideInRight 0.3s ease;
-  max-width: 360px;
+  max-width: 380px;
 }
 
 .toast.success {
@@ -1116,6 +1244,10 @@ a {
 
 .toast.error {
   border-left: 4px solid var(--color-error);
+}
+
+.toast.info {
+  border-left: 4px solid var(--color-gold-accent);
 }
 
 @keyframes slideInRight {
@@ -1135,7 +1267,7 @@ a {
     grid-template-columns: 1fr;
   }
   .hero-title {
-    font-size: 2.5rem;
+    font-size: 2.6rem;
   }
 }
 
@@ -1175,16 +1307,24 @@ a {
     font-size: 1.4rem;
   }
 
-  .filter-toolbar {
+  .advanced-filters-panel {
+    padding: 1rem;
+  }
+
+  .filter-row-top, .filter-row-bottom {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .search-box {
+  .search-box-wrapper {
     width: 100%;
   }
 
+  .extractor-input-group {
+    flex-direction: column;
+  }
+
   .hero-title {
-    font-size: 2.1rem;
+    font-size: 2.2rem;
   }
 }

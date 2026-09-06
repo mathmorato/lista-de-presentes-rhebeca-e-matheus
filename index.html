@@ -63,7 +63,7 @@
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
-            Noivos
+            Painel dos Noivos
           </button>
 
           <!-- Menu Mobile Toggle -->
@@ -153,7 +153,7 @@
             </svg>
           </div>
           <div class="summary-card-info">
-            <h4>Presentes Reservados</h4>
+            <h4>Presentes Já Garantidos</h4>
             <div class="summary-card-val" id="statReservedGifts">0</div>
           </div>
         </div>
@@ -165,7 +165,7 @@
             </svg>
           </div>
           <div class="summary-card-info">
-            <h4>Arrecadado para a Lua de Mel</h4>
+            <h4>Arrecadado em Cotas</h4>
             <div class="summary-card-val" id="statTotalRaised">R$ 0,00</div>
           </div>
         </div>
@@ -173,33 +173,74 @@
     </div>
   </section>
 
-  <!-- ==================== CATÁLOGO DE PRESENTES ==================== -->
+  <!-- ==================== VITRINE PÚBLICA PARA CONVIDADOS ==================== -->
   <section id="catalogo" class="catalog-section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">Lista de Presentes</span>
-        <h2 class="section-title">Escolha Como Nos Presentear</h2>
+        <span class="section-tag">Vitrine Pública</span>
+        <h2 class="section-title">Nossa Lista de Presentes</h2>
         <p class="section-desc">
-          Você pode reservar itens físicos para montar nosso novo lar ou nos presentear com cotas em nossa lua de mel via Pix.
+          Você pode nos abençoar reservando itens para nosso lar ou presenteando com cotas da nossa lua de mel via Pix.
         </p>
       </div>
 
-      <!-- Barra de Filtros e Busca -->
-      <div class="filter-toolbar">
-        <div class="category-chips">
-          <button class="chip-btn active" data-category="all">Todos os Itens</button>
-          <button class="chip-btn" data-category="cozinha">Cozinha</button>
-          <button class="chip-btn" data-category="quarto">Quarto & Banho</button>
-          <button class="chip-btn" data-category="eletro">Eletros</button>
-          <button class="chip-btn" data-category="cotas">Cotas Lua de Mel</button>
+      <!-- Painel Completo de Filtros, Busca e Ordenação -->
+      <div class="advanced-filters-panel">
+        <div class="filter-row-top">
+          <!-- Filtro de Categorias -->
+          <div class="category-chips">
+            <button class="chip-btn active" data-category="all">Todos os Itens</button>
+            <button class="chip-btn" data-category="cozinha">Cozinha</button>
+            <button class="chip-btn" data-category="quarto">Quarto</button>
+            <button class="chip-btn" data-category="sala">Sala & Decoração</button>
+            <button class="chip-btn" data-category="eletro">Eletrodomésticos</button>
+            <button class="chip-btn" data-category="cotas">Cotas Lua de Mel</button>
+          </div>
+
+          <!-- Busca Textual Dinâmica -->
+          <div class="search-box-wrapper">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="giftSearchInput" placeholder="Buscar presentes por nome..." autocomplete="off">
+          </div>
         </div>
 
-        <div class="search-box">
-          <svg class="icon-line sm" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="giftSearchInput" placeholder="Buscar presentes..." autocomplete="off">
+        <div class="filter-row-bottom">
+          <!-- Filtro por Faixa de Preço -->
+          <div class="filter-group">
+            <label class="filter-group-label" for="filterPriceRange">Faixa de Preço:</label>
+            <select id="filterPriceRange" class="filter-select">
+              <option value="all">Todas as Faixas</option>
+              <option value="under100">Até R$ 100</option>
+              <option value="100to300">R$ 100 a R$ 300</option>
+              <option value="300to600">R$ 300 a R$ 600</option>
+              <option value="above600">Acima de R$ 600</option>
+            </select>
+          </div>
+
+          <!-- Filtro por Disponibilidade -->
+          <div class="filter-group">
+            <label class="filter-group-label" for="filterAvailability">Disponibilidade:</label>
+            <select id="filterAvailability" class="filter-select">
+              <option value="all">Todos os Itens</option>
+              <option value="available">Apenas Disponíveis</option>
+              <option value="reserved">Já Presenteados / Reservados</option>
+            </select>
+          </div>
+
+          <!-- Ordenação -->
+          <div class="filter-group">
+            <label class="filter-group-label" for="sortGifts">Ordenar Por:</label>
+            <select id="sortGifts" class="filter-select">
+              <option value="featured">Mais Desejados / Destaques</option>
+              <option value="price_asc">Menor Preço → Maior Preço</option>
+              <option value="price_desc">Maior Preço → Menor Preço</option>
+              <option value="name_asc">Ordem Alfabética (A-Z)</option>
+              <option value="name_desc">Ordem Alfabética (Z-A)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -335,11 +376,11 @@
         <div class="modal-body">
           <input type="hidden" id="reserveGiftId">
           <p style="margin-bottom: 1.25rem;">
-            Você está reservando este presente para os noivos. Ao reservar, o item não poderá ser escolhido por outro convidado.
+            Você está reservando este presente para os noivos. Ao confirmar, o item será imediatamente marcado como reservado para evitar presentes repetidos.
           </p>
 
           <div style="background: var(--color-cream); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 500;">Valor de Referência:</span>
+            <span style="font-weight: 500;">Valor Estimado:</span>
             <span id="reserveGiftPrice" style="font-weight: 700; color: var(--color-olive-primary); font-size: 1.1rem;">R$ 0,00</span>
           </div>
 
@@ -349,13 +390,13 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="reserveGuestPhone">Telefone / WhatsApp</label>
-            <input type="tel" id="reserveGuestPhone" class="form-input" placeholder="(00) 00000-0000">
+            <label class="form-label" for="reserveGuestPhone">Telefone / WhatsApp / E-mail</label>
+            <input type="text" id="reserveGuestPhone" class="form-input" placeholder="(00) 00000-0000 ou seu@email.com">
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="reserveGuestMessage">Mensagem carinhosa de felicitações</label>
-            <textarea id="reserveGuestMessage" class="form-textarea" rows="3" placeholder="Escreva uma mensagem para os noivos..."></textarea>
+            <label class="form-label" for="reserveGuestMessage">Mensagem de carinho para os noivos</label>
+            <textarea id="reserveGuestMessage" class="form-textarea" rows="3" placeholder="Escreva uma mensagem carinhosa para Rhebeca & Matheus..."></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -370,7 +411,7 @@
   <div id="cotaModal" class="modal-backdrop">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="cotaGiftTitle">Contribuir com Cota</h3>
+        <h3 id="cotaGiftTitle">Presentear com Cota Pix</h3>
         <button class="modal-close" aria-label="Fechar modal">
           <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
@@ -418,13 +459,13 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="cotaGuestPhone">Telefone / WhatsApp</label>
-            <input type="tel" id="cotaGuestPhone" class="form-input" placeholder="(00) 00000-0000">
+            <label class="form-label" for="cotaGuestPhone">Telefone / WhatsApp / E-mail</label>
+            <input type="text" id="cotaGuestPhone" class="form-input" placeholder="(00) 00000-0000">
           </div>
 
           <div class="form-group">
             <label class="form-label" for="cotaGuestMessage">Mensagem de felicitações</label>
-            <textarea id="cotaGuestMessage" class="form-textarea" rows="2" placeholder="Deixe seus votos para os noivos..."></textarea>
+            <textarea id="cotaGuestMessage" class="form-textarea" rows="2" placeholder="Deixe seus votos carinhosos para os noivos..."></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -441,7 +482,6 @@
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <h3>Painel de Gestão dos Noivos</h3>
-          <!-- Versão visível no painel administrativo -->
           <span class="admin-badge">Versão: v.1.0.0</span>
         </div>
         <button class="modal-close" aria-label="Fechar painel">
@@ -456,11 +496,37 @@
           <button class="admin-tab-btn" data-tab="settings">Configurações & Nuvem</button>
         </div>
 
-        <!-- ABA 1: GERENCIAR PRESENTES -->
+        <!-- ABA 1: GERENCIAR PRESENTES COM EXTRATOR DE LINKS -->
         <div id="adminTabGifts" class="admin-tab-content">
-          <!-- Formulário Adicionar/Editar -->
+          
+          <!-- Módulo A: Extrator Inteligente por Link -->
+          <div class="smart-extractor-box">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <svg class="icon-line" style="color: var(--color-gold-accent);" viewBox="0 0 24 24">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              <h4 style="font-size: 1.15rem; color: var(--color-olive-deep);">Cadastrar Presente por Link (Extrator Inteligente)</h4>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--color-olive-muted);">
+              Cole a URL do produto de qualquer loja virtual (Amazon, Mercado Livre, Magazine Luiza, etc.) para extrair título, foto e preço automaticamente:
+            </p>
+            <div class="extractor-input-group">
+              <input type="url" id="extractUrlInput" class="form-input" placeholder="https://www.amazon.com.br/dp/... ou link de qualquer loja">
+              <button type="button" id="btnExtractUrl" class="btn btn-gold" style="white-space: nowrap;">
+                <svg class="icon-line sm" viewBox="0 0 24 24">
+                  <polyline points="16 16 12 12 8 16"></polyline>
+                  <line x1="12" y1="12" x2="12" y2="21"></line>
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                </svg>
+                Extrair Dados por Link
+              </button>
+            </div>
+          </div>
+
+          <!-- Formulário Pré-Salvamento e Edição de Item -->
           <div style="background: var(--color-cream); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 2rem; border: 1px solid var(--color-olive-border);">
-            <h4 id="adminGiftFormTitle" style="margin-bottom: 1rem; font-size: 1.15rem;">Novo Presente ou Cota</h4>
+            <h4 id="adminGiftFormTitle" style="margin-bottom: 1rem; font-size: 1.15rem;">Cadastrar Novo Presente ou Cota</h4>
             <form id="adminGiftForm">
               <input type="hidden" id="adminGiftId">
 
@@ -473,8 +539,9 @@
                   <label class="form-label" for="adminGiftCategory">Categoria</label>
                   <select id="adminGiftCategory" class="form-select">
                     <option value="cozinha">Cozinha</option>
-                    <option value="quarto">Quarto & Banho</option>
-                    <option value="eletro">Eletros</option>
+                    <option value="quarto">Quarto</option>
+                    <option value="sala">Sala & Decoração</option>
+                    <option value="eletro">Eletrodomésticos</option>
                     <option value="cotas">Cotas Lua de Mel</option>
                   </select>
                 </div>
@@ -486,20 +553,41 @@
                   <input type="number" step="0.01" id="adminGiftPrice" class="form-input" placeholder="0.00" required>
                 </div>
                 <div class="form-group">
-                  <label class="form-label" for="adminGiftImage">URL da Imagem</label>
+                  <label class="form-label" for="adminGiftProductUrl">Link da Loja Original (URL)</label>
+                  <input type="url" id="adminGiftProductUrl" class="form-input" placeholder="https://loja.com/produto">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="adminGiftImage">URL da Foto do Produto</label>
                   <input type="url" id="adminGiftImage" class="form-input" placeholder="https://exemplo.com/foto.jpg">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Prévia da Imagem</label>
+                  <div class="preview-image-box" id="adminImagePreviewBox">
+                    <span style="font-size: 0.8rem; color: var(--color-olive-muted);">Sem imagem</span>
+                  </div>
                 </div>
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="adminGiftDesc">Descrição Curta</label>
-                <input type="text" id="adminGiftDesc" class="form-input" placeholder="Detalhes ou preferência de modelo...">
+                <input type="text" id="adminGiftDesc" class="form-input" placeholder="Detalhes, cor ou preferência de modelo...">
               </div>
 
-              <div class="form-group" style="margin-top: 0.5rem;">
+              <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 1rem 0;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="adminGiftFeatured">
+                  <span style="font-weight: 600; color: var(--color-gold-soft); display: flex; align-items: center; gap: 0.3rem;">
+                    <svg class="icon-line sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    Destacar como "Mais Desejado dos Noivos" ⭐
+                  </span>
+                </label>
+
                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                   <input type="checkbox" id="adminGiftIsCota">
-                  <span style="font-weight: 600;">Este item será arrecadado em Cotas (Lua de Mel / Presente Coletivo)</span>
+                  <span style="font-weight: 600;">Arrecadar em Cotas (Lua de Mel / Presente Coletivo)</span>
                 </label>
               </div>
 
@@ -517,26 +605,27 @@
               </div>
 
               <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                <button type="button" id="adminGiftCancelBtn" class="btn btn-secondary" style="display: none;" onclick="AdminController.resetGiftForm()">Cancelar Edição</button>
+                <button type="button" id="adminGiftCancelBtn" class="btn btn-secondary" style="display: none;" onclick="AdminController.resetGiftForm()">Cancelar</button>
                 <button type="submit" id="adminGiftSubmitBtn" class="btn btn-primary">Adicionar à Lista</button>
               </div>
             </form>
           </div>
 
-          <!-- Tabela de Itens Existentes -->
+          <!-- Tabela de Itens Cadastrados -->
           <div style="overflow-x: auto;">
             <table class="admin-table">
               <thead>
                 <tr>
-                  <th>Item</th>
+                  <th>Item & Destaque</th>
                   <th>Categoria</th>
                   <th>Valor</th>
                   <th>Status</th>
+                  <th>Link Loja</th>
                   <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="adminGiftsTableBody">
-                <!-- Preenchido via JS -->
+                <!-- Preenchido dinamicamente via JS -->
               </tbody>
             </table>
           </div>
@@ -550,7 +639,7 @@
                 <tr>
                   <th>Convidado</th>
                   <th>Contato</th>
-                  <th>Convidados</th>
+                  <th>Acompanhantes</th>
                   <th>Status</th>
                   <th>Observações</th>
                 </tr>
@@ -588,19 +677,24 @@
               </div>
             </div>
 
+            <div class="form-group">
+              <label class="form-label" for="settingWelcomeMsg">Mensagem de Boas-Vindas da Capa</label>
+              <textarea id="settingWelcomeMsg" class="form-textarea" rows="2"></textarea>
+            </div>
+
             <h4 style="margin: 1.5rem 0 1rem;">Sincronização em Nuvem (Supabase)</h4>
             <p style="font-size: 0.85rem; color: var(--color-olive-muted); margin-bottom: 1rem;">
-              A aplicação opera offline com IndexedDB. Para sincronizar em tempo real entre múltiplos convidados e dispositivos, insira suas credenciais do projeto Supabase:
+              Persistência compartilhada em nuvem garantindo atualização instantânea para noivos e convidados:
             </p>
 
             <div class="form-group">
               <label class="form-label" for="settingSupabaseUrl">Supabase Project URL</label>
-              <input type="url" id="settingSupabaseUrl" class="form-input" placeholder="https://xyzcompany.supabase.co">
+              <input type="url" id="settingSupabaseUrl" class="form-input" placeholder="https://ttggcvricfkoqlorbmnv.supabase.co">
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="settingSupabaseKey">Supabase Anon Public Key</label>
-              <input type="password" id="settingSupabaseKey" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6...">
+              <label class="form-label" for="settingSupabaseKey">Supabase Publishable / Anon Key</label>
+              <input type="text" id="settingSupabaseKey" class="form-input" placeholder="sb_publishable_...">
             </div>
 
             <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Salvar Configurações</button>
@@ -613,7 +707,7 @@
   <!-- ==================== CONTAINER DE TOASTS ==================== -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- ==================== RODAPÉ OBRIGATÓRIO COM VERSÃO ==================== -->
+  <!-- ==================== RODAPÉ OFICIAL COM VERSÃO ==================== -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-monogram">Rhebeca & Matheus</div>
@@ -621,16 +715,17 @@
       
       <div class="footer-bottom">
         <div>Feito com carinho para celebrar nosso casamento</div>
-        <!-- Versão visível obrigatória v.X.Y.Z -->
+        <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <strong>v.1.0.0</strong>
+          <span id="app-footer-version">v.1.0.0</span>
         </div>
       </div>
     </div>
   </footer>
 
   <!-- Scripts da Aplicação -->
+  <script src="js/extractor.js"></script>
   <script src="js/db.js"></script>
   <script src="js/app.js"></script>
 </body>
