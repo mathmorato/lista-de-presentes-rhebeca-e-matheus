@@ -545,13 +545,13 @@
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.2) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content lg">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <h3>Painel de Gestão dos Noivos</h3>
-          <span class="admin-badge">Versão: v.1.0.1</span>
+          <span class="admin-badge">Versão: v.1.0.2</span>
         </div>
         <button class="modal-close" aria-label="Fechar painel">
           <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -565,10 +565,10 @@
           <button class="admin-tab-btn" data-tab="settings">Configurações & Nuvem</button>
         </div>
 
-        <!-- ABA 1: GERENCIAR PRESENTES COM EXTRATOR DE LINKS -->
+        <!-- ABA 1: GERENCIAR PRESENTES COM EXTRATOR INTELIGENTE -->
         <div id="adminTabGifts" class="admin-tab-content">
           
-          <!-- Módulo A: Extrator Inteligente por Link -->
+          <!-- Módulo A: Extrator Inteligente por Link Resiliente -->
           <div class="smart-extractor-box">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
               <svg class="icon-line" style="color: var(--color-gold-accent);" viewBox="0 0 24 24">
@@ -578,10 +578,10 @@
               <h4 style="font-size: 1.15rem; color: var(--color-olive-deep);">Cadastrar Presente por Link (Extrator Inteligente)</h4>
             </div>
             <p style="font-size: 0.85rem; color: var(--color-olive-muted);">
-              Cole a URL do produto de qualquer loja virtual (Amazon, Mercado Livre, Magazine Luiza, etc.) para extrair título, foto e preço automaticamente:
+              Cole o link de qualquer loja (Amazon, Mercado Livre, Magalu, Shopee, Tok&Stok, etc.) para identificar nome, foto e categoria automaticamente:
             </p>
             <div class="extractor-input-group">
-              <input type="url" id="extractUrlInput" class="form-input" placeholder="https://www.amazon.com.br/dp/... ou link de qualquer loja">
+              <input type="url" id="extractUrlInput" class="form-input" placeholder="Cole o link do produto de qualquer loja virtual aqui...">
               <button type="button" id="btnExtractUrl" class="btn btn-gold" style="white-space: nowrap;">
                 <svg class="icon-line sm" viewBox="0 0 24 24">
                   <polyline points="16 16 12 12 8 16"></polyline>
@@ -618,7 +618,7 @@
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                  <label class="form-label" for="adminGiftPrice">Valor Total Estimado (R$)</label>
+                  <label class="form-label" for="adminGiftPrice">Valor Total Estimado (R$) *</label>
                   <input type="number" step="0.01" id="adminGiftPrice" class="form-input" placeholder="0.00" required>
                 </div>
                 <div class="form-group">
@@ -798,7 +798,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.0.1</span>
+          <span id="app-footer-version">v.1.0.2</span>
         </div>
       </div>
     </div>

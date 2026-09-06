@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.1
+   Versão: v.1.0.2
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.0.1] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.0.2] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -214,7 +214,6 @@ const CatalogController = {
     const grid = document.getElementById('giftsGrid');
     if (!grid) return;
 
-    // 1. Filtragem
     let filtered = this.allGifts.filter(gift => {
       const matchCat = this.currentCategory === 'all' || gift.category === this.currentCategory;
       const matchSearch = !this.searchQuery || 
@@ -244,7 +243,6 @@ const CatalogController = {
       return matchCat && matchSearch && matchPrice && matchAvail;
     });
 
-    // 2. Ordenação
     filtered.sort((a, b) => {
       const priceA = a.isCota ? (a.quotaValue || a.price) : a.price;
       const priceB = b.isCota ? (b.quotaValue || b.price) : b.price;
@@ -265,7 +263,6 @@ const CatalogController = {
       return 0;
     });
 
-    // 3. Renderização
     if (filtered.length === 0) {
       grid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 4.5rem 1rem;">
@@ -282,7 +279,6 @@ const CatalogController = {
 
     grid.innerHTML = filtered.map(gift => this.createCardHTML(gift)).join('');
 
-    // Bind dos botões de ação nos cards
     grid.querySelectorAll('.btn-presentear').forEach(btn => {
       btn.addEventListener('click', () => {
         const giftId = btn.getAttribute('data-id');
@@ -477,9 +473,8 @@ const CatalogController = {
 
 /* ==========================================================================
    SUBMISSÃO DE RESERVAS E COTAS PIX
-   ========================================================================== */
+   ========================================================================= */
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Reserva de Presente Físico
   const reserveForm = document.getElementById('reserveGiftForm');
   if (reserveForm) {
     reserveForm.addEventListener('submit', async (e) => {
@@ -506,7 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 2. Pagamento de Cota Pix
   const cotaForm = document.getElementById('cotaForm');
   if (cotaForm) {
     cotaForm.addEventListener('submit', async (e) => {
@@ -537,7 +531,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. Botão Copiar Chave Pix
   const btnCopyPix = document.getElementById('btnCopyPix');
   if (btnCopyPix) {
     btnCopyPix.addEventListener('click', async () => {
@@ -651,7 +644,7 @@ const RsvpController = {
 };
 
 /* ==========================================================================
-   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.1) COM EXTRATOR DE LINKS
+   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.2) COM EXTRATOR APRIMORADO
    ========================================================================== */
 const AdminController = {
   currentTab: 'gifts',
@@ -676,6 +669,7 @@ const AdminController = {
       });
     });
 
+    // 1. Extrator Inteligente Resiliente com Heurística
     const btnExtract = document.getElementById('btnExtractUrl');
     const urlInput = document.getElementById('extractUrlInput');
     if (btnExtract && urlInput) {
@@ -692,44 +686,34 @@ const AdminController = {
           <svg class="icon-line sm" style="animation: spin 1s linear infinite;" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="16"></circle>
           </svg>
-          Extraindo...
+          Extraindo dados...
         `;
 
         try {
-          showToast('Analisando link e extraindo dados do produto...', 'info');
+          showToast('Analisando produto da loja...', 'info');
           const data = await window.LinkExtractor.extractFromUrl(url);
 
+          // Preencher formulário pré-salvamento
           document.getElementById('adminGiftId').value = '';
           document.getElementById('adminGiftTitle').value = data.title;
           document.getElementById('adminGiftPrice').value = data.price > 0 ? data.price : '';
           document.getElementById('adminGiftImage').value = data.imageUrl;
           document.getElementById('adminGiftProductUrl').value = data.productUrl;
           document.getElementById('adminGiftDesc').value = data.description;
-
-          const lowerTitle = (data.title + ' ' + url).toLowerCase();
-          const categorySelect = document.getElementById('adminGiftCategory');
-          if (lowerTitle.includes('jogo de cama') || lowerTitle.includes('lençol') || lowerTitle.includes('toalha')) {
-            categorySelect.value = 'quarto';
-          } else if (lowerTitle.includes('panela') || lowerTitle.includes('prato') || lowerTitle.includes('faqueiro') || lowerTitle.includes('copo') || lowerTitle.includes('taça')) {
-            categorySelect.value = 'cozinha';
-          } else if (lowerTitle.includes('fritadeira') || lowerTitle.includes('aspirador') || lowerTitle.includes('cafeteira') || lowerTitle.includes('micro') || lowerTitle.includes('ar')) {
-            categorySelect.value = 'eletro';
-          } else if (lowerTitle.includes('lua de mel') || lowerTitle.includes('viagem') || lowerTitle.includes('voo') || lowerTitle.includes('passeio')) {
-            categorySelect.value = 'cotas';
-          } else {
-            categorySelect.value = 'sala';
-          }
+          document.getElementById('adminGiftCategory').value = data.category || 'cozinha';
 
           this.updateImagePreview(data.imageUrl);
 
-          document.getElementById('adminGiftFormTitle').innerText = 'Revisar & Salvar Presente Extraído';
+          document.getElementById('adminGiftFormTitle').innerText = `Revisar & Salvar Presente (${data.sourceStore})`;
           document.getElementById('adminGiftSubmitBtn').innerText = 'Salvar Item na Lista';
           document.getElementById('adminGiftForm').scrollIntoView({ behavior: 'smooth' });
 
-          if (!data.title || data.price === 0) {
-            showToast('Dados básicos extraídos. Por favor, confira o título e o valor antes de salvar.', 'info');
+          if (!data.price || data.price === 0) {
+            showToast(`Produto identificado da ${data.sourceStore}! Por favor, informe o valor estimado (R$).`, 'success');
+            const priceInput = document.getElementById('adminGiftPrice');
+            if (priceInput) priceInput.focus();
           } else {
-            showToast('Produto extraído com sucesso! Revise e salve.', 'success');
+            showToast(`Dados extraídos da ${data.sourceStore}! Revise e confirme.`, 'success');
           }
         } catch (err) {
           showToast(err.message || 'Erro ao extrair link.', 'error');
@@ -776,9 +760,9 @@ const AdminController = {
     const previewBox = document.getElementById('adminImagePreviewBox');
     if (!previewBox) return;
     if (url) {
-      previewBox.innerHTML = `<img src="${escapeHTML(url)}" alt="Preview" onerror="this.parentElement.innerHTML='<span style=\\'font-size: 0.8rem; color: var(--color-olive-muted);\\'>Falha ao carregar imagem</span>';">`;
+      previewBox.innerHTML = `<img src="${escapeHTML(url)}" alt="Preview" onerror="this.parentElement.innerHTML='<span style=\\'font-size: 0.8rem; color: var(--color-olive-muted);\\'>Falha ao carregar</span>';">`;
     } else {
-      previewBox.innerHTML = `<span style="font-size: 0.8rem; color: var(--color-olive-muted);">Nenhuma imagem selecionada</span>`;
+      previewBox.innerHTML = `<span style="font-size: 0.8rem; color: var(--color-olive-muted);">Nenhuma imagem</span>`;
     }
   },
 
@@ -1004,7 +988,6 @@ const AdminController = {
 
     await window.weddingDB.saveSettings(newSettings);
     
-    // Atualizar dados na página
     const heroSubtitle = document.querySelector('.hero-subtitle');
     if (heroSubtitle && newSettings.welcomeMessage) {
       heroSubtitle.innerText = newSettings.welcomeMessage;
@@ -1048,7 +1031,7 @@ function showToast(message, type = 'success') {
   } else if (type === 'error') {
     iconSvg = `<svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
   } else {
-    iconSvg = `<svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="8"></line></svg>`;
+    iconSvg = `<svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
   }
 
   toast.innerHTML = `
