@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.0
+   Versão: v.1.0.1
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -33,17 +33,17 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.0.0] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.0.1] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background da nuvem para o IndexedDB
         this.syncFromSupabase().catch(err => {
-          console.warn('[WeddingDB v.1.0.0] Sincronização inicial do Supabase em background falhou (usando IndexedDB local):', err);
+          console.warn('[WeddingDB v.1.0.1] Sincronização em background inicial (IndexedDB ativo):', err);
         });
       } catch (err) {
-        console.warn('[WeddingDB v.1.0.0] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.0.1] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -242,10 +242,8 @@ class WeddingDB {
   }
 
   async saveGift(gift) {
-    // 1. Grava no IndexedDB imediatamente
     await this._saveGiftLocalOnly(gift);
 
-    // 2. Sincroniza com Supabase
     if (this.supabaseClient) {
       try {
         const payload = this._mapToSupabaseGift(gift);
@@ -260,10 +258,8 @@ class WeddingDB {
   }
 
   async deleteGift(id) {
-    // 1. Exclui do IndexedDB local
     await this._deleteGiftLocalOnly(id);
 
-    // 2. Cascata no Supabase
     if (this.supabaseClient) {
       try {
         await this.supabaseClient.from('gifts').delete().eq('id', id);
@@ -470,17 +466,19 @@ class WeddingDB {
       groomName: 'Matheus',
       brideName: 'Rhebeca',
       coupleTitle: 'Rhebeca & Matheus',
-      welcomeMessage: 'Com a bênção de Deus e a alegria de compartilhar nossa história com as pessoas mais especiais de nossas vidas.',
+      welcomeMessage: '“Assim, eles já não são dois, mas sim uma só carne. Portanto, o que Deus uniu, ninguém separe.” — Mateus 19:6',
+      weddingDate: '2027-01-09T17:00:00',
+      ceremonyPlace: 'Igreja Batista Shalom',
+      ceremonyCity: 'São Luís de Montes Belos - GO',
       pixKey: 'rhebecaematheuscasamento@gmail.com',
       pixName: 'Rhebeca e Matheus',
-      pixCity: 'São Paulo',
-      weddingDate: '2026-11-21T16:30:00',
+      pixCity: 'São Luís de Montes Belos',
       supabaseUrl: 'https://ttggcvricfkoqlorbmnv.supabase.co',
       supabaseKey: 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN'
     };
   }
 
-  // --- DADOS INICIAIS DE EXCESSO ELEGANTE ---
+  // --- DADOS INICIAIS ---
 
   async _seedInitialData() {
     const initialGifts = [

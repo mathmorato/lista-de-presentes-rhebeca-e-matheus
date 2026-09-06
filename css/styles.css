@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.0
+   Versão: v.1.0.1
    Design System: Paleta Branco e Verde Oliva Nobre
    ========================================================================== */
 
@@ -277,7 +277,7 @@ a {
   display: none;
 }
 
-/* Hero Section */
+/* Hero Section com Save The Date Oficial */
 .hero-section {
   position: relative;
   padding: 4.5rem 0 3.5rem;
@@ -306,43 +306,124 @@ a {
 .hero-ornament::before { left: -16px; }
 .hero-ornament::after { right: -16px; }
 
+.save-the-date-script {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 2.2rem;
+  color: var(--color-olive-primary);
+  margin-bottom: 0.2rem;
+}
+
+.hero-tagline {
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-gold-soft);
+  margin-bottom: 0.8rem;
+}
+
 .hero-title {
-  font-size: 3.4rem;
+  font-size: 3.6rem;
   font-weight: 700;
   color: var(--color-olive-deep);
-  margin-bottom: 0.85rem;
+  margin-bottom: 1rem;
   letter-spacing: -0.5px;
 }
 
-.hero-subtitle {
-  font-size: 1.22rem;
+.hero-title .ampersand {
+  font-family: var(--font-serif);
+  font-style: italic;
   font-weight: 400;
-  max-width: 660px;
-  margin: 0 auto 2.2rem;
-  line-height: 1.6;
+  color: var(--color-olive-primary);
 }
 
-.wedding-meta-pills {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2.5rem;
-}
-
-.meta-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.65rem 1.35rem;
+.biblical-verse-box {
+  max-width: 680px;
+  margin: 0 auto 2.5rem;
+  padding: 1.25rem 2rem;
   background: var(--color-white);
   border: 1px solid var(--color-olive-border);
-  border-radius: var(--radius-full);
-  font-size: 0.92rem;
-  font-weight: 500;
-  color: var(--color-olive-deep);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.biblical-verse-text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--color-olive-deep);
+  line-height: 1.6;
+  margin-bottom: 0.4rem;
+}
+
+.biblical-verse-reference {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-gold-accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 3 Badges em Destaque do Save The Date (Data, Hora, Local) */
+.save-the-date-triad {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 820px;
+  margin: 0 auto 2.5rem;
+}
+
+.triad-card {
+  flex: 1;
+  min-width: 220px;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-olive-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth);
+}
+
+.triad-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-olive-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.triad-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-cream);
+  color: var(--color-olive-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--color-olive-border);
+}
+
+.triad-title {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-olive-deep);
+  margin-bottom: 0.2rem;
+}
+
+.triad-sub {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-olive-muted);
 }
 
 .countdown-box {
@@ -376,6 +457,20 @@ a {
   text-transform: uppercase;
   letter-spacing: 1.2px;
   color: var(--color-olive-muted);
+}
+
+/* Modal de Visualização da Arte Oficial */
+.save-the-date-modal-content {
+  max-width: 520px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.save-the-date-img {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-olive-border);
+  box-shadow: var(--shadow-md);
 }
 
 /* Resumo & Métricas */
@@ -1183,7 +1278,7 @@ a {
 
 .footer-quote {
   font-style: italic;
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto 1.5rem;
   font-size: 0.95rem;
 }
@@ -1267,7 +1362,15 @@ a {
     grid-template-columns: 1fr;
   }
   .hero-title {
-    font-size: 2.6rem;
+    font-size: 2.7rem;
+  }
+  .save-the-date-triad {
+    flex-direction: column;
+    align-items: center;
+  }
+  .triad-card {
+    width: 100%;
+    max-width: 380px;
   }
 }
 
@@ -1326,5 +1429,13 @@ a {
 
   .hero-title {
     font-size: 2.2rem;
+  }
+
+  .biblical-verse-box {
+    padding: 1rem;
+  }
+
+  .biblical-verse-text {
+    font-size: 1rem;
   }
 }
