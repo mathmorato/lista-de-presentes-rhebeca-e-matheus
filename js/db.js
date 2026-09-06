@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.1
+   Versão: v.1.0.2
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -33,17 +33,17 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.0.1] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.0.2] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background da nuvem para o IndexedDB
         this.syncFromSupabase().catch(err => {
-          console.warn('[WeddingDB v.1.0.1] Sincronização em background inicial (IndexedDB ativo):', err);
+          console.warn('[WeddingDB v.1.0.2] Sincronização em background inicial (IndexedDB ativo):', err);
         });
       } catch (err) {
-        console.warn('[WeddingDB v.1.0.1] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.0.2] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -647,5 +647,4 @@ class WeddingDB {
   }
 }
 
-// Instância global disponível para o app
 window.weddingDB = new WeddingDB();
