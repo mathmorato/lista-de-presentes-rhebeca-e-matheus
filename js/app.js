@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.0
+   Versão: v.1.0.1
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.0.0] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.0.1] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -77,12 +77,12 @@ const ThemeController = {
 };
 
 /* ==========================================================================
-   CONTAGEM REGRESSIVA DO CASAMENTO
+   CONTAGEM REGRESSIVA DO CASAMENTO (09/01/2027 às 17:00)
    ========================================================================== */
 const CountdownController = {
   async init() {
     const settings = await window.weddingDB.getSettings();
-    const targetDate = new Date(settings.weddingDate || '2026-11-21T16:30:00').getTime();
+    const targetDate = new Date(settings.weddingDate || '2027-01-09T17:00:00').getTime();
 
     const daysEl = document.getElementById('countdownDays');
     const hoursEl = document.getElementById('countdownHours');
@@ -216,15 +216,11 @@ const CatalogController = {
 
     // 1. Filtragem
     let filtered = this.allGifts.filter(gift => {
-      // Categoria
       const matchCat = this.currentCategory === 'all' || gift.category === this.currentCategory;
-      
-      // Busca Textual
       const matchSearch = !this.searchQuery || 
         gift.title.toLowerCase().includes(this.searchQuery) ||
         (gift.description && gift.description.toLowerCase().includes(this.searchQuery));
 
-      // Faixa de Preço
       let matchPrice = true;
       const effectivePrice = gift.isCota ? (gift.quotaValue || gift.price) : gift.price;
       if (this.currentPriceRange === 'under100') {
@@ -237,7 +233,6 @@ const CatalogController = {
         matchPrice = effectivePrice > 600;
       }
 
-      // Disponibilidade
       let matchAvail = true;
       const isReservedOrCompleted = gift.status === 'reserved' || gift.status === 'completed';
       if (this.currentAvailability === 'available') {
@@ -300,7 +295,6 @@ const CatalogController = {
     const isReserved = gift.status === 'reserved';
     const isCompleted = gift.status === 'completed';
 
-    // Badge de status e cota
     let statusBadgeHTML = '';
     if (gift.isCota) {
       statusBadgeHTML = `<span class="gift-badge badge-cota">Cota Lua de Mel</span>`;
@@ -310,7 +304,6 @@ const CatalogController = {
       statusBadgeHTML = `<span class="gift-badge badge-available">Disponível</span>`;
     }
 
-    // Badge Dourada "Mais Desejado"
     const featuredBadgeHTML = gift.isFeatured 
       ? `<span class="badge-featured">
            <svg class="icon-line sm" style="width: 14px; height: 14px;" viewBox="0 0 24 24">
@@ -377,7 +370,6 @@ const CatalogController = {
       }
     }
 
-    // Botão de link para a loja original
     const storeLinkHTML = gift.productUrl 
       ? `<a href="${escapeHTML(gift.productUrl)}" target="_blank" rel="noopener noreferrer" class="btn-store-link">
            <svg class="icon-line sm" style="width: 14px; height: 14px;" viewBox="0 0 24 24">
@@ -468,11 +460,9 @@ const CatalogController = {
     countInput.oninput = updateCalculatedTotal;
     updateCalculatedTotal();
 
-    // Dados Pix
     document.getElementById('pixKeyDisplay').innerText = settings.pixKey;
     document.getElementById('pixHolderDisplay').innerText = settings.pixName;
 
-    // Gerar QR Code Dinâmico
     const qrImg = document.getElementById('pixQrCodeImg');
     const qrPayload = `PIX-${settings.pixKey}-${gift.title}`;
     qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrPayload)}`;
@@ -661,7 +651,7 @@ const RsvpController = {
 };
 
 /* ==========================================================================
-   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.0) COM EXTRATOR DE LINKS
+   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.1) COM EXTRATOR DE LINKS
    ========================================================================== */
 const AdminController = {
   currentTab: 'gifts',
@@ -677,7 +667,6 @@ const AdminController = {
       });
     }
 
-    // Navegação de Abas
     document.querySelectorAll('.admin-tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
@@ -687,7 +676,6 @@ const AdminController = {
       });
     });
 
-    // 1. Extrator Inteligente por Link (Módulo A)
     const btnExtract = document.getElementById('btnExtractUrl');
     const urlInput = document.getElementById('extractUrlInput');
     if (btnExtract && urlInput) {
@@ -711,7 +699,6 @@ const AdminController = {
           showToast('Analisando link e extraindo dados do produto...', 'info');
           const data = await window.LinkExtractor.extractFromUrl(url);
 
-          // Preencher formulário pré-salvamento
           document.getElementById('adminGiftId').value = '';
           document.getElementById('adminGiftTitle').value = data.title;
           document.getElementById('adminGiftPrice').value = data.price > 0 ? data.price : '';
@@ -719,7 +706,6 @@ const AdminController = {
           document.getElementById('adminGiftProductUrl').value = data.productUrl;
           document.getElementById('adminGiftDesc').value = data.description;
 
-          // Sugerir categoria com base no título
           const lowerTitle = (data.title + ' ' + url).toLowerCase();
           const categorySelect = document.getElementById('adminGiftCategory');
           if (lowerTitle.includes('jogo de cama') || lowerTitle.includes('lençol') || lowerTitle.includes('toalha')) {
@@ -734,10 +720,8 @@ const AdminController = {
             categorySelect.value = 'sala';
           }
 
-          // Atualizar preview da imagem
           this.updateImagePreview(data.imageUrl);
 
-          // Rolar até o formulário de pré-salvamento
           document.getElementById('adminGiftFormTitle').innerText = 'Revisar & Salvar Presente Extraído';
           document.getElementById('adminGiftSubmitBtn').innerText = 'Salvar Item na Lista';
           document.getElementById('adminGiftForm').scrollIntoView({ behavior: 'smooth' });
@@ -756,7 +740,6 @@ const AdminController = {
       });
     }
 
-    // Atualização de preview de imagem em tempo real no input de URL de imagem
     const imgInput = document.getElementById('adminGiftImage');
     if (imgInput) {
       imgInput.addEventListener('input', (e) => {
@@ -764,7 +747,6 @@ const AdminController = {
       });
     }
 
-    // Formulário Adicionar / Editar
     const giftForm = document.getElementById('adminGiftForm');
     if (giftForm) {
       giftForm.addEventListener('submit', async (e) => {
@@ -773,7 +755,6 @@ const AdminController = {
       });
     }
 
-    // Checkbox Cota no Form Admin
     const isCotaCheck = document.getElementById('adminGiftIsCota');
     const cotaFields = document.getElementById('adminCotaFields');
     if (isCotaCheck && cotaFields) {
@@ -782,7 +763,6 @@ const AdminController = {
       });
     }
 
-    // Formulário de Configurações
     const settingsForm = document.getElementById('adminSettingsForm');
     if (settingsForm) {
       settingsForm.addEventListener('submit', async (e) => {
@@ -857,7 +837,6 @@ const AdminController = {
       </tr>
     `).join('');
 
-    // Ações na tabela
     tbody.querySelectorAll('.btn-admin-star').forEach(b => {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-id');
@@ -1001,9 +980,11 @@ const AdminController = {
     const settings = await window.weddingDB.getSettings();
     document.getElementById('settingPixKey').value = settings.pixKey || '';
     document.getElementById('settingPixName').value = settings.pixName || '';
-    document.getElementById('settingPixCity').value = settings.pixCity || '';
-    document.getElementById('settingWeddingDate').value = settings.weddingDate ? settings.weddingDate.substring(0, 16) : '';
+    document.getElementById('settingPixCity').value = settings.pixCity || 'São Luís de Montes Belos';
+    document.getElementById('settingWeddingDate').value = settings.weddingDate ? settings.weddingDate.substring(0, 16) : '2027-01-09T17:00';
     document.getElementById('settingWelcomeMsg').value = settings.welcomeMessage || '';
+    document.getElementById('settingCeremonyPlace').value = settings.ceremonyPlace || 'Igreja Batista Shalom';
+    document.getElementById('settingCeremonyCity').value = settings.ceremonyCity || 'São Luís de Montes Belos - GO';
     document.getElementById('settingSupabaseUrl').value = settings.supabaseUrl || 'https://ttggcvricfkoqlorbmnv.supabase.co';
     document.getElementById('settingSupabaseKey').value = settings.supabaseKey || 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN';
   },
@@ -1015,13 +996,15 @@ const AdminController = {
       pixCity: document.getElementById('settingPixCity').value.trim(),
       weddingDate: document.getElementById('settingWeddingDate').value,
       welcomeMessage: document.getElementById('settingWelcomeMsg').value.trim(),
+      ceremonyPlace: document.getElementById('settingCeremonyPlace').value.trim(),
+      ceremonyCity: document.getElementById('settingCeremonyCity').value.trim(),
       supabaseUrl: document.getElementById('settingSupabaseUrl').value.trim(),
       supabaseKey: document.getElementById('settingSupabaseKey').value.trim()
     };
 
     await window.weddingDB.saveSettings(newSettings);
     
-    // Atualizar mensagem na capa se houver
+    // Atualizar dados na página
     const heroSubtitle = document.querySelector('.hero-subtitle');
     if (heroSubtitle && newSettings.welcomeMessage) {
       heroSubtitle.innerText = newSettings.welcomeMessage;
@@ -1065,7 +1048,7 @@ function showToast(message, type = 'success') {
   } else if (type === 'error') {
     iconSvg = `<svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
   } else {
-    iconSvg = `<svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+    iconSvg = `<svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="8"></line></svg>`;
   }
 
   toast.innerHTML = `

@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.0
+   Versão: v.1.0.1
    Módulo: Extrator Inteligente de Metadados por Link de Lojas Virtuais
    ========================================================================== */
 
@@ -29,7 +29,6 @@ const LinkExtractor = {
     // Tentar buscar HTML via proxies CORS conhecidos
     const html = await this._fetchHtmlWithFallbacks(url);
     if (!html) {
-      // Se todos os proxies falharem, retorna dados base para preenchimento manual
       return fallbackData;
     }
 
@@ -95,7 +94,6 @@ const LinkExtractor = {
   },
 
   _extractTitle(doc, url) {
-    // 1. Tags OpenGraph / Twitter
     const ogTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') ||
                     doc.querySelector('meta[name="twitter:title"]')?.getAttribute('content') ||
                     doc.querySelector('meta[name="title"]')?.getAttribute('content');
@@ -104,7 +102,6 @@ const LinkExtractor = {
       return this._cleanTitle(ogTitle);
     }
 
-    // 2. Elementos DOM específicos de lojas
     const domSelectors = [
       '#productTitle',                    // Amazon
       '.ui-pdp-title',                    // Mercado Livre
@@ -121,7 +118,6 @@ const LinkExtractor = {
       }
     }
 
-    // 3. Tag <title>
     const pageTitle = doc.title;
     if (pageTitle) {
       return this._cleanTitle(pageTitle);
@@ -132,7 +128,6 @@ const LinkExtractor = {
 
   _cleanTitle(rawTitle) {
     if (!rawTitle) return '';
-    // Remover sufixos comerciais comuns
     return rawTitle
       .replace(/\s*\|\s*(Mercado Livre|Amazon\.com\.br|Magazine Luiza|Casas Bahia|Shopee).*$/i, '')
       .replace(/\s*-\s*(Mercado Livre|Amazon\.com\.br|Magazine Luiza|Casas Bahia|Shopee).*$/i, '')
@@ -140,7 +135,6 @@ const LinkExtractor = {
   },
 
   _extractImage(doc, baseUrl) {
-    // 1. Metatags OpenGraph / Twitter
     const ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
                     doc.querySelector('meta[property="og:image:secure_url"]')?.getAttribute('content') ||
                     doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content') ||
@@ -150,7 +144,6 @@ const LinkExtractor = {
       return this._resolveUrl(ogImage.trim(), baseUrl);
     }
 
-    // 2. Seletores específicos de grandes varejistas
     const domSelectors = [
       '#landingImage',                   // Amazon
       '.ui-pdp-image',                   // Mercado Livre
@@ -173,7 +166,6 @@ const LinkExtractor = {
   },
 
   _extractPrice(doc, rawHtml) {
-    // 1. Metatags OpenGraph de Preço
     const metaPrice = doc.querySelector('meta[property="product:price:amount"]')?.getAttribute('content') ||
                       doc.querySelector('meta[property="og:price:amount"]')?.getAttribute('content') ||
                       doc.querySelector('meta[itemprop="price"]')?.getAttribute('content');
@@ -183,7 +175,6 @@ const LinkExtractor = {
       if (!isNaN(parsed) && parsed > 0) return parsed;
     }
 
-    // 2. Microdados JSON-LD (Schema.org)
     const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
     for (const script of jsonLdScripts) {
       try {
@@ -193,7 +184,6 @@ const LinkExtractor = {
       } catch (e) {}
     }
 
-    // 3. Seletores de preço em lojas comuns
     const priceSelectors = [
       '.a-price .a-offscreen',           // Amazon
       '.ui-pdp-price__second-line .andes-money-amount__fraction', // Mercado Livre
@@ -211,7 +201,6 @@ const LinkExtractor = {
       }
     }
 
-    // 4. Regex de Real no HTML
     const priceMatch = rawHtml.match(/R\$\s?([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{2}))/i);
     if (priceMatch && priceMatch[1]) {
       return this._parsePriceString(priceMatch[1]);
@@ -245,10 +234,8 @@ const LinkExtractor = {
 
   _parsePriceString(str) {
     if (!str) return 0;
-    // Extrai números e vírgula
     const cleaned = str.replace(/[^\d,\.]/g, '');
     if (cleaned.includes(',') && cleaned.includes('.')) {
-      // Formato brasileiro: 1.250,50
       return parseFloat(cleaned.replace(/\./g, '').replace(',', '.')) || 0;
     } else if (cleaned.includes(',')) {
       return parseFloat(cleaned.replace(',', '.')) || 0;
