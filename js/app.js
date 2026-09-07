@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.9
+   Versão: v.1.1.0
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.0.9] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.1.0] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.9) COM EXTRATOR APRIMORADO
+   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.0) COM EXTRATOR APRIMORADO
    ========================================================================== */
 const AdminController = {
   currentTab: 'gifts',
@@ -752,12 +752,7 @@ const AdminController = {
     tbody.querySelectorAll('.btn-admin-unreserve').forEach(b => {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-id');
-        if (confirm('Deseja liberar este presente para ficar disponível novamente na lista pública?')) {
-          await window.weddingDB.unreserveGift(id);
-          showToast('Presente liberado e disponível novamente!', 'success');
-          await this.renderGiftsTable();
-          await CatalogController.refresh();
-        }
+        await this.confirmUnreserveGift(id);
       });
     });
   },
@@ -835,6 +830,83 @@ const AdminController = {
       closeModal();
       showToast(`Item "${itemTitle}" excluído e sincronizado!`, 'success');
       await this.renderGiftsTable();
+      await CatalogController.refresh();
+    };
+  },
+
+  async confirmUnreserveGift(id) {
+    const unreserveModal = document.getElementById('unreserveModal');
+    const unreserveItemTitleText = document.getElementById('unreserveItemTitleText');
+    const unreserveProgressBox = document.getElementById('unreserveProgressBox');
+    const unreserveProgressBar = document.getElementById('unreserveProgressBar');
+    const unreserveProgressStatusText = document.getElementById('unreserveProgressStatusText');
+    const unreserveProgressPercent = document.getElementById('unreserveProgressPercent');
+    const unreserveModalActions = document.getElementById('unreserveModalActions');
+    const btnConfirmUnreserve = document.getElementById('btnConfirmUnreserve');
+    const btnCancelUnreserve = document.getElementById('btnCancelUnreserve');
+
+    if (!unreserveModal) return;
+
+    const gift = await window.weddingDB.getGiftById(id);
+    const itemTitle = gift ? gift.title : 'este presente';
+
+    unreserveItemTitleText.innerHTML = `Tem certeza que deseja liberar <strong>"${escapeHTML(itemTitle)}"</strong>?<br><span style="font-size:0.83rem; color:var(--color-olive-muted);">O item ficará disponível novamente para todos os convidados na lista pública.</span>`;
+
+    // Resetar estado do modal
+    unreserveProgressBox.style.display = 'none';
+    unreserveProgressBar.style.width = '0%';
+    unreserveProgressPercent.innerText = '0%';
+    unreserveProgressStatusText.innerText = 'Liberando item no cache e na nuvem...';
+    unreserveModalActions.style.display = 'flex';
+
+    unreserveModal.classList.add('active');
+
+    const closeModal = () => {
+      unreserveModal.classList.remove('active');
+      unreserveModal.removeEventListener('click', onBackdropClick);
+    };
+
+    const onBackdropClick = (e) => {
+      if (e.target === unreserveModal && unreserveModalActions.style.display !== 'none') {
+        closeModal();
+      }
+    };
+
+    unreserveModal.addEventListener('click', onBackdropClick);
+    btnCancelUnreserve.onclick = closeModal;
+
+    btnConfirmUnreserve.onclick = async () => {
+      unreserveModalActions.style.display = 'none';
+      unreserveProgressBox.style.display = 'block';
+
+      // Etapa 1: Início da liberação (30%)
+      unreserveProgressBar.style.width = '30%';
+      unreserveProgressPercent.innerText = '30%';
+      unreserveProgressStatusText.innerText = 'Limpando dados de reserva no cache local...';
+
+      await new Promise(r => setTimeout(r, 200));
+
+      // Executar liberação IndexedDB + Supabase
+      await window.weddingDB.unreserveGift(id);
+
+      // Etapa 2: Sincronização na nuvem (75%)
+      unreserveProgressBar.style.width = '75%';
+      unreserveProgressPercent.innerText = '75%';
+      unreserveProgressStatusText.innerText = 'Sincronizando atualização com o Supabase...';
+
+      await new Promise(r => setTimeout(r, 250));
+
+      // Etapa 3: Conclusão (100%)
+      unreserveProgressBar.style.width = '100%';
+      unreserveProgressPercent.innerText = '100%';
+      unreserveProgressStatusText.innerText = 'Item liberado com sucesso!';
+
+      await new Promise(r => setTimeout(r, 200));
+
+      closeModal();
+      showToast(`"${itemTitle}" foi liberado e está disponível novamente!`, 'success');
+      await this.renderGiftsTable();
+      await this.renderReservationsTable();
       await CatalogController.refresh();
     };
   },
@@ -948,16 +1020,7 @@ const AdminController = {
     tbody.querySelectorAll('.btn-admin-unreserve').forEach(b => {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-id');
-        const gift = await window.weddingDB.getGiftById(id);
-        const itemTitle = gift ? gift.title : 'este presente';
-
-        if (confirm(`Tem certeza que deseja liberar "${itemTitle}"?\n\nO item ficará disponível novamente para todos os convidados na lista e os dados de reserva serão limpos no cache local e no Supabase.`)) {
-          await window.weddingDB.unreserveGift(id);
-          showToast(`"${itemTitle}" foi liberado e está disponível novamente!`, 'success');
-          await this.renderReservationsTable();
-          await this.renderGiftsTable();
-          await CatalogController.refresh();
-        }
+        await this.confirmUnreserveGift(id);
       });
     });
   },
@@ -1056,21 +1119,19 @@ const AdminController = {
     document.getElementById('settingWelcomeMsg').value = settings.welcomeMessage || '';
     document.getElementById('settingCeremonyPlace').value = settings.ceremonyPlace || 'Igreja Batista Shalom';
     document.getElementById('settingCeremonyCity').value = settings.ceremonyCity || 'São Luís de Montes Belos - GO';
-    document.getElementById('settingSupabaseUrl').value = settings.supabaseUrl || 'https://ttggcvricfkoqlorbmnv.supabase.co';
-    document.getElementById('settingSupabaseKey').value = settings.supabaseKey || 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN';
   },
 
   async handleSaveSettings() {
+    const currentSettings = await window.weddingDB.getSettings();
     const newSettings = {
+      ...currentSettings,
       pixKey: document.getElementById('settingPixKey').value.trim(),
       pixName: document.getElementById('settingPixName').value.trim(),
       pixCity: document.getElementById('settingPixCity').value.trim(),
       weddingDate: document.getElementById('settingWeddingDate').value,
       welcomeMessage: document.getElementById('settingWelcomeMsg').value.trim(),
       ceremonyPlace: document.getElementById('settingCeremonyPlace').value.trim(),
-      ceremonyCity: document.getElementById('settingCeremonyCity').value.trim(),
-      supabaseUrl: document.getElementById('settingSupabaseUrl').value.trim(),
-      supabaseKey: document.getElementById('settingSupabaseKey').value.trim()
+      ceremonyCity: document.getElementById('settingCeremonyCity').value.trim()
     };
 
     await window.weddingDB.saveSettings(newSettings);
@@ -1080,7 +1141,7 @@ const AdminController = {
       heroSubtitle.innerText = newSettings.welcomeMessage;
     }
 
-    showToast('Configurações salvas e integradas com sucesso!', 'success');
+    showToast('Configurações salvas com sucesso!', 'success');
     await CountdownController.init();
   }
 };
