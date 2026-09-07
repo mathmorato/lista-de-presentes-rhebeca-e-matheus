@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.4
+   Versão: v.1.2.5
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.2.4] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.2.5] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -768,6 +768,18 @@ const AdminController = {
         handleManualSync(btnTriggerSyncNow, icon, label);
       });
     }
+
+    // Ouvinte global da sincronização periódica (15s) ou manual
+    window.addEventListener('wedding:sync-completed', (e) => {
+      const detail = e.detail || {};
+      const syncLastTimeVal = document.getElementById('syncLastTimeVal');
+      if (syncLastTimeVal && detail.timeString) {
+        syncLastTimeVal.innerText = `Sincronizado às ${detail.timeString}`;
+      }
+      if (detail.hasChanges) {
+        CatalogController.refresh();
+      }
+    });
   },
 
   updateImagePreview(url) {

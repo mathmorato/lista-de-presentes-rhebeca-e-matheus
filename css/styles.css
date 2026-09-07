@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.4
+   Versão: v.1.2.5
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -1939,5 +1939,36 @@ a {
   border-radius: calc(var(--radius-md) - 2px);
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.08));
 }
+
+/* ==========================================================================
+   SINCRONIZAÇÃO AUTOMÁTICA EM BACKGROUND (15s)
+   ========================================================================== */
+@keyframes pulseGlow {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+    box-shadow: 0 0 0 0 rgba(96, 108, 56, 0.4);
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+    box-shadow: 0 0 0 4px rgba(96, 108, 56, 0);
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+    box-shadow: 0 0 0 0 rgba(96, 108, 56, 0);
+  }
+}
+
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success, #2d6a4f);
+  animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 
 
