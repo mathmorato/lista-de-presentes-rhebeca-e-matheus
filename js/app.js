@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.5
+   Versão: v.1.3.6
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.3.5] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.3.6] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -379,17 +379,6 @@ const CatalogController = {
       }
     }
 
-    const storeLinkHTML = gift.productUrl 
-      ? `<a href="${escapeHTML(gift.productUrl)}" target="_blank" rel="noopener noreferrer" class="btn-store-link">
-           <svg class="icon-line sm" style="width: 14px; height: 14px;" viewBox="0 0 24 24">
-             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-             <polyline points="15 3 21 3 21 9"></polyline>
-             <line x1="10" y1="14" x2="21" y2="3"></line>
-           </svg>
-           Ver na loja original
-         </a>`
-      : '';
-
     const fallbackImg = `
       <div class="gift-card-placeholder">
         <svg class="icon-line lg" viewBox="0 0 24 24"><path d="M20 12V22H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zm0 0h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
@@ -415,7 +404,6 @@ const CatalogController = {
           ${pricingHTML}
           <div class="card-actions-wrapper">
             ${actionBtnHTML}
-            ${storeLinkHTML}
           </div>
         </div>
       </div>
@@ -444,6 +432,23 @@ const CatalogController = {
     document.getElementById('reserveGuestName').value = '';
     document.getElementById('reserveGuestPhone').value = '';
     document.getElementById('reserveGuestMessage').value = '';
+
+    const submitBtn = document.getElementById('btnSubmitReserve');
+    const submitBtnText = document.getElementById('btnSubmitReserveText');
+
+    if (gift.productUrl) {
+      if (submitBtnText) submitBtnText.innerText = 'Confirmar e Ir para a Loja';
+      if (submitBtn) {
+        submitBtn.className = 'btn btn-primary';
+        submitBtn.title = 'Salvar presente e abrir link da loja original';
+      }
+    } else {
+      if (submitBtnText) submitBtnText.innerText = 'Confirmar Escolha do Presente';
+      if (submitBtn) {
+        submitBtn.className = 'btn btn-primary';
+        submitBtn.title = 'Confirmar que você irá presentear este item';
+      }
+    }
 
     modal.classList.add('active');
   },
@@ -505,49 +510,23 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const gift = await window.weddingDB.getGiftById(giftId);
         const itemTitle = gift ? gift.title : 'Presente da Lista';
-        const itemPrice = gift ? formatCurrency(gift.price) : '';
 
-        // 1. Salvar no banco híbrido com status pendente de aprovação
+        // 1. Salvar no banco híbrido com status reservado e dados de quem presenteou
         await window.weddingDB.reserveGift(giftId, { guestName, phone, message });
 
         document.getElementById('reserveModal').classList.remove('active');
         await CatalogController.refresh();
         await MessagesController.refresh();
 
-        // 2. Obter número de WhatsApp oficial dos noivos
-        const settings = await window.weddingDB.getSettings();
-        const rawTargetPhone = settings.whatsappPhone || '5564993409360';
-        const targetPhone = rawTargetPhone.replace(/\D/g, '') || '5564993409360';
-
-        // 3. Montar mensagem de carinho automática falando qual item irá presentear
-        const defaultLoveMsg = message || "Que a união de vocês seja imensamente abençoada por Deus, com muito amor, cumplicidade, paz e felicidades! Estou muito feliz em participar deste momento inesquecível da vida de vocês.";
-        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️✨\n\nEstou presenteando vocês com um item da lista de casamento:\n🎁 *${itemTitle}*${itemPrice ? ` (${itemPrice})` : ''}\n\n💌 *Mensagem de Carinho:*\n"${defaultLoveMsg}"\n\nPor favor, confirmem o recebimento no painel dos noivos e me passem o melhor *endereço de entrega* para que eu possa providenciar o envio com muito carinho! 📦🏡\n\n---\nCom todo carinho,\n👤 *${guestName}*${phone ? `\n📱 *Telefone/WhatsApp:* ${phone}` : ''}`;
-
-        const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(whatsappMsg)}`;
-
-        // 4. Exibir Modal de Confirmação com Botão Direto do WhatsApp
-        const modal = document.getElementById('whatsappConfirmationModal');
-        const titleEl = document.getElementById('waConfirmModalTitle');
-        const descEl = document.getElementById('waConfirmModalDesc');
-        const btnLink = document.getElementById('waDirectBtnLink');
-
-        if (titleEl) titleEl.innerText = 'Solicitação de Presente Enviada!';
-        if (descEl) {
-          descEl.innerHTML = `Sua escolha com <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong> foi registrada com sucesso!<br><br>Você está sendo redirecionado para o WhatsApp dos noivos para enviar sua mensagem de carinho:`;
+        // 2. Se o presente tiver link da loja virtual, redirecionar diretamente para a loja original
+        if (gift && gift.productUrl) {
+          showToast(`Obrigado, ${guestName}! Presente registrado com sucesso. Redirecionando para a loja...`, 'success');
+          setTimeout(() => {
+            window.location.href = gift.productUrl;
+          }, 400);
+        } else {
+          showToast(`Muito obrigado, ${guestName}! Sua escolha de presente para Rhebeca & Matheus foi registrada com sucesso.`, 'success');
         }
-        if (btnLink) {
-          btnLink.href = whatsappUrl;
-        }
-        if (modal) {
-          modal.classList.add('active');
-        }
-
-        showToast('Presente registrado! Redirecionando para o WhatsApp...', 'success');
-
-        // Redirecionamento automático e imediato para o WhatsApp
-        setTimeout(() => {
-          window.location.href = whatsappUrl;
-        }, 300);
       } catch (err) {
         showToast(err.message || 'Erro ao reservar presente.', 'error');
       }
