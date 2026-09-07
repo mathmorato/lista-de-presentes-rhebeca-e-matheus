@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.8
+   Versão: v.1.2.9
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -88,12 +88,15 @@ const AdminDashboard = {
 
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real
     await window.weddingDB.init((changeType) => {
-      console.log('[Admin v.1.2.8] Mudança em tempo real recebida:', changeType);
+      console.log('[Admin v.1.2.9] Mudança em tempo real recebida:', changeType);
       if (this.currentTab === 'gifts') {
         this.renderGiftsTable();
       } else if (this.currentTab === 'reservations') {
         this.renderReservationsTable();
+      } else if (this.currentTab === 'trash') {
+        this.renderTrashTable();
       }
+      this.updateTrashBadge();
     });
 
     // 2. Abas do Painel
@@ -440,6 +443,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
   async render() {
     document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
+    await this.updateTrashBadge();
 
     if (this.currentTab === 'gifts') {
       const tabGifts = document.getElementById('adminTabGifts');
@@ -453,6 +457,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       const tabSettings = document.getElementById('adminTabSettings');
       if (tabSettings) tabSettings.style.display = 'block';
       await this.renderSettingsForm();
+    } else if (this.currentTab === 'trash') {
+      const tabTrash = document.getElementById('adminTabTrash');
+      if (tabTrash) tabTrash.style.display = 'block';
+      await this.renderTrashTable();
     }
   },
 
@@ -679,7 +687,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
     if (!deleteModal) return;
 
-    deleteItemTitleText.innerHTML = `Tem certeza que deseja excluir permanentemente o item <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Esta ação removerá o item do catálogo local e do Supabase na nuvem.</span>`;
+    deleteItemTitleText.innerHTML = `Deseja mover o item <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong> para a Lixeira?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">O item sairá da vitrine pública de presentes e poderá ser restaurado na aba Lixeira a qualquer momento.</span>`;
+
+    btnConfirmDelete.innerText = 'Mover para Lixeira';
+    btnConfirmDelete.style.background = 'var(--color-error)';
+    btnConfirmDelete.style.borderColor = 'var(--color-error)';
 
     deleteProgressBox.style.display = 'none';
     deleteProgressBar.style.width = '0%';
@@ -707,29 +719,29 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       deleteModalActions.style.display = 'none';
       deleteProgressBox.style.display = 'block';
 
-      deleteProgressBar.style.width = '30%';
-      deleteProgressPercent.innerText = '30%';
-      deleteProgressStatusText.innerText = 'Removendo do cache local IndexedDB...';
+      deleteProgressBar.style.width = '35%';
+      deleteProgressPercent.innerText = '35%';
+      deleteProgressStatusText.innerText = 'Movendo para a Lixeira localmente...';
+
+      await new Promise(r => setTimeout(r, 150));
+      await window.weddingDB.trashGift(id);
+
+      deleteProgressBar.style.width = '80%';
+      deleteProgressPercent.innerText = '80%';
+      deleteProgressStatusText.innerText = 'Sincronizando com o Supabase...';
 
       await new Promise(r => setTimeout(r, 200));
-      await window.weddingDB.deleteGift(id);
-
-      deleteProgressBar.style.width = '75%';
-      deleteProgressPercent.innerText = '75%';
-      deleteProgressStatusText.innerText = 'Sincronizando exclusão com o Supabase...';
-
-      await new Promise(r => setTimeout(r, 250));
 
       deleteProgressBar.style.width = '100%';
       deleteProgressPercent.innerText = '100%';
-      deleteProgressStatusText.innerText = 'Exclusão concluída com sucesso!';
+      deleteProgressStatusText.innerText = 'Item movido para a Lixeira com sucesso!';
 
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 150));
 
       closeModal();
       this.selectedGiftIds.delete(id);
-      showToast(`Item "${itemTitle}" excluído e sincronizado!`, 'success');
-      await this.renderGiftsTable();
+      showToast(`Item "${itemTitle}" movido para a Lixeira!`, 'success');
+      await this.render();
     };
   },
 
@@ -749,12 +761,16 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (!deleteModal) return;
 
     const total = ids.length;
-    deleteItemTitleText.innerHTML = `Tem certeza que deseja excluir permanentemente os <strong style="color: var(--color-error);">${total} presentes selecionados</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Todos os itens marcados serão removidos do catálogo local (IndexedDB) e sincronizados na nuvem Supabase.</span>`;
+    deleteItemTitleText.innerHTML = `Deseja mover os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong> para a Lixeira?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os itens sairão da vitrine de presentes e poderão ser restaurados na aba Lixeira a qualquer momento.</span>`;
+
+    btnConfirmDelete.innerText = 'Mover para Lixeira';
+    btnConfirmDelete.style.background = 'var(--color-error)';
+    btnConfirmDelete.style.borderColor = 'var(--color-error)';
 
     deleteProgressBox.style.display = 'none';
     deleteProgressBar.style.width = '0%';
     deleteProgressPercent.innerText = '0%';
-    deleteProgressStatusText.innerText = 'Iniciando remoção em lote...';
+    deleteProgressStatusText.innerText = 'Iniciando remoção...';
     deleteModalActions.style.display = 'flex';
 
     deleteModal.classList.add('active');
@@ -777,29 +793,298 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       deleteModalActions.style.display = 'none';
       deleteProgressBox.style.display = 'block';
 
-      deleteProgressBar.style.width = '30%';
-      deleteProgressPercent.innerText = '30%';
-      deleteProgressStatusText.innerText = `Removendo ${total} itens do IndexedDB...`;
+      deleteProgressBar.style.width = '35%';
+      deleteProgressPercent.innerText = '35%';
+      deleteProgressStatusText.innerText = `Movendo ${total} itens para a Lixeira...`;
+
+      await new Promise(r => setTimeout(r, 150));
+      await window.weddingDB.trashMultipleGifts(ids);
+
+      deleteProgressBar.style.width = '80%';
+      deleteProgressPercent.innerText = '80%';
+      deleteProgressStatusText.innerText = 'Sincronizando com o Supabase...';
 
       await new Promise(r => setTimeout(r, 200));
-      await window.weddingDB.deleteMultipleGifts(ids);
-
-      deleteProgressBar.style.width = '75%';
-      deleteProgressPercent.innerText = '75%';
-      deleteProgressStatusText.innerText = 'Sincronizando exclusões com o Supabase...';
-
-      await new Promise(r => setTimeout(r, 250));
 
       deleteProgressBar.style.width = '100%';
       deleteProgressPercent.innerText = '100%';
-      deleteProgressStatusText.innerText = `${total} itens excluídos com sucesso!`;
+      deleteProgressStatusText.innerText = `${total} itens movidos para a Lixeira!`;
 
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 150));
 
       closeModal();
       this.selectedGiftIds.clear();
-      showToast(`${total} ${total === 1 ? 'item excluído' : 'itens excluídos'} e sincronizados!`, 'success');
-      await this.renderGiftsTable();
+      showToast(`${total} ${total === 1 ? 'item movido' : 'itens movidos'} para a Lixeira!`, 'success');
+      await this.render();
+    };
+  },
+
+  async updateTrashBadge() {
+    try {
+      const trashItems = await window.weddingDB.getTrashGifts();
+      const count = trashItems.length;
+      const badge = document.getElementById('trashCountBadge');
+      const totalBadge = document.getElementById('trashTotalCountBadge');
+      if (badge) {
+        badge.innerText = count;
+        badge.style.display = count > 0 ? 'inline-block' : 'none';
+      }
+      if (totalBadge) {
+        totalBadge.innerText = `${count} ${count === 1 ? 'item' : 'itens'}`;
+      }
+    } catch (_) {}
+  },
+
+  async renderTrashTable() {
+    const tbody = document.getElementById('adminTrashTableBody');
+    if (!tbody) return;
+
+    const trashItems = await window.weddingDB.getTrashGifts();
+    const btnEmptyTrash = document.getElementById('btnEmptyTrash');
+
+    if (btnEmptyTrash) {
+      btnEmptyTrash.disabled = trashItems.length === 0;
+      btnEmptyTrash.style.opacity = trashItems.length === 0 ? '0.5' : '1';
+      btnEmptyTrash.style.cursor = trashItems.length === 0 ? 'not-allowed' : 'pointer';
+      btnEmptyTrash.onclick = () => {
+        if (trashItems.length === 0) return;
+        this.confirmEmptyTrash(trashItems.length);
+      };
+    }
+
+    if (trashItems.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 3.5rem 1rem; color: var(--color-olive-muted);">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+              <svg class="icon-line lg" style="color: var(--color-olive-frame); opacity: 0.5;" viewBox="0 0 24 24">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <h4 style="font-size: 1.1rem; color: var(--color-olive-deep); margin: 0;">A lixeira está vazia</h4>
+              <p style="font-size: 0.85rem; margin: 0; max-width: 400px; line-height: 1.4;">
+                Nenhum presente foi excluído recentemente. Quando você excluir itens do catálogo, eles aparecerão aqui para serem restaurados ou apagados definitivamente.
+              </p>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = trashItems.map(g => {
+      const imgHtml = g.imageUrl
+        ? `<img src="${escapeHTML(g.imageUrl)}" alt="${escapeHTML(g.title)}" style="width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border);" onerror="this.src=''; this.parentElement.innerHTML='<div style=\\'width:48px;height:48px;background:var(--color-cream);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--color-olive-muted);\\'>🎁</div>';">`
+        : `<div style="width: 48px; height: 48px; background: var(--color-cream); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--color-olive-muted); font-size: 1.2rem;">🎁</div>`;
+
+      const priceText = g.isCota ? `${formatCurrency(g.quotaValue || g.price)}/cota` : formatCurrency(g.price);
+      const deletedDateText = g.deletedAt 
+        ? new Date(g.deletedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : (g.updatedAt ? new Date(g.updatedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-');
+
+      return `
+        <tr data-trash-id="${g.id}">
+          <td style="vertical-align: middle;">
+            ${imgHtml}
+          </td>
+          <td style="vertical-align: middle;">
+            <strong style="color: var(--color-olive-deep); font-size: 0.95rem;">${escapeHTML(g.title)}</strong>
+            ${g.isCota ? '<span style="display:block; font-size:0.75rem; color:var(--color-olive-frame);">Cota de Lua de Mel</span>' : ''}
+          </td>
+          <td style="vertical-align: middle; text-transform: capitalize;">${escapeHTML(g.category)}</td>
+          <td style="vertical-align: middle; font-weight: 600; color: var(--color-olive-primary);">${priceText}</td>
+          <td style="vertical-align: middle; font-size: 0.85rem; color: var(--color-olive-muted);">${deletedDateText}</td>
+          <td style="vertical-align: middle; text-align: right;">
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-sm btn-outline btn-restore-gift" data-id="${g.id}" title="Restaurar de volta à lista ativa" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--color-olive-primary); border-color: var(--color-olive-primary); font-size: 0.8rem; padding: 0.35rem 0.75rem; border-radius: var(--radius-sm);">
+                <svg class="icon-line xs" viewBox="0 0 24 24">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                <span>Restaurar</span>
+              </button>
+              <button class="btn btn-sm btn-perm-delete-gift" data-id="${g.id}" title="Excluir permanentemente" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(188, 71, 73, 0.1); color: var(--color-error); border: 1px solid rgba(188, 71, 73, 0.3); font-size: 0.8rem; padding: 0.35rem 0.75rem; border-radius: var(--radius-sm);">
+                <svg class="icon-line xs" viewBox="0 0 24 24">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                <span>Excluir Definitivo</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Binds de ação
+    tbody.querySelectorAll('.btn-restore-gift').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        await this.handleRestoreGift(id);
+      });
+    });
+
+    tbody.querySelectorAll('.btn-perm-delete-gift').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        await this.confirmPermanentDeleteGift(id);
+      });
+    });
+  },
+
+  async handleRestoreGift(id) {
+    try {
+      const restored = await window.weddingDB.restoreGift(id);
+      const title = restored ? restored.title : 'Presente';
+      showToast(`Item "${title}" restaurado com sucesso para a vitrine pública!`, 'success');
+      await this.render();
+    } catch (err) {
+      showToast(err.message || 'Erro ao restaurar presente.', 'error');
+    }
+  },
+
+  async confirmPermanentDeleteGift(id) {
+    const gift = await window.weddingDB.getGiftById(id);
+    const itemTitle = gift ? gift.title : 'este item';
+
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteItemTitleText = document.getElementById('deleteItemTitleText');
+    const deleteProgressBox = document.getElementById('deleteProgressBox');
+    const deleteProgressBar = document.getElementById('deleteProgressBar');
+    const deleteProgressStatusText = document.getElementById('deleteProgressStatusText');
+    const deleteProgressPercent = document.getElementById('deleteProgressPercent');
+    const deleteModalActions = document.getElementById('deleteModalActions');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+    const btnCancelDelete = document.getElementById('btnCancelDelete');
+
+    if (!deleteModal) return;
+
+    deleteItemTitleText.innerHTML = `Tem certeza que deseja excluir permanentemente o item <strong style="color: var(--color-error);">"${escapeHTML(itemTitle)}"</strong>?<br><span style="font-size: 0.83rem; color: var(--color-error); font-weight: 500;">Esta ação é definitiva e não poderá ser desfeita. O item será expurgado do IndexedDB e da nuvem Supabase.</span>`;
+
+    btnConfirmDelete.innerText = 'Sim, Excluir Definitivamente';
+    btnConfirmDelete.style.background = 'var(--color-error)';
+    btnConfirmDelete.style.borderColor = 'var(--color-error)';
+
+    deleteProgressBox.style.display = 'none';
+    deleteProgressBar.style.width = '0%';
+    deleteProgressPercent.innerText = '0%';
+    deleteProgressStatusText.innerText = 'Iniciando exclusão definitiva...';
+    deleteModalActions.style.display = 'flex';
+
+    deleteModal.classList.add('active');
+
+    const closeModal = () => {
+      deleteModal.classList.remove('active');
+      deleteModal.removeEventListener('click', onBackdropClick);
+    };
+
+    const onBackdropClick = (e) => {
+      if (e.target === deleteModal && deleteModalActions.style.display !== 'none') {
+        closeModal();
+      }
+    };
+
+    deleteModal.addEventListener('click', onBackdropClick);
+    btnCancelDelete.onclick = closeModal;
+
+    btnConfirmDelete.onclick = async () => {
+      deleteModalActions.style.display = 'none';
+      deleteProgressBox.style.display = 'block';
+
+      deleteProgressBar.style.width = '40%';
+      deleteProgressPercent.innerText = '40%';
+      deleteProgressStatusText.innerText = 'Excluindo definitivamente do banco local...';
+
+      await new Promise(r => setTimeout(r, 150));
+      await window.weddingDB.permanentDeleteGift(id);
+
+      deleteProgressBar.style.width = '80%';
+      deleteProgressPercent.innerText = '80%';
+      deleteProgressStatusText.innerText = 'Expurgando permanentemente do Supabase...';
+
+      await new Promise(r => setTimeout(r, 200));
+
+      deleteProgressBar.style.width = '100%';
+      deleteProgressPercent.innerText = '100%';
+      deleteProgressStatusText.innerText = 'Item excluído permanentemente com sucesso!';
+
+      await new Promise(r => setTimeout(r, 150));
+
+      closeModal();
+      showToast(`Item "${itemTitle}" excluído permanentemente!`, 'info');
+      await this.render();
+    };
+  },
+
+  async confirmEmptyTrash(count) {
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteItemTitleText = document.getElementById('deleteItemTitleText');
+    const deleteProgressBox = document.getElementById('deleteProgressBox');
+    const deleteProgressBar = document.getElementById('deleteProgressBar');
+    const deleteProgressStatusText = document.getElementById('deleteProgressStatusText');
+    const deleteProgressPercent = document.getElementById('deleteProgressPercent');
+    const deleteModalActions = document.getElementById('deleteModalActions');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+    const btnCancelDelete = document.getElementById('btnCancelDelete');
+
+    if (!deleteModal) return;
+
+    deleteItemTitleText.innerHTML = `Tem certeza que deseja esvaziar a lixeira e excluir definitivamente todos os <strong style="color: var(--color-error);">${count} presentes</strong>?<br><span style="font-size: 0.83rem; color: var(--color-error); font-weight: 500;">Esta ação é irreversível. Todos os itens na lixeira serão apagados permanentemente tanto do banco local quanto do Supabase.</span>`;
+
+    btnConfirmDelete.innerText = 'Sim, Esvaziar Tudo';
+    btnConfirmDelete.style.background = 'var(--color-error)';
+    btnConfirmDelete.style.borderColor = 'var(--color-error)';
+
+    deleteProgressBox.style.display = 'none';
+    deleteProgressBar.style.width = '0%';
+    deleteProgressPercent.innerText = '0%';
+    deleteProgressStatusText.innerText = 'Iniciando esvaziamento da lixeira...';
+    deleteModalActions.style.display = 'flex';
+
+    deleteModal.classList.add('active');
+
+    const closeModal = () => {
+      deleteModal.classList.remove('active');
+      deleteModal.removeEventListener('click', onBackdropClick);
+    };
+
+    const onBackdropClick = (e) => {
+      if (e.target === deleteModal && deleteModalActions.style.display !== 'none') {
+        closeModal();
+      }
+    };
+
+    deleteModal.addEventListener('click', onBackdropClick);
+    btnCancelDelete.onclick = closeModal;
+
+    btnConfirmDelete.onclick = async () => {
+      deleteModalActions.style.display = 'none';
+      deleteProgressBox.style.display = 'block';
+
+      deleteProgressBar.style.width = '40%';
+      deleteProgressPercent.innerText = '40%';
+      deleteProgressStatusText.innerText = `Excluindo ${count} itens permanentemente...`;
+
+      await new Promise(r => setTimeout(r, 150));
+      await window.weddingDB.emptyTrash();
+
+      deleteProgressBar.style.width = '80%';
+      deleteProgressPercent.innerText = '80%';
+      deleteProgressStatusText.innerText = 'Expurgando permanentemente do Supabase...';
+
+      await new Promise(r => setTimeout(r, 200));
+
+      deleteProgressBar.style.width = '100%';
+      deleteProgressPercent.innerText = '100%';
+      deleteProgressStatusText.innerText = 'Lixeira esvaziada com sucesso!';
+
+      await new Promise(r => setTimeout(r, 150));
+
+      closeModal();
+      showToast(`Lixeira esvaziada com sucesso! (${count} itens removidos)`, 'info');
+      await this.render();
     };
   },
 

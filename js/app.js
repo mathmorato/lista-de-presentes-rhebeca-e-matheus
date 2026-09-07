@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.8
+   Versão: v.1.2.9
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.2.8] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.2.9] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -213,6 +213,7 @@ const CatalogController = {
     if (!grid) return;
 
     let filtered = this.allGifts.filter(gift => {
+      if (gift.status === 'trash') return false;
       const matchCat = this.currentCategory === 'all' || gift.category === this.currentCategory;
       const matchSearch = !this.searchQuery || 
         gift.title.toLowerCase().includes(this.searchQuery) ||
@@ -292,10 +293,12 @@ const CatalogController = {
 
     let statusBadgeHTML = '';
     if (gift.isCota) {
-      statusBadgeHTML = `<span class="gift-badge badge-cota">Cota Lua de Mel</span>`;
-    } else if (isPending) {
-      statusBadgeHTML = `<span class="gift-badge badge-warning" style="background: rgba(221, 161, 94, 0.2); color: #856404; border: 1px solid rgba(221, 161, 94, 0.5);">Aguardando Aprovação</span>`;
-    } else if (isReserved || isCompleted) {
+      if ((gift.quotaCurrent >= gift.quotaTotal) || isCompleted) {
+        statusBadgeHTML = `<span class="gift-badge badge-reserved">Já Presenteado</span>`;
+      } else {
+        statusBadgeHTML = `<span class="gift-badge badge-cota">Cota Lua de Mel</span>`;
+      }
+    } else if (isReserved || isCompleted || isPending) {
       statusBadgeHTML = `<span class="gift-badge badge-reserved">Já Presenteado</span>`;
     } else {
       statusBadgeHTML = '';
@@ -336,12 +339,21 @@ const CatalogController = {
         </div>
       `;
 
-      actionBtnHTML = `
-        <button class="btn btn-primary btn-block btn-presentear" data-id="${gift.id}">
-          <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-          Presentear com Cota Pix
-        </button>
-      `;
+      if (current >= total || isCompleted) {
+        actionBtnHTML = `
+          <button class="btn btn-secondary btn-block" disabled>
+            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+            Já Presenteado
+          </button>
+        `;
+      } else {
+        actionBtnHTML = `
+          <button class="btn btn-primary btn-block btn-presentear" data-id="${gift.id}">
+            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            Presentear com Cota Pix
+          </button>
+        `;
+      }
     } else {
       pricingHTML = `
         <div class="gift-pricing">
@@ -350,18 +362,11 @@ const CatalogController = {
         </div>
       `;
 
-      if (isPending) {
-        actionBtnHTML = `
-          <button class="btn btn-secondary btn-block" disabled style="opacity: 0.9; font-size: 0.84rem; background: rgba(221, 161, 94, 0.15); color: #856404; border-color: rgba(221, 161, 94, 0.4);">
-            <svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            Em Aprovação com os Noivos
-          </button>
-        `;
-      } else if (isReserved || isCompleted) {
+      if (isReserved || isCompleted || isPending) {
         actionBtnHTML = `
           <button class="btn btn-secondary btn-block" disabled>
             <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
-            Já Presenteado com Carinho
+            Já Presenteado
           </button>
         `;
       } else {
@@ -514,8 +519,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawTargetPhone = settings.whatsappPhone || '5564993409360';
         const targetPhone = rawTargetPhone.replace(/\D/g, '') || '5564993409360';
 
-        // 3. Montar mensagem formatada solicitando aprovação e endereço de entrega
-        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️\n\nEnviei uma solicitação pelo site e escolhi presentear vocês com o seguinte item da lista de casamento:\n🎁 *${itemTitle}*${itemPrice ? ` (${itemPrice})` : ''}\n\nPor favor, confirmem o recebimento da solicitação no painel dos noivos e me passem o melhor *endereço de entrega* para que eu possa providenciar o envio! 📦🏡\n\n---\n👤 *Convidado(a):* ${guestName}${phone ? `\n📱 *Telefone/WhatsApp:* ${phone}` : ''}${message ? `\n💌 *Mensagem de carinho:* "${message}"` : ''}`;
+        // 3. Montar mensagem de carinho automática falando qual item irá presentear
+        const defaultLoveMsg = message || "Que a união de vocês seja imensamente abençoada por Deus, com muito amor, cumplicidade, paz e felicidades! Estou muito feliz em participar deste momento inesquecível da vida de vocês.";
+        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️✨\n\nEstou presenteando vocês com um item da lista de casamento:\n🎁 *${itemTitle}*${itemPrice ? ` (${itemPrice})` : ''}\n\n💌 *Mensagem de Carinho:*\n"${defaultLoveMsg}"\n\nPor favor, confirmem o recebimento no painel dos noivos e me passem o melhor *endereço de entrega* para que eu possa providenciar o envio com muito carinho! 📦🏡\n\n---\nCom todo carinho,\n👤 *${guestName}*${phone ? `\n📱 *Telefone/WhatsApp:* ${phone}` : ''}`;
 
         const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(whatsappMsg)}`;
 
@@ -527,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (titleEl) titleEl.innerText = 'Solicitação de Presente Enviada!';
         if (descEl) {
-          descEl.innerHTML = `Sua solicitação para presentear com <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong> foi registrada e enviada para aprovação de <strong>Rhebeca & Matheus</strong>.<br><br>Clique no botão abaixo para abrir a mensagem no WhatsApp oficial dos noivos (+55 64 99340-9360) e solicitar o endereço de entrega:`;
+          descEl.innerHTML = `Sua escolha com <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong> foi registrada com sucesso!<br><br>Você está sendo redirecionado para o WhatsApp dos noivos para enviar sua mensagem de carinho:`;
         }
         if (btnLink) {
           btnLink.href = whatsappUrl;
@@ -536,15 +542,12 @@ document.addEventListener('DOMContentLoaded', () => {
           modal.classList.add('active');
         }
 
-        // Tenta abrir automaticamente em nova aba/app
-        try {
-          const win = window.open(whatsappUrl, '_blank');
-          if (!win || win.closed || typeof win.closed === 'undefined') {
-            // Se bloqueado pelo navegador, o modal já está visível com o botão direto clicável
-          }
-        } catch (_) {}
+        showToast('Presente registrado! Redirecionando para o WhatsApp...', 'success');
 
-        showToast('Solicitação registrada! Abra o WhatsApp para notificar os noivos.', 'success');
+        // Redirecionamento automático e imediato para o WhatsApp
+        setTimeout(() => {
+          window.location.href = whatsappUrl;
+        }, 300);
       } catch (err) {
         showToast(err.message || 'Erro ao reservar presente.', 'error');
       }
@@ -580,7 +583,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawTargetPhone = settings.whatsappPhone || '5564993409360';
         const targetPhone = rawTargetPhone.replace(/\D/g, '') || '5564993409360';
 
-        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️\n\nAcabei de realizar uma contribuição de cota para a lua de mel no site de casamento:\n🌴 *${gift.title}*\n💳 *Valor:* ${formatCurrency(amount)} (${count} cota(s))\n\n---\n👤 *Convidado(a):* ${guestName}${phone ? `\n📱 *Contato:* ${phone}` : ''}${message ? `\n💌 *Mensagem:* "${message}"` : ''}`;
+        const defaultLoveCota = message || "Desejo momentos inesquecíveis na lua de mel e uma vida inteira de felicidade, amor e cumplicidade! Parabéns ao casal lindo!";
+        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️✨\n\nAcabei de presentear vocês com uma cota para a lua de mel:\n🌴 *${gift.title}*\n💳 *Valor:* ${formatCurrency(amount)} (${count} cota(s))\n\n💌 *Mensagem de Carinho:*\n"${defaultLoveCota}"\n\n---\nCom todo carinho,\n👤 *${guestName}*${phone ? `\n📱 *Telefone/WhatsApp:* ${phone}` : ''}`;
 
         const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(whatsappMsg)}`;
 
@@ -591,7 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (titleEl) titleEl.innerText = 'Cota Registrada com Sucesso!';
         if (descEl) {
-          descEl.innerHTML = `Sua contribuição de <strong style="color: var(--color-olive-deep);">${count} cota(s) em "${escapeHTML(gift.title)}" (${formatCurrency(amount)})</strong> foi registrada com sucesso!<br><br>Clique no botão abaixo para abrir o comprovante/mensagem no WhatsApp oficial dos noivos:`;
+          descEl.innerHTML = `Sua contribuição de <strong style="color: var(--color-olive-deep);">${count} cota(s) em "${escapeHTML(gift.title)}" (${formatCurrency(amount)})</strong> foi registrada com sucesso!<br><br>Você está sendo redirecionado para o WhatsApp oficial dos noivos:`;
         }
         if (btnLink) {
           btnLink.href = whatsappUrl;
@@ -600,11 +604,12 @@ document.addEventListener('DOMContentLoaded', () => {
           modal.classList.add('active');
         }
 
-        try {
-          window.open(whatsappUrl, '_blank');
-        } catch (_) {}
+        showToast('Contribuição registrada! Redirecionando para o WhatsApp...', 'success');
 
-        showToast('Contribuição registrada! Abra o WhatsApp para confirmar.', 'success');
+        // Redirecionamento automático e imediato para o WhatsApp
+        setTimeout(() => {
+          window.location.href = whatsappUrl;
+        }, 300);
       } catch (err) {
         showToast(err.message || 'Erro ao registrar cota.', 'error');
       }
