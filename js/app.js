@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.7
+   Versão: v.1.0.8
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.0.7] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.0.8] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.7) COM EXTRATOR APRIMORADO
+   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.8) COM EXTRATOR APRIMORADO
    ========================================================================== */
 const AdminController = {
   currentTab: 'gifts',
@@ -676,6 +676,9 @@ const AdminController = {
     if (this.currentTab === 'gifts') {
       document.getElementById('adminTabGifts').style.display = 'block';
       await this.renderGiftsTable();
+    } else if (this.currentTab === 'reservations') {
+      document.getElementById('adminTabReservations').style.display = 'block';
+      await this.renderReservationsTable();
     } else if (this.currentTab === 'settings') {
       document.getElementById('adminTabSettings').style.display = 'block';
       await this.renderSettingsForm();
@@ -717,6 +720,7 @@ const AdminController = {
         </td>
         <td>
           <button class="btn btn-outline btn-admin-edit" data-id="${g.id}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; margin-right: 0.3rem;">Editar</button>
+          ${(g.status === 'reserved' || g.status === 'completed' || (g.quotaCurrent && g.quotaCurrent > 0)) ? `<button class="btn btn-outline btn-admin-unreserve" data-id="${g.id}" title="Liberar item para ficar disponível novamente" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; margin-right: 0.3rem; color: var(--color-gold-accent); border-color: var(--color-gold-accent);">Liberar</button>` : ''}
           <button class="btn btn-secondary btn-admin-del" data-id="${g.id}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; color: var(--color-error);">Excluir</button>
         </td>
       </tr>
@@ -742,6 +746,18 @@ const AdminController = {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-id');
         await this.confirmDeleteGift(id);
+      });
+    });
+
+    tbody.querySelectorAll('.btn-admin-unreserve').forEach(b => {
+      b.addEventListener('click', async () => {
+        const id = b.getAttribute('data-id');
+        if (confirm('Deseja liberar este presente para ficar disponível novamente na lista pública?')) {
+          await window.weddingDB.unreserveGift(id);
+          showToast('Presente liberado e disponível novamente!', 'success');
+          await this.renderGiftsTable();
+          await CatalogController.refresh();
+        }
       });
     });
   },
@@ -813,6 +829,129 @@ const AdminController = {
       await this.renderGiftsTable();
       await CatalogController.refresh();
     };
+  },
+
+  async renderReservationsTable() {
+    const tbody = document.getElementById('adminReservationsTableBody');
+    if (!tbody) return;
+
+    const gifts = await window.weddingDB.getAllGifts();
+    const giftedItems = gifts.filter(g => 
+      g.status === 'reserved' || 
+      g.status === 'completed' || 
+      (g.quotaCurrent && g.quotaCurrent > 0) || 
+      (g.contributions && g.contributions.length > 0)
+    );
+
+    // Calcular Estatísticas dos Presenteados
+    const reservedCount = gifts.filter(g => g.status === 'reserved' || g.status === 'completed').length;
+    let totalCotasAmount = 0;
+    const uniqueGuests = new Set();
+
+    gifts.forEach(g => {
+      if (g.amountRaised) totalCotasAmount += parseFloat(g.amountRaised);
+      if (g.reservedBy) uniqueGuests.add(g.reservedBy.trim());
+      if (g.contributions && Array.isArray(g.contributions)) {
+        g.contributions.forEach(c => {
+          if (c.guestName) uniqueGuests.add(c.guestName.trim());
+        });
+      }
+    });
+
+    const statReservedEl = document.getElementById('statTotalReserved');
+    const statCotasEl = document.getElementById('statTotalCotasAmount');
+    const statGuestsEl = document.getElementById('statTotalGuests');
+
+    if (statReservedEl) statReservedEl.innerText = reservedCount;
+    if (statCotasEl) statCotasEl.innerText = formatCurrency(totalCotasAmount);
+    if (statGuestsEl) statGuestsEl.innerText = uniqueGuests.size;
+
+    if (giftedItems.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum presente foi reservado ou contribuído ainda. Quando um convidado reservar um item ou pagar uma cota, ele aparecerá aqui!</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = giftedItems.map(g => {
+      // Mapear convidados e mensagens
+      let guestListStr = '-';
+      let contactStr = '-';
+      let messageStr = '-';
+
+      if (g.isCota) {
+        if (g.contributions && g.contributions.length > 0) {
+          const names = g.contributions.map(c => `${escapeHTML(c.guestName)} (${c.quotaCount} cota${c.quotaCount > 1 ? 's' : ''})`);
+          guestListStr = names.join('<br>');
+
+          const contacts = g.contributions.map(c => c.phone || c.email).filter(Boolean);
+          contactStr = contacts.length > 0 ? escapeHTML(contacts.join(', ')) : '-';
+
+          const msgs = g.contributions.map(c => c.message).filter(Boolean);
+          messageStr = msgs.length > 0 ? `"${escapeHTML(msgs[msgs.length - 1])}"` : '-';
+        } else if (g.reservedBy) {
+          guestListStr = escapeHTML(g.reservedBy);
+          contactStr = escapeHTML(g.guestPhone || '-');
+          messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '-';
+        }
+      } else {
+        guestListStr = `<strong>${escapeHTML(g.reservedBy || 'Convidado')}</strong>`;
+        contactStr = escapeHTML(g.guestPhone || '-');
+        messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '-';
+      }
+
+      const progressDisplay = g.isCota 
+        ? `<strong style="color: var(--color-olive-primary);">${formatCurrency(g.amountRaised || 0)}</strong><br><span style="font-size: 0.78rem; color: var(--color-olive-muted);">${g.quotaCurrent || 0}/${g.quotaTotal || 0} cotas</span>`
+        : `<strong>${formatCurrency(g.price)}</strong>`;
+
+      return `
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              ${g.imageUrl ? `<img src="${escapeHTML(g.imageUrl)}" alt="${escapeHTML(g.title)}" style="width: 40px; height: 40px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--color-olive-border);">` : ''}
+              <div>
+                <strong>${escapeHTML(g.title)}</strong>
+                ${g.isFeatured ? '<span style="font-size:0.72rem; background: var(--color-warning-light); color: var(--color-gold-accent); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.35rem;">Destaque</span>' : ''}
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="gift-badge ${g.isCota ? 'badge-cota' : 'badge-reserved'}">
+              ${g.isCota ? 'Cota Lua de Mel' : 'Presente Físico'}
+            </span>
+          </td>
+          <td>${guestListStr}</td>
+          <td style="max-width: 220px; font-size: 0.85rem;">
+            <div><strong>Contato:</strong> ${contactStr}</div>
+            <div style="color: var(--color-olive-muted); font-style: italic; margin-top: 0.2rem;">${messageStr}</div>
+          </td>
+          <td>${progressDisplay}</td>
+          <td>
+            <button class="btn btn-outline btn-admin-unreserve" data-id="${g.id}" title="Liberar este item para ficar disponível novamente na vitrine pública" style="padding: 0.4rem 0.85rem; font-size: 0.82rem; color: var(--color-gold-accent); border-color: var(--color-gold-accent);">
+              <svg class="icon-line sm" viewBox="0 0 24 24" style="margin-right: 0.25rem;">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              Liberar Item
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('.btn-admin-unreserve').forEach(b => {
+      b.addEventListener('click', async () => {
+        const id = b.getAttribute('data-id');
+        const gift = await window.weddingDB.getGiftById(id);
+        const itemTitle = gift ? gift.title : 'este presente';
+
+        if (confirm(`Tem certeza que deseja liberar "${itemTitle}"?\n\nO item ficará disponível novamente para todos os convidados na lista e os dados de reserva serão limpos no cache local e no Supabase.`)) {
+          await window.weddingDB.unreserveGift(id);
+          showToast(`"${itemTitle}" foi liberado e está disponível novamente!`, 'success');
+          await this.renderReservationsTable();
+          await this.renderGiftsTable();
+          await CatalogController.refresh();
+        }
+      });
+    });
   },
 
   async editGift(id) {

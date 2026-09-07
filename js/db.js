@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.7
+   Versão: v.1.0.8
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -33,17 +33,17 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.0.7] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.0.8] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background da nuvem para o IndexedDB
         this.syncFromSupabase().catch(err => {
-          console.warn('[WeddingDB v.1.0.7] Sincronização em background inicial (IndexedDB ativo):', err);
+          console.warn('[WeddingDB v.1.0.8] Sincronização em background inicial (IndexedDB ativo):', err);
         });
       } catch (err) {
-        console.warn('[WeddingDB v.1.0.7] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.0.8] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -279,6 +279,23 @@ class WeddingDB {
         console.warn('[WeddingDB] Erro de exclusão no Supabase (deleteGift):', err);
       }
     }
+  }
+
+  async unreserveGift(id) {
+    const gift = await this.getGiftById(id);
+    if (!gift) throw new Error('Presente não encontrado.');
+
+    gift.status = 'available';
+    gift.reservedBy = null;
+    gift.guestPhone = null;
+    gift.guestMessage = null;
+    gift.reservedAt = null;
+    gift.quotaCurrent = 0;
+    gift.amountRaised = 0;
+    gift.contributions = [];
+
+    await this.saveGift(gift);
+    return gift;
   }
 
   async toggleFeatured(id) {
