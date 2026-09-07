@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.6
+   Versão: v.1.4.7
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.4.6] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.4.7] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -379,7 +379,6 @@ const CatalogController = {
 
     const urlBox = document.getElementById('reserveGiftUrlBox');
     const urlInput = document.getElementById('reserveGiftUrlInput');
-    const btnCopyOnlyFooter = document.getElementById('btnReserveCopyLinkOnly');
     const submitBtn = document.getElementById('btnSubmitReserve');
     const submitBtnText = document.getElementById('btnSubmitReserveText');
 
@@ -391,8 +390,7 @@ const CatalogController = {
     if (cleanUrl) {
       if (urlBox) urlBox.style.display = 'flex';
       if (urlInput) urlInput.value = cleanUrl;
-      if (btnCopyOnlyFooter) btnCopyOnlyFooter.style.display = 'inline-flex';
-      if (submitBtnText) submitBtnText.innerText = 'Copiar Link e Prosseguir para a Loja';
+      if (submitBtnText) submitBtnText.innerText = 'Copiar Link e Ir para a Loja';
       if (submitBtn) {
         submitBtn.className = 'btn btn-primary';
         submitBtn.title = 'Salvar escolha, copiar link da loja e abrir o produto';
@@ -400,7 +398,6 @@ const CatalogController = {
     } else {
       if (urlBox) urlBox.style.display = 'none';
       if (urlInput) urlInput.value = '';
-      if (btnCopyOnlyFooter) btnCopyOnlyFooter.style.display = 'none';
       if (submitBtnText) submitBtnText.innerText = 'Confirmar Escolha do Presente';
       if (submitBtn) {
         submitBtn.className = 'btn btn-primary';
@@ -503,7 +500,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('reserveModal').classList.remove('active');
         await CatalogController.refresh();
-        await MessagesController.refresh();
+        if (typeof MessagesController !== 'undefined' && MessagesController && typeof MessagesController.refresh === 'function') {
+          await MessagesController.refresh();
+        }
 
         // 2. Se o presente tiver link da loja virtual, abrir nova aba e mostrar tela de confirmação
         if (cleanUrl) {
@@ -517,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Eventos dos botões "Copiar Link" do modal de reserva
+    // Eventos do botão "Copiar Link" da caixa de link do modal de reserva
     const handleCopyReserveProductUrl = async () => {
       const giftId = document.getElementById('reserveGiftId').value;
       const gift = await window.weddingDB.getGiftById(giftId);
@@ -553,13 +552,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (copied) {
         showToast('Link da loja copiado com sucesso!', 'success');
-        const textEls = [
-          document.getElementById('btnCopyReserveGiftUrlText'),
-          document.getElementById('btnReserveCopyLinkOnlyText')
-        ];
-        textEls.forEach(el => { if (el) el.innerText = 'Link Copiado!'; });
+        const textEl = document.getElementById('btnCopyReserveGiftUrlText');
+        if (textEl) textEl.innerText = 'Link Copiado!';
         setTimeout(() => {
-          textEls.forEach(el => { if (el) el.innerText = 'Copiar Link'; });
+          if (textEl) textEl.innerText = 'Copiar Link';
         }, 2500);
       } else {
         showToast('Não foi possível copiar automaticamente.', 'warning');
@@ -568,9 +564,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const btnCopyReserveGiftUrl = document.getElementById('btnCopyReserveGiftUrl');
     if (btnCopyReserveGiftUrl) btnCopyReserveGiftUrl.addEventListener('click', handleCopyReserveProductUrl);
-
-    const btnReserveCopyLinkOnly = document.getElementById('btnReserveCopyLinkOnly');
-    if (btnReserveCopyLinkOnly) btnReserveCopyLinkOnly.addEventListener('click', handleCopyReserveProductUrl);
   }
 
 
