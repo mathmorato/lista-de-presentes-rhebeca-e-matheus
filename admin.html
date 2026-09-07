@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos Oficiais do Projeto -->
-  <link rel="stylesheet" href="css/styles.css?v=1.3.2">
+  <link rel="stylesheet" href="css/styles.css?v=1.3.3">
 
   <!-- Supabase JS Client Oficial -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -51,10 +51,10 @@
       </div>
 
       <!-- Formulário de Login -->
-      <form id="adminLoginForm" style="text-align: left;">
+      <form id="adminLoginForm" onsubmit="handleAdminLoginSubmit(event)" style="text-align: left;">
         <div class="form-group" style="margin-bottom: 1.25rem;">
-          <label class="form-label" for="adminEmailInput">E-mail de Acesso *</label>
-          <input type="email" id="adminEmailInput" class="form-input" required placeholder="ex.: matheus.h.h@hotmail.com" autocomplete="username">
+          <label class="form-label" for="adminEmailInput">E-mail ou Usuário de Acesso *</label>
+          <input type="text" id="adminEmailInput" class="form-input" required placeholder="ex.: matheus.h.h@hotmail.com ou Matheus" autocomplete="username">
         </div>
 
         <div class="form-group" style="margin-bottom: 1.5rem; position: relative;">
@@ -78,6 +78,20 @@
           </svg>
           Entrar no Painel de Gestão
         </button>
+
+        <div style="margin-top: 1.25rem; padding: 0.85rem; background: var(--color-cream); border: 1px dashed var(--color-olive-border); border-radius: var(--radius-sm); text-align: center;">
+          <span style="display: block; font-size: 0.78rem; color: var(--color-olive-deep); font-weight: 600; margin-bottom: 0.5rem;">
+            Acesso Rápido com 1 Clique (Noivos):
+          </span>
+          <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+            <button type="button" onclick="quickFillLogin('matheus')" class="btn btn-sm btn-outline" style="font-size: 0.8rem; padding: 0.4rem 0.85rem; background: var(--color-white); border-radius: var(--radius-full); cursor: pointer;">
+              👤 Entrar como Matheus
+            </button>
+            <button type="button" onclick="quickFillLogin('rhebeca')" class="btn btn-sm btn-outline" style="font-size: 0.8rem; padding: 0.4rem 0.85rem; background: var(--color-white); border-radius: var(--radius-full); cursor: pointer;">
+              👰 Entrar como Rhebeca
+            </button>
+          </div>
+        </div>
       </form>
 
       <div style="margin-top: 1.75rem; border-top: 1px solid var(--color-cream); padding-top: 1.25rem;">
@@ -113,7 +127,7 @@
               <h1 style="font-family: var(--font-serif); font-size: 1.35rem; color: var(--color-olive-deep); margin: 0;">
                 Painel de Gestão dos Noivos
               </h1>
-              <span class="admin-badge">Versão: v.1.3.2</span>
+              <span class="admin-badge">Versão: v.1.3.3</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.15rem; flex-wrap: wrap;">
               <span id="adminUserGreetingBadge" style="font-size: 0.8rem; color: var(--color-olive-frame); font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -841,14 +855,14 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.3.2</span>
+        <span id="app-footer-version">v.1.3.3</span>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/extractor.js?v=1.3.2"></script>
-  <script src="js/db.js?v=1.3.2"></script>
-  <script src="js/admin.js?v=1.3.2"></script>
+  <script src="js/extractor.js?v=1.3.3"></script>
+  <script src="js/db.js?v=1.3.3"></script>
+  <script src="js/admin.js?v=1.3.3"></script>
 </body>
 </html>
