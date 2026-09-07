@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.9
+   Versão: v.1.3.0
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -46,18 +46,47 @@ const AuthController = {
   },
 
   logout() {
-    sessionStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    window.location.reload();
+    try {
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch (_) {}
+    window.location.href = 'admin.html?logout=' + Date.now();
   }
 };
 
 window.AuthController = AuthController;
 
+function handleAdminLogout(event) {
+  if (event) {
+    if (typeof event.preventDefault === 'function') event.preventDefault();
+    if (typeof event.stopPropagation === 'function') event.stopPropagation();
+  }
+  const modal = document.getElementById('logoutModal');
+  if (modal) {
+    modal.classList.add('active');
+  } else {
+    AuthController.logout();
+  }
+}
+window.handleAdminLogout = handleAdminLogout;
+
 const AdminDashboard = {
   currentTab: 'gifts',
   isInitialized: false,
   selectedGiftIds: new Set(),
+
+  switchTab(tabName) {
+    if (!tabName) return;
+    this.currentTab = tabName;
+    document.querySelectorAll('.admin-tab-btn').forEach(b => {
+      if (b.getAttribute('data-tab') === tabName) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+    this.render();
+  },
 
   updateBulkActionsBar(totalGiftsCount) {
     const bar = document.getElementById('bulkActionsBar');
@@ -86,27 +115,29 @@ const AdminDashboard = {
     if (this.isInitialized) return;
     this.isInitialized = true;
 
-    // 1. Inicializar Banco de Dados Híbrido com callback de tempo real
-    await window.weddingDB.init((changeType) => {
-      console.log('[Admin v.1.2.9] Mudança em tempo real recebida:', changeType);
-      if (this.currentTab === 'gifts') {
-        this.renderGiftsTable();
-      } else if (this.currentTab === 'reservations') {
-        this.renderReservationsTable();
-      } else if (this.currentTab === 'trash') {
-        this.renderTrashTable();
-      }
-      this.updateTrashBadge();
-    });
+    // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
+    try {
+      await window.weddingDB.init((changeType) => {
+        console.log('[Admin v.1.3.0] Mudança em tempo real recebida:', changeType);
+        if (this.currentTab === 'gifts') {
+          this.renderGiftsTable();
+        } else if (this.currentTab === 'reservations') {
+          this.renderReservationsTable();
+        } else if (this.currentTab === 'trash') {
+          this.renderTrashTable();
+        }
+        this.updateTrashBadge();
+      });
+    } catch (dbErr) {
+      console.error('[Admin v.1.3.0] Erro ao conectar/inicializar banco:', dbErr);
+    }
 
     // 2. Abas do Painel
     document.querySelectorAll('.admin-tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const targetBtn = e.currentTarget;
-        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
-        targetBtn.classList.add('active');
-        this.currentTab = targetBtn.getAttribute('data-tab');
-        this.render();
+        const tabName = targetBtn.getAttribute('data-tab');
+        this.switchTab(tabName);
       });
     });
 
@@ -1589,6 +1620,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
   }
 };
 
+window.AdminDashboard = AdminDashboard;
+
 /* Inicialização da Página de Administração */
 document.addEventListener('DOMContentLoaded', () => {
   const loginView = document.getElementById('adminLoginView');
@@ -1599,6 +1632,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const togglePasswordBtn = document.getElementById('toggleLoginPassword');
   const passwordInput = document.getElementById('adminPasswordInput');
 
+  // 1. Configuração Imediata de Logout e Modal
+  const btnLogout = document.getElementById('btnAdminLogout');
+  const logoutModal = document.getElementById('logoutModal');
+  const btnConfirmLogout = document.getElementById('btnConfirmLogout');
+  const btnCancelLogout = document.getElementById('btnCancelLogout');
+
+  if (btnLogout) {
+    btnLogout.addEventListener('click', (e) => {
+      window.handleAdminLogout(e);
+    });
+  }
+
+  if (logoutModal) {
+    const closeLogoutModal = () => logoutModal.classList.remove('active');
+    if (btnCancelLogout) btnCancelLogout.addEventListener('click', closeLogoutModal);
+    logoutModal.addEventListener('click', (e) => {
+      if (e.target === logoutModal) closeLogoutModal();
+    });
+    if (btnConfirmLogout) {
+      btnConfirmLogout.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeLogoutModal();
+        AuthController.logout();
+      });
+    }
+  }
+
+  // 2. Configuração Imediata das Abas (ativa navegação sem depender de async)
+  document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetBtn = e.currentTarget;
+      const tabName = targetBtn.getAttribute('data-tab');
+      if (window.AdminDashboard && typeof window.AdminDashboard.switchTab === 'function') {
+        window.AdminDashboard.switchTab(tabName);
+      }
+    });
+  });
+
+  // 3. Alternar visualização da senha de login
   if (togglePasswordBtn && passwordInput) {
     togglePasswordBtn.addEventListener('click', () => {
       const isPass = passwordInput.type === 'password';

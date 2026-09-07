@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.9
+   Versão: v.1.3.0
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -37,20 +37,20 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.2.8] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.3.0] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background bidirecionalmente entre IndexedDB e Supabase
         this.syncWithSupabase({ silent: true }).catch(err => {
-          console.warn('[WeddingDB v.1.2.8] Sincronização inicial em background (IndexedDB ativo):', err);
+          console.warn('[WeddingDB v.1.3.0] Sincronização inicial em background (IndexedDB ativo):', err);
         });
 
         // Iniciar sincronização automática periódica a cada 15 segundos
         this.startAutoSync(15);
       } catch (err) {
-        console.warn('[WeddingDB v.1.2.8] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.3.0] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -157,7 +157,7 @@ class WeddingDB {
     this.stopAutoSync();
     this.autoSyncIntervalSeconds = intervalSeconds || 15;
     const intervalMs = this.autoSyncIntervalSeconds * 1000;
-    console.log(`[WeddingDB v.1.2.8] AutoSync ativado: sincronizando a cada ${this.autoSyncIntervalSeconds} segundos.`);
+    console.log(`[WeddingDB v.1.3.0] AutoSync ativado: sincronizando a cada ${this.autoSyncIntervalSeconds} segundos.`);
 
     this.autoSyncTimer = setInterval(async () => {
       // Executa apenas se o dispositivo estiver online e não houver sincronização em curso
@@ -168,7 +168,7 @@ class WeddingDB {
         try {
           await this.syncWithSupabase({ silent: true });
         } catch (err) {
-          console.warn('[WeddingDB v.1.2.8 AutoSync] Erro na sincronização periódica (silenciosa):', err.message || err);
+          console.warn('[WeddingDB v.1.3.0 AutoSync] Erro na sincronização periódica (silenciosa):', err.message || err);
         }
       }
     }, intervalMs);
@@ -181,7 +181,7 @@ class WeddingDB {
     if (this.autoSyncTimer) {
       clearInterval(this.autoSyncTimer);
       this.autoSyncTimer = null;
-      console.log('[WeddingDB v.1.2.8] AutoSync pausado.');
+      console.log('[WeddingDB v.1.3.0] AutoSync pausado.');
     }
   }
 
@@ -210,7 +210,7 @@ class WeddingDB {
 
     try {
       if (!isSilent) {
-        console.log('[WeddingDB v.1.2.8] Iniciando sincronização bidirecional completa com Supabase...');
+        console.log('[WeddingDB v.1.3.0] Iniciando sincronização bidirecional completa com Supabase...');
       }
 
       // 0. Processar exclusões pendentes feitas em modo offline e carregar tombstones de itens deletados
@@ -422,7 +422,7 @@ class WeddingDB {
       const timeString = this.lastSyncTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
       if (!isSilent) {
-        console.log(`[WeddingDB v.1.2.8] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
+        console.log(`[WeddingDB v.1.3.0] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
       }
 
       const syncResult = {
@@ -667,7 +667,7 @@ class WeddingDB {
           // Exclusão confirmada no Supabase: limpar pendências
           pendingDeletes = pendingDeletes.filter(x => !ids.includes(x));
           localStorage.setItem('wedding_deleted_gift_ids', JSON.stringify(pendingDeletes));
-          console.log(`[WeddingDB v.1.2.9] ${ids.length} presentes excluídos e sincronizados no Supabase.`);
+          console.log(`[WeddingDB v.1.3.0] ${ids.length} presentes excluídos e sincronizados no Supabase.`);
         }
       } catch (err) {
         console.warn('[WeddingDB] Falha de rede ao excluir em lote no Supabase:', err);
