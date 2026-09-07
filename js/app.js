@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.6
+   Versão: v.1.1.7
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.1.6] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.1.7] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -1092,8 +1092,21 @@ const AdminController = {
 
     this.updateImagePreview(gift.imageUrl);
 
-    document.getElementById('adminGiftSubmitBtn').innerText = 'Salvar Alterações';
-    document.getElementById('adminGiftCancelBtn').style.display = 'inline-flex';
+    const submitBtn = document.getElementById('adminGiftSubmitBtn');
+    if (submitBtn) {
+      submitBtn.innerHTML = `
+        <svg class="icon-line sm" viewBox="0 0 24 24">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <span>Salvar Alterações</span>
+      `;
+    }
+    const cancelBtn = document.getElementById('adminGiftCancelBtn');
+    if (cancelBtn) {
+      cancelBtn.style.display = 'inline-flex';
+    }
     document.getElementById('adminGiftFormTitle').innerText = 'Editar Item da Lista';
     document.getElementById('adminGiftForm').scrollIntoView({ behavior: 'smooth' });
   },
@@ -1105,8 +1118,20 @@ const AdminController = {
     const fileInput = document.getElementById('adminGiftImageFile');
     if (fileInput) fileInput.value = '';
     document.getElementById('adminCotaFields').style.display = 'none';
-    document.getElementById('adminGiftSubmitBtn').innerText = 'Adicionar à Lista';
-    document.getElementById('adminGiftCancelBtn').style.display = 'none';
+    const submitBtn = document.getElementById('adminGiftSubmitBtn');
+    if (submitBtn) {
+      submitBtn.innerHTML = `
+        <svg class="icon-line sm" viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Adicionar à Lista</span>
+      `;
+    }
+    const cancelBtn = document.getElementById('adminGiftCancelBtn');
+    if (cancelBtn) {
+      cancelBtn.style.display = 'none';
+    }
     document.getElementById('adminGiftFormTitle').innerText = 'Cadastrar Novo Presente ou Cota';
     this.updateImagePreview('');
   },
