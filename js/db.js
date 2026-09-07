@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.0
+   Versão: v.1.3.1
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -482,7 +482,8 @@ class WeddingDB {
       guestMessage: remote.guest_message,
       reservedAt: remote.reserved_at,
       contributions: remote.contributions || [],
-      updatedAt: remote.updated_at || null
+      updatedAt: remote.updated_at || null,
+      deletedAt: remote.deleted_at || (remote.status === 'trash' ? remote.updated_at : null)
     };
   }
 
@@ -679,9 +680,33 @@ class WeddingDB {
     }
   }
 
-  // --- LIXEIRA DE PRESENTES (RECUPERAÇÃO E EXCLUSÃO DEFINITIVA) ---
+  // --- LIXEIRA DE PRESENTES (RECUPERAÇÃO E EXCLUSÃO DEFINITIVA INTEGRADA AO SUPABASE) ---
 
   async getTrashGifts() {
+    // 1. Sincronizar itens de lixeira remotos do Supabase se o cliente estiver disponível
+    if (this.supabaseClient) {
+      try {
+        const { data: remoteTrash, error } = await this.supabaseClient
+          .from('gifts')
+          .select('*')
+          .eq('status', 'trash');
+
+        if (!error && Array.isArray(remoteTrash)) {
+          for (const rt of remoteTrash) {
+            const mapped = this._mapFromSupabaseGift(rt);
+            const local = await this.getGiftById(rt.id);
+            if (!local || local.status !== 'trash') {
+              mapped.status = 'trash';
+              if (!mapped.deletedAt) mapped.deletedAt = rt.updated_at || new Date().toISOString();
+              await this._saveGiftLocalOnly(mapped);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[WeddingDB v.1.3.1] Erro ao sincronizar lixeira remota com Supabase:', err);
+      }
+    }
+
     const all = await this.getAllGifts({ includeTrash: true });
     return all.filter(g => g.status === 'trash').sort((a, b) => {
       const tA = new Date(a.deletedAt || a.updatedAt || 0).getTime();
@@ -700,23 +725,31 @@ class WeddingDB {
 
     await this._saveGiftLocalOnly(gift);
 
+    let supabaseSynced = false;
     if (this.supabaseClient) {
       try {
         const payload = this._mapToSupabaseGift(gift);
-        await this.supabaseClient.from('gifts').upsert(payload);
+        const { error } = await this.supabaseClient.from('gifts').upsert(payload);
+        if (!error) {
+          supabaseSynced = true;
+          console.log('[WeddingDB v.1.3.1] Item movido para a lixeira e sincronizado no Supabase:', id);
+        } else {
+          console.warn('[WeddingDB v.1.3.1] Erro ao sincronizar status de lixeira no Supabase:', error);
+        }
       } catch (err) {
-        console.warn('[WeddingDB] Erro ao mover presente para a lixeira no Supabase:', err);
+        console.warn('[WeddingDB v.1.3.1] Falha de rede ao mover item para lixeira no Supabase:', err);
       }
     }
 
     if (this.onDataChangeCallback) {
       this.onDataChangeCallback('gifts');
     }
-    return gift;
+    return { gift, supabaseSynced };
   }
 
   async trashMultipleGifts(ids) {
     if (!Array.isArray(ids) || ids.length === 0) return;
+    const payloads = [];
     for (const id of ids) {
       const gift = await this.getGiftById(id);
       if (gift) {
@@ -724,13 +757,16 @@ class WeddingDB {
         gift.deletedAt = new Date().toISOString();
         gift.updatedAt = new Date().toISOString();
         await this._saveGiftLocalOnly(gift);
+        payloads.push(this._mapToSupabaseGift(gift));
+      }
+    }
 
-        if (this.supabaseClient) {
-          try {
-            const payload = this._mapToSupabaseGift(gift);
-            await this.supabaseClient.from('gifts').upsert(payload);
-          } catch (_) {}
-        }
+    if (this.supabaseClient && payloads.length > 0) {
+      try {
+        await this.supabaseClient.from('gifts').upsert(payloads);
+        console.log(`[WeddingDB v.1.3.1] ${payloads.length} itens movidos para a lixeira e sincronizados no Supabase.`);
+      } catch (err) {
+        console.warn('[WeddingDB v.1.3.1] Falha ao sincronizar exclusão em lote para lixeira no Supabase:', err);
       }
     }
 

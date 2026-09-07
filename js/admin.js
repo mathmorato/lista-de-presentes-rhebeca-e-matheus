@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.0
+   Versão: v.1.3.1
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -118,7 +118,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.3.0] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.3.1] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -129,7 +129,7 @@ const AdminDashboard = {
         this.updateTrashBadge();
       });
     } catch (dbErr) {
-      console.error('[Admin v.1.3.0] Erro ao conectar/inicializar banco:', dbErr);
+      console.error('[Admin v.1.3.1] Erro ao conectar/inicializar banco:', dbErr);
     }
 
     // 2. Abas do Painel
@@ -872,6 +872,30 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
     const trashItems = await window.weddingDB.getTrashGifts();
     const btnEmptyTrash = document.getElementById('btnEmptyTrash');
+    const btnSyncTrash = document.getElementById('btnSyncTrashNow');
+
+    if (btnSyncTrash) {
+      btnSyncTrash.onclick = async () => {
+        btnSyncTrash.disabled = true;
+        const icon = document.getElementById('iconSyncTrash');
+        const label = document.getElementById('labelSyncTrash');
+        if (icon) icon.classList.add('icon-spin');
+        if (label) label.innerText = 'Sincronizando...';
+        showToast('Sincronizando lixeira com o Supabase...', 'info');
+        try {
+          await window.weddingDB.syncWithSupabase();
+          await this.renderTrashTable();
+          await this.updateTrashBadge();
+          showToast('Lixeira sincronizada com o Supabase!', 'success');
+        } catch (err) {
+          showToast('Erro ao sincronizar lixeira: ' + (err.message || 'Falha de rede'), 'error');
+        } finally {
+          btnSyncTrash.disabled = false;
+          if (icon) icon.classList.remove('icon-spin');
+          if (label) label.innerText = 'Sincronizar Lixeira';
+        }
+      };
+    }
 
     if (btnEmptyTrash) {
       btnEmptyTrash.disabled = trashItems.length === 0;
@@ -886,7 +910,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (trashItems.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; padding: 3.5rem 1rem; color: var(--color-olive-muted);">
+          <td colspan="7" style="text-align: center; padding: 3.5rem 1rem; color: var(--color-olive-muted);">
             <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
               <svg class="icon-line lg" style="color: var(--color-olive-frame); opacity: 0.5;" viewBox="0 0 24 24">
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -894,7 +918,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
               </svg>
               <h4 style="font-size: 1.1rem; color: var(--color-olive-deep); margin: 0;">A lixeira está vazia</h4>
               <p style="font-size: 0.85rem; margin: 0; max-width: 400px; line-height: 1.4;">
-                Nenhum presente foi excluído recentemente. Quando você excluir itens do catálogo, eles aparecerão aqui para serem restaurados ou apagados definitivamente.
+                Nenhum presente foi excluído recentemente. Quando você excluir itens do catálogo, eles aparecerão aqui com os dados integrados do Supabase para serem restaurados ou apagados definitivamente.
               </p>
             </div>
           </td>
@@ -913,6 +937,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
         ? new Date(g.deletedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : (g.updatedAt ? new Date(g.updatedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-');
 
+      const donorBadge = g.reservedBy 
+        ? `<span style="display:block; font-size:0.75rem; color:var(--color-gold-accent); margin-top:0.2rem; font-weight:500;">Presenteado por: <strong>${escapeHTML(g.reservedBy)}</strong></span>`
+        : '';
+
       return `
         <tr data-trash-id="${g.id}">
           <td style="vertical-align: middle;">
@@ -921,9 +949,17 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           <td style="vertical-align: middle;">
             <strong style="color: var(--color-olive-deep); font-size: 0.95rem;">${escapeHTML(g.title)}</strong>
             ${g.isCota ? '<span style="display:block; font-size:0.75rem; color:var(--color-olive-frame);">Cota de Lua de Mel</span>' : ''}
+            ${donorBadge}
           </td>
           <td style="vertical-align: middle; text-transform: capitalize;">${escapeHTML(g.category)}</td>
           <td style="vertical-align: middle; font-weight: 600; color: var(--color-olive-primary);">${priceText}</td>
+          <td style="vertical-align: middle;">
+            <span class="badge" style="background: rgba(96, 108, 56, 0.12); color: var(--color-olive-deep); border: 1px solid rgba(96, 108, 56, 0.28); font-size: 0.74rem; padding: 0.2rem 0.55rem; border-radius: 999px; display: inline-flex; align-items: center; gap: 0.3rem;">
+              <svg class="icon-line xs" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+              <span>Supabase Integrado</span>
+            </span>
+            <span style="display: block; font-size: 0.7rem; color: var(--color-olive-muted); margin-top: 0.2rem; font-family: monospace;">ID: ${escapeHTML(g.id)}</span>
+          </td>
           <td style="vertical-align: middle; font-size: 0.85rem; color: var(--color-olive-muted);">${deletedDateText}</td>
           <td style="vertical-align: middle; text-align: right;">
             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap;">
@@ -967,12 +1003,16 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
   async handleRestoreGift(id) {
     try {
-      const restored = await window.weddingDB.restoreGift(id);
-      const title = restored ? restored.title : 'Presente';
-      showToast(`Item "${title}" restaurado com sucesso para a vitrine pública!`, 'success');
+      const res = await window.weddingDB.restoreGift(id);
+      const gift = res && res.gift ? res.gift : res;
+      const title = gift ? gift.title : 'Presente';
+      const cloudMsg = res && res.supabaseSynced ? ' (sincronizado na nuvem)' : '';
+      showToast(`Item "${title}" restaurado com sucesso para a vitrine pública!${cloudMsg}`, 'success');
       await this.render();
     } catch (err) {
       showToast(err.message || 'Erro ao restaurar presente.', 'error');
+    }
+  },
     }
   },
 
