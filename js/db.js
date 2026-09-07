@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.8
+   Versão: v.1.2.9
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -261,7 +261,7 @@ class WeddingDB {
         }
       }
 
-      const localGifts = await this.getAllGifts();
+      const localGifts = await this.getAllGifts({ includeTrash: true });
       const remoteMap = new Map(sanitizedRemoteGifts.map(rg => [rg.id, rg]));
 
       // 1a. Upload e Conciliação Bidirecional com base em timestamp (updatedAt)
@@ -513,13 +513,21 @@ class WeddingDB {
 
   // --- MÉTODOS DE PRESENTES (GIFTS) ---
 
-  async getAllGifts() {
+  async getAllGifts(options = {}) {
+    const includeTrash = options && options.includeTrash === true;
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('gifts', 'readonly');
       const store = tx.objectStore('gifts');
       const request = store.getAll();
 
-      request.onsuccess = () => resolve(request.result || []);
+      request.onsuccess = () => {
+        const results = request.result || [];
+        if (includeTrash) {
+          resolve(results);
+        } else {
+          resolve(results.filter(g => g.status !== 'trash'));
+        }
+      };
       request.onerror = () => reject(request.error);
     });
   }
@@ -659,7 +667,7 @@ class WeddingDB {
           // Exclusão confirmada no Supabase: limpar pendências
           pendingDeletes = pendingDeletes.filter(x => !ids.includes(x));
           localStorage.setItem('wedding_deleted_gift_ids', JSON.stringify(pendingDeletes));
-          console.log(`[WeddingDB v.1.2.8] ${ids.length} presentes excluídos e sincronizados no Supabase.`);
+          console.log(`[WeddingDB v.1.2.9] ${ids.length} presentes excluídos e sincronizados no Supabase.`);
         }
       } catch (err) {
         console.warn('[WeddingDB] Falha de rede ao excluir em lote no Supabase:', err);
@@ -669,6 +677,114 @@ class WeddingDB {
     if (this.onDataChangeCallback) {
       this.onDataChangeCallback('gifts');
     }
+  }
+
+  // --- LIXEIRA DE PRESENTES (RECUPERAÇÃO E EXCLUSÃO DEFINITIVA) ---
+
+  async getTrashGifts() {
+    const all = await this.getAllGifts({ includeTrash: true });
+    return all.filter(g => g.status === 'trash').sort((a, b) => {
+      const tA = new Date(a.deletedAt || a.updatedAt || 0).getTime();
+      const tB = new Date(b.deletedAt || b.updatedAt || 0).getTime();
+      return tB - tA; // Mais recentemente excluídos primeiro
+    });
+  }
+
+  async trashGift(id) {
+    const gift = await this.getGiftById(id);
+    if (!gift) return null;
+
+    gift.status = 'trash';
+    gift.deletedAt = new Date().toISOString();
+    gift.updatedAt = new Date().toISOString();
+
+    await this._saveGiftLocalOnly(gift);
+
+    if (this.supabaseClient) {
+      try {
+        const payload = this._mapToSupabaseGift(gift);
+        await this.supabaseClient.from('gifts').upsert(payload);
+      } catch (err) {
+        console.warn('[WeddingDB] Erro ao mover presente para a lixeira no Supabase:', err);
+      }
+    }
+
+    if (this.onDataChangeCallback) {
+      this.onDataChangeCallback('gifts');
+    }
+    return gift;
+  }
+
+  async trashMultipleGifts(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+    for (const id of ids) {
+      const gift = await this.getGiftById(id);
+      if (gift) {
+        gift.status = 'trash';
+        gift.deletedAt = new Date().toISOString();
+        gift.updatedAt = new Date().toISOString();
+        await this._saveGiftLocalOnly(gift);
+
+        if (this.supabaseClient) {
+          try {
+            const payload = this._mapToSupabaseGift(gift);
+            await this.supabaseClient.from('gifts').upsert(payload);
+          } catch (_) {}
+        }
+      }
+    }
+
+    if (this.onDataChangeCallback) {
+      this.onDataChangeCallback('gifts');
+    }
+  }
+
+  async restoreGift(id) {
+    const gift = await this.getGiftById(id);
+    if (!gift) return null;
+
+    // Se havia reserva anterior preservada, recupera status condizente, senão available
+    gift.status = (gift.reservedBy || gift.approvalStatus) ? 'pending_approval' : 'available';
+    delete gift.deletedAt;
+    gift.updatedAt = new Date().toISOString();
+
+    // Remover dos tombstones caso estivesse acidentalmente
+    try {
+      let tombstones = JSON.parse(localStorage.getItem('wedding_deleted_tombstones') || '[]');
+      if (tombstones.includes(id)) {
+        tombstones = tombstones.filter(x => x !== id);
+        localStorage.setItem('wedding_deleted_tombstones', JSON.stringify(tombstones));
+      }
+    } catch (_) {}
+
+    await this._saveGiftLocalOnly(gift);
+
+    if (this.supabaseClient) {
+      try {
+        const payload = this._mapToSupabaseGift(gift);
+        await this.supabaseClient.from('gifts').upsert(payload);
+      } catch (err) {
+        console.warn('[WeddingDB] Erro ao restaurar presente no Supabase:', err);
+      }
+    }
+
+    if (this.onDataChangeCallback) {
+      this.onDataChangeCallback('gifts');
+    }
+    return gift;
+  }
+
+  async permanentDeleteGift(id) {
+    return await this.deleteGift(id);
+  }
+
+  async emptyTrash() {
+    const trashed = await this.getTrashGifts();
+    const ids = trashed.map(g => g.id);
+    if (ids.length > 0) {
+      await this.deleteMultipleGifts(ids);
+    }
+    return ids.length;
   }
 
   async unreserveGift(id) {
