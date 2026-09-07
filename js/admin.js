@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.4
+   Versão: v.1.2.5
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -64,7 +64,7 @@ const AdminDashboard = {
 
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real
     await window.weddingDB.init((changeType) => {
-      console.log('[Admin v.1.2.1] Mudança em tempo real recebida:', changeType);
+      console.log('[Admin v.1.2.5] Mudança em tempo real recebida:', changeType);
       if (this.currentTab === 'gifts') {
         this.renderGiftsTable();
       } else if (this.currentTab === 'reservations') {
@@ -251,6 +251,22 @@ const AdminDashboard = {
         handleManualSync(btnTriggerSyncNow, icon, label);
       });
     }
+
+    // 8.2 Ouvinte do Evento de Sincronização (Automática a cada 15s ou Manual)
+    window.addEventListener('wedding:sync-completed', (e) => {
+      const detail = e.detail || {};
+      const syncLastTimeVal = document.getElementById('syncLastTimeVal');
+      if (syncLastTimeVal && detail.timeString) {
+        syncLastTimeVal.innerText = `Sincronizado às ${detail.timeString} (Auto 15s)`;
+      }
+      if (detail.hasChanges) {
+        if (this.currentTab === 'gifts') {
+          this.renderGiftsTable();
+        } else if (this.currentTab === 'reservations') {
+          this.renderReservationsTable();
+        }
+      }
+    });
 
     // 8.1 Botão de Copiar Script SQL do Supabase
     const btnCopySql = document.getElementById('btnCopySqlScript');

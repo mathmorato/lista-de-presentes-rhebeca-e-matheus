@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.4
+   Versão: v.1.2.5
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -13,6 +13,10 @@ class WeddingDB {
     this.supabaseClient = null;
     this.isInitialized = false;
     this.onDataChangeCallback = null;
+    this.isSyncing = false;
+    this.autoSyncTimer = null;
+    this.autoSyncIntervalSeconds = 15;
+    this.lastSyncTime = null;
   }
 
   async init(onDataChange) {
@@ -33,17 +37,20 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.2.1] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.2.5] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background bidirecionalmente entre IndexedDB e Supabase
-        this.syncWithSupabase().catch(err => {
-          console.warn('[WeddingDB v.1.2.1] Sincronização inicial em background (IndexedDB ativo):', err);
+        this.syncWithSupabase({ silent: true }).catch(err => {
+          console.warn('[WeddingDB v.1.2.5] Sincronização inicial em background (IndexedDB ativo):', err);
         });
+
+        // Iniciar sincronização automática periódica a cada 15 segundos
+        this.startAutoSync(15);
       } catch (err) {
-        console.warn('[WeddingDB v.1.2.1] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.2.5] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -132,7 +139,50 @@ class WeddingDB {
     }
   }
 
-  async syncWithSupabase() {
+  /**
+   * Inicia sincronização automática em background a cada N segundos (padrão: 15 segundos)
+   */
+  startAutoSync(intervalSeconds = 15) {
+    this.stopAutoSync();
+    this.autoSyncIntervalSeconds = intervalSeconds || 15;
+    const intervalMs = this.autoSyncIntervalSeconds * 1000;
+    console.log(`[WeddingDB v.1.2.5] AutoSync ativado: sincronizando a cada ${this.autoSyncIntervalSeconds} segundos.`);
+
+    this.autoSyncTimer = setInterval(async () => {
+      // Executa apenas se o dispositivo estiver online e não houver sincronização em curso
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        return;
+      }
+      if (!this.isSyncing) {
+        try {
+          await this.syncWithSupabase({ silent: true });
+        } catch (err) {
+          console.warn('[WeddingDB v.1.2.5 AutoSync] Erro na sincronização periódica (silenciosa):', err.message || err);
+        }
+      }
+    }, intervalMs);
+  }
+
+  /**
+   * Para o ciclo de sincronização automática periódica
+   */
+  stopAutoSync() {
+    if (this.autoSyncTimer) {
+      clearInterval(this.autoSyncTimer);
+      this.autoSyncTimer = null;
+      console.log('[WeddingDB v.1.2.5] AutoSync pausado.');
+    }
+  }
+
+  async syncWithSupabase(options = {}) {
+    const isSilent = !!(options && options.silent);
+
+    // Proteção contra chamadas simultâneas ou sobreposição de requisições a cada 15 segundos
+    if (this.isSyncing) {
+      if (!isSilent) console.log('[WeddingDB] Sincronização já em andamento, aguardando término...');
+      return { success: true, message: 'Sincronização em andamento.', inProgress: true };
+    }
+
     if (!this.supabaseClient) {
       const settings = await this.getSettings();
       const supabaseUrl = settings.supabaseUrl || 'https://ttggcvricfkoqlorbmnv.supabase.co';
@@ -145,8 +195,12 @@ class WeddingDB {
       }
     }
 
+    this.isSyncing = true;
+
     try {
-      console.log('[WeddingDB v.1.2.1] Iniciando sincronização bidirecional completa com Supabase...');
+      if (!isSilent) {
+        console.log('[WeddingDB v.1.2.5] Iniciando sincronização bidirecional completa com Supabase...');
+      }
 
       // 0. Processar exclusões pendentes feitas em modo offline
       let pendingDeletes = [];
@@ -227,6 +281,7 @@ class WeddingDB {
 
       // 2. Sincronização de MENSAGENS (messages)
       let messagesSyncedCount = 0;
+      let msgsChanged = 0;
       try {
         const { data: remoteMsgs, error: msgErr } = await this.supabaseClient.from('messages').select('*');
         if (!msgErr && Array.isArray(remoteMsgs)) {
@@ -245,6 +300,7 @@ class WeddingDB {
                 gift_title: lm.giftTitle || null,
                 created_at: lm.createdAt
               });
+              msgsChanged++;
             }
           }
 
@@ -258,6 +314,7 @@ class WeddingDB {
                 giftTitle: rm.gift_title,
                 createdAt: rm.created_at
               });
+              msgsChanged++;
             }
           }
         }
@@ -267,6 +324,7 @@ class WeddingDB {
 
       // 3. Sincronização de CONFIRMAÇÃO DE PRESENÇA (rsvps)
       let rsvpsSyncedCount = 0;
+      let rsvpsChanged = 0;
       try {
         const { data: remoteRsvps, error: rsvpErr } = await this.supabaseClient.from('rsvps').select('*');
         if (!rsvpErr && Array.isArray(remoteRsvps)) {
@@ -288,6 +346,7 @@ class WeddingDB {
                 dietary: lr.dietary || null,
                 created_at: lr.createdAt
               });
+              rsvpsChanged++;
             }
           }
 
@@ -304,6 +363,7 @@ class WeddingDB {
                 dietary: rr.dietary,
                 createdAt: rr.created_at
               });
+              rsvpsChanged++;
             }
           }
         }
@@ -311,25 +371,49 @@ class WeddingDB {
         console.warn('[WeddingDB] Aviso ao sincronizar RSVPs:', errRsvp);
       }
 
-      // Notificar ouvintes que dados foram atualizados
-      if (this.onDataChangeCallback) {
+      const hasChanges = (uploadCount > 0) || (downloadCount > 0) || (msgsChanged > 0) || (rsvpsChanged > 0);
+
+      // Notificar ouvintes apenas se dados foram alterados ou se for chamada manual
+      if ((hasChanges || !isSilent) && this.onDataChangeCallback) {
         this.onDataChangeCallback('all');
       }
 
       const totalLocalGifts = (await this.getAllGifts()).length;
+      this.lastSyncTime = new Date();
+      const timeString = this.lastSyncTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-      console.log(`[WeddingDB v.1.2.1] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
+      if (!isSilent) {
+        console.log(`[WeddingDB v.1.2.5] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
+      }
 
-      return {
+      const syncResult = {
         success: true,
         giftsSynced: Math.max(totalLocalGifts, remoteMap.size),
         messagesSynced: messagesSyncedCount,
         rsvpsSynced: rsvpsSyncedCount,
-        timestamp: new Date().toISOString()
+        hasChanges,
+        uploadCount,
+        downloadCount,
+        timestamp: this.lastSyncTime.toISOString(),
+        timeString
       };
+
+      // Disparar evento global para atualizar indicadores visuais na UI
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('wedding:sync-completed', {
+          detail: {
+            ...syncResult,
+            silent: isSilent
+          }
+        }));
+      }
+
+      return syncResult;
     } catch (e) {
       console.error('[WeddingDB] Falha no processo de sincronização:', e);
       throw e;
+    } finally {
+      this.isSyncing = false;
     }
   }
 
