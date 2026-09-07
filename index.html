@@ -464,7 +464,7 @@
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.6) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.7) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content lg">
       <div class="modal-header">
@@ -480,7 +480,7 @@
           <div>
             <h3 style="margin: 0; font-family: var(--font-serif); color: var(--color-olive-deep); font-size: 1.35rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
               Painel de Gestão dos Noivos
-              <span class="admin-badge">Versão: v.1.1.6</span>
+              <span class="admin-badge">Versão: v.1.1.7</span>
             </h3>
             <p style="margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--color-olive-muted);">
               Gestão da lista de presentes, cotas financeiras e convidados presenteadores
@@ -611,18 +611,26 @@
                 <input type="text" id="adminGiftDesc" class="form-input" placeholder="Detalhes, cor ou preferência de modelo...">
               </div>
 
-              <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 1rem 0;">
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <div class="admin-checkbox-group">
+                <label class="admin-checkbox-card" for="adminGiftFeatured">
                   <input type="checkbox" id="adminGiftFeatured">
-                  <span style="font-weight: 600; color: var(--color-gold-soft); display: flex; align-items: center; gap: 0.3rem;">
-                    <svg class="icon-line sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                    Destacar como "Mais Desejado dos Noivos" ⭐
-                  </span>
+                  <div class="checkbox-card-content">
+                    <svg class="icon-line sm" viewBox="0 0 24 24">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <span>Destacar como "Mais Desejado dos Noivos"</span>
+                  </div>
                 </label>
 
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <label class="admin-checkbox-card" for="adminGiftIsCota">
                   <input type="checkbox" id="adminGiftIsCota">
-                  <span style="font-weight: 600;">Arrecadar em Cotas (Lua de Mel / Presente Coletivo)</span>
+                  <div class="checkbox-card-content">
+                    <svg class="icon-line sm" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 2a10 10 0 0 1 10 10H12V2z"></path>
+                    </svg>
+                    <span>Arrecadar em Cotas (Lua de Mel / Presente Coletivo)</span>
+                  </div>
                 </label>
               </div>
 
@@ -639,9 +647,21 @@
                 </div>
               </div>
 
-              <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                <button type="button" id="adminGiftCancelBtn" class="btn btn-secondary" style="display: none;" onclick="AdminController.resetGiftForm()">Cancelar</button>
-                <button type="submit" id="adminGiftSubmitBtn" class="btn btn-primary">Adicionar à Lista</button>
+              <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center;">
+                <button type="button" id="adminGiftCancelBtn" class="btn btn-secondary btn-with-icon" style="display: none;" onclick="AdminController.resetGiftForm()">
+                  <svg class="icon-line sm" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span>Cancelar</span>
+                </button>
+                <button type="submit" id="adminGiftSubmitBtn" class="btn btn-primary btn-with-icon">
+                  <svg class="icon-line sm" viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>Adicionar à Lista</span>
+                </button>
               </div>
             </form>
           </div>
@@ -845,7 +865,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.1.6</span>
+          <span id="app-footer-version">v.1.1.7</span>
         </div>
       </div>
     </div>
