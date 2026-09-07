@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.4
+   Versão: v.1.1.5
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -1144,7 +1144,31 @@ a {
 }
 
 .modal-content.lg {
-  max-width: 900px;
+  max-width: 1200px;
+  width: min(1200px, 95vw);
+}
+
+.modal-content::-webkit-scrollbar,
+.admin-table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track,
+.admin-table-container::-webkit-scrollbar-track {
+  background: var(--color-cream);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.admin-table-container::-webkit-scrollbar-thumb {
+  background: var(--color-olive-border);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.admin-table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-olive-frame);
 }
 
 .modal-backdrop.active .modal-content {
@@ -1324,8 +1348,19 @@ a {
   color: var(--color-gold-accent);
 }
 
+.admin-table-container {
+  overflow-x: auto;
+  width: 100%;
+  border: 1px solid var(--color-olive-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  box-shadow: var(--shadow-sm);
+  -webkit-overflow-scrolling: touch;
+}
+
 .admin-table {
   width: 100%;
+  min-width: 780px;
   border-collapse: collapse;
   font-size: 0.9rem;
 }
@@ -1334,12 +1369,22 @@ a {
   padding: 0.85rem 1rem;
   text-align: left;
   border-bottom: 1px solid var(--color-olive-border);
+  vertical-align: middle;
 }
 
 .admin-table th {
   background: var(--color-card-bg);
   color: var(--color-olive-deep);
   font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-table th:last-child,
+.admin-table td:last-child {
+  text-align: right;
+  min-width: 220px;
 }
 
 /* Ações da Tabela de Gestão */
