@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.6
+   Versão: v.1.3.7
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -256,7 +256,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.3.6] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.3.7] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -1670,7 +1670,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           <div style="display:inline-flex; flex-direction:column; gap:0.25rem;">
             <span class="badge" style="background:#d4edda; color:#155724; border:1.5px solid #c3e6cb; padding:0.35rem 0.75rem; border-radius:var(--radius-full); font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
               <svg class="icon-line xs" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              ✅ Aprovado / Confirmado
+              Confirmado
             </span>
             ${g.reservedAt ? `<span style="font-size:0.75rem; color:var(--color-olive-muted);">Confirmado em ${new Date(g.reservedAt).toLocaleDateString('pt-BR')}</span>` : ''}
           </div>
