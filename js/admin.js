@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.0
+   Versão: v.1.4.1
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -299,7 +299,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.4.0] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.4.1] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -312,7 +312,7 @@ const AdminDashboard = {
         this.updateReservationsBadge().catch(() => {});
       });
     } catch (dbErr) {
-      console.error('[Admin v.1.4.0] Erro ao conectar/inicializar banco:', dbErr);
+      console.error('[Admin v.1.4.1] Erro ao conectar/inicializar banco:', dbErr);
     }
 
     // Configuração dos botões de classificação da tabela
@@ -655,7 +655,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (url && url.trim()) {
       previewBox.innerHTML = `
         <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-          <img src="${escapeHTML(url.trim())}" alt="Prévia do Presente" onerror="this.parentElement.innerHTML='<div style=\\'display: flex; flex-direction: column; align-items: center; gap: 0.35rem; color: var(--color-error); font-size: 0.8rem;\\'><svg class=\\'icon-line sm\\' viewBox=\\'0 0 24 24\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'></circle><line x1=\\'12\\' y1=\\'8\\' x2=\\'12\\' y2=\\'12\\'></line><line x1=\\'12\\' y1=\\'16\\' x2=\\'12.01\\' y2=\\'16\\'></line></svg><span>Falha ao carregar imagem</span></div>';">
+          <img src="${escapeHTML(url.trim())}" alt="Prévia do Presente" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+          <div style="display: none; flex-direction: column; align-items: center; gap: 0.35rem; color: var(--color-error); font-size: 0.8rem;">
+            <svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>Falha ao carregar imagem</span>
+          </div>
           <span style="position: absolute; bottom: 8px; right: 8px; background: rgba(40, 54, 24, 0.78); color: #ffffff; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; backdrop-filter: blur(2px); font-weight: 500;">Visão Completa</span>
         </div>
       `;
@@ -672,6 +676,23 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
         </div>
       `;
     }
+  },
+
+  renderItemThumbnail(imageUrl, title, size = 48) {
+    const lineIconSvg = '<svg class="icon-line sm" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>';
+    const safeTitle = escapeHTML(title || '');
+
+    if (!imageUrl || !imageUrl.trim()) {
+      return `<div style="width: ${size}px; height: ${size}px; background: var(--color-cream); border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); display: flex; align-items: center; justify-content: center; color: var(--color-olive-muted); flex-shrink: 0;">${lineIconSvg}</div>`;
+    }
+
+    const safeUrl = escapeHTML(imageUrl.trim());
+    return `
+      <div style="width: ${size}px; height: ${size}px; position: relative; flex-shrink: 0; display: inline-block;">
+        <img src="${safeUrl}" alt="${safeTitle}" style="width: ${size}px; height: ${size}px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); display: block;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+        <div style="display: none; width: ${size}px; height: ${size}px; background: var(--color-cream); border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); align-items: center; justify-content: center; color: var(--color-olive-muted);">${lineIconSvg}</div>
+      </div>
+    `;
   },
 
   async render() {
@@ -758,7 +779,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (gifts.length === 0) {
       this.selectedGiftIds.clear();
       this.updateBulkActionsBar(0);
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum item cadastrado ainda. Use o extrator por link acima para começar!</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum item cadastrado ainda. Use o extrator por link acima para começar!</td></tr>`;
       return;
     }
 
@@ -774,10 +795,13 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       const isChecked = this.selectedGiftIds.has(g.id);
       return `
       <tr class="${isChecked ? 'selected-row' : ''}" data-gift-id="${g.id}">
-        <td class="col-checkbox" style="text-align: center; padding-left: 0.75rem; padding-right: 0.5rem;">
+        <td class="col-checkbox" style="text-align: center; padding-left: 0.75rem; padding-right: 0.5rem; vertical-align: middle;">
           <input type="checkbox" class="gift-select-checkbox" data-id="${g.id}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--color-olive-primary); cursor: pointer; vertical-align: middle;">
         </td>
-        <td>
+        <td style="vertical-align: middle; width: 70px;">
+          ${this.renderItemThumbnail(g.imageUrl, g.title)}
+        </td>
+        <td style="vertical-align: middle;">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <button class="btn-icon btn-admin-star" data-id="${g.id}" title="${g.isFeatured ? 'Remover dos Mais Desejados' : 'Marcar como Mais Desejado'}" style="width: 28px; height: 28px; border: none; background: none; color: ${g.isFeatured ? 'var(--color-gold-accent)' : 'var(--color-olive-muted)'}; cursor: pointer;">
               <svg class="icon-line sm" viewBox="0 0 24 24" style="${g.isFeatured ? 'fill: var(--color-gold-accent);' : ''}">
@@ -1169,11 +1193,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     }
 
     tbody.innerHTML = trashItems.map(g => {
-      const lineIconSvg = '<svg class="icon-line sm" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>';
-      const imgHtml = g.imageUrl
-        ? `<img src="${escapeHTML(g.imageUrl)}" alt="${escapeHTML(g.title)}" style="width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border);" onerror="this.src=''; this.parentElement.innerHTML='<div style=\\'width:48px;height:48px;background:var(--color-cream);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--color-olive-muted);\\'>${lineIconSvg}</div>';">`
-        : `<div style="width: 48px; height: 48px; background: var(--color-cream); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--color-olive-muted);">${lineIconSvg}</div>`;
-
       const priceText = formatCurrency(g.price);
       const deletedDateText = g.deletedAt 
         ? new Date(g.deletedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -1185,8 +1204,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
       return `
         <tr data-trash-id="${g.id}">
-          <td style="vertical-align: middle;">
-            ${imgHtml}
+          <td style="vertical-align: middle; width: 70px;">
+            ${this.renderItemThumbnail(g.imageUrl, g.title)}
           </td>
           <td style="vertical-align: middle;">
             <strong style="color: var(--color-olive-deep); font-size: 0.95rem;">${escapeHTML(g.title)}</strong>
@@ -1693,7 +1712,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (statApprovedGifts) statApprovedGifts.innerText = reservedItems.filter(g => g.status === 'reserved' || g.status === 'completed').length;
 
     if (reservedItems.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum presente reservado ou aguardando aprovação no momento. Clique em "+ Lançar Quem Deu Manualmente" acima para adicionar!</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum presente reservado ou aguardando aprovação no momento. Clique em "+ Lançar Quem Deu Manualmente" acima para adicionar!</td></tr>`;
       return;
     }
 
@@ -1732,10 +1751,13 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
       return `
         <tr>
-          <td>
+          <td style="vertical-align: middle; width: 70px;">
+            ${this.renderItemThumbnail(g.imageUrl, g.title)}
+          </td>
+          <td style="vertical-align: middle;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <div>
-                <strong>${escapeHTML(g.title)}</strong>
+                <strong style="color: var(--color-olive-deep); font-size: 0.95rem;">${escapeHTML(g.title)}</strong>
                 ${g.isFeatured ? '<div style="margin-top:0.2rem;"><span class="badge-featured" style="display:inline-flex; align-items:center; gap:0.3rem; font-size:0.72rem; padding:0.15rem 0.5rem;"><svg class="icon-line xs" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Mais Desejado</span></div>' : ''}
               </div>
             </div>
