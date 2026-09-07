@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.6
+   Versão: v.1.2.7
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.2.6] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.2.7] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -231,7 +231,7 @@ const CatalogController = {
       }
 
       let matchAvail = true;
-      const isReservedOrCompleted = gift.status === 'reserved' || gift.status === 'completed';
+      const isReservedOrCompleted = gift.status === 'reserved' || gift.status === 'completed' || gift.status === 'pending_approval';
       if (this.currentAvailability === 'available') {
         matchAvail = !isReservedOrCompleted;
       } else if (this.currentAvailability === 'reserved') {
@@ -288,12 +288,15 @@ const CatalogController = {
   createCardHTML(gift) {
     const isReserved = gift.status === 'reserved';
     const isCompleted = gift.status === 'completed';
+    const isPending = gift.status === 'pending_approval';
 
     let statusBadgeHTML = '';
     if (gift.isCota) {
       statusBadgeHTML = `<span class="gift-badge badge-cota">Cota Lua de Mel</span>`;
-    } else if (isReserved) {
-      statusBadgeHTML = `<span class="gift-badge badge-reserved">Reservado</span>`;
+    } else if (isPending) {
+      statusBadgeHTML = `<span class="gift-badge badge-warning" style="background: rgba(221, 161, 94, 0.2); color: #856404; border: 1px solid rgba(221, 161, 94, 0.5);">Aguardando Aprovação</span>`;
+    } else if (isReserved || isCompleted) {
+      statusBadgeHTML = `<span class="gift-badge badge-reserved">Já Presenteado</span>`;
     } else {
       statusBadgeHTML = '';
     }
@@ -347,11 +350,18 @@ const CatalogController = {
         </div>
       `;
 
-      if (isReserved) {
+      if (isPending) {
+        actionBtnHTML = `
+          <button class="btn btn-secondary btn-block" disabled style="opacity: 0.9; font-size: 0.84rem; background: rgba(221, 161, 94, 0.15); color: #856404; border-color: rgba(221, 161, 94, 0.4);">
+            <svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Em Aprovação com os Noivos
+          </button>
+        `;
+      } else if (isReserved || isCompleted) {
         actionBtnHTML = `
           <button class="btn btn-secondary btn-block" disabled>
             <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
-            Já Reservado com Carinho
+            Já Presenteado com Carinho
           </button>
         `;
       } else {
@@ -492,11 +502,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const itemTitle = gift ? gift.title : 'Presente da Lista';
         const itemPrice = gift ? formatCurrency(gift.price) : '';
 
-        // 1. Salvar no banco híbrido (IndexedDB e Supabase)
+        // 1. Salvar no banco híbrido com status pendente de aprovação
         await window.weddingDB.reserveGift(giftId, { guestName, phone, message });
 
         document.getElementById('reserveModal').classList.remove('active');
-        showToast('Presente registrado! Redirecionando para o WhatsApp dos noivos...', 'success');
         await CatalogController.refresh();
         await MessagesController.refresh();
 
@@ -505,16 +514,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawTargetPhone = settings.whatsappPhone || '5564993409360';
         const targetPhone = rawTargetPhone.replace(/\D/g, '') || '5564993409360';
 
-        // 3. Montar mensagem formatada solicitando endereço de entrega e atualização de status
-        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️\n\nEstou passando para avisar que escolhi presentear vocês com o seguinte item da lista de casamento:\n🎁 *${itemTitle}*${itemPrice ? ` (${itemPrice})` : ''}\n\nGostaria de solicitar, por gentileza, o melhor *endereço de entrega* para que eu possa providenciar o envio do presente! 📦🏡\n\nPor favor, confirmem o recebimento desta mensagem e atualizem o status do item na lista como *Presenteado* ✅.\n\n---\n👤 *Convidado(a):* ${guestName}${phone ? `\n📱 *Telefone/WhatsApp:* ${phone}` : ''}${message ? `\n💌 *Mensagem de carinho:* "${message}"` : ''}`;
+        // 3. Montar mensagem formatada solicitando aprovação e endereço de entrega
+        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️\n\nEnviei uma solicitação pelo site e escolhi presentear vocês com o seguinte item da lista de casamento:\n🎁 *${itemTitle}*${itemPrice ? ` (${itemPrice})` : ''}\n\nPor favor, confirmem o recebimento da solicitação no painel dos noivos e me passem o melhor *endereço de entrega* para que eu possa providenciar o envio! 📦🏡\n\n---\n👤 *Convidado(a):* ${guestName}${phone ? `\n📱 *Telefone/WhatsApp:* ${phone}` : ''}${message ? `\n💌 *Mensagem de carinho:* "${message}"` : ''}`;
 
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(whatsappMsg)}`;
+        const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(whatsappMsg)}`;
 
-        // Redirecionamento automático imediato
-        const win = window.open(whatsappUrl, '_blank');
-        if (!win || win.closed || typeof win.closed === 'undefined') {
-          window.location.href = whatsappUrl;
+        // 4. Exibir Modal de Confirmação com Botão Direto do WhatsApp
+        const modal = document.getElementById('whatsappConfirmationModal');
+        const titleEl = document.getElementById('waConfirmModalTitle');
+        const descEl = document.getElementById('waConfirmModalDesc');
+        const btnLink = document.getElementById('waDirectBtnLink');
+
+        if (titleEl) titleEl.innerText = 'Solicitação de Presente Enviada!';
+        if (descEl) {
+          descEl.innerHTML = `Sua solicitação para presentear com <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong> foi registrada e enviada para aprovação de <strong>Rhebeca & Matheus</strong>.<br><br>Clique no botão abaixo para abrir a mensagem no WhatsApp oficial dos noivos (+55 64 99340-9360) e solicitar o endereço de entrega:`;
         }
+        if (btnLink) {
+          btnLink.href = whatsappUrl;
+        }
+        if (modal) {
+          modal.classList.add('active');
+        }
+
+        // Tenta abrir automaticamente em nova aba/app
+        try {
+          const win = window.open(whatsappUrl, '_blank');
+          if (!win || win.closed || typeof win.closed === 'undefined') {
+            // Se bloqueado pelo navegador, o modal já está visível com o botão direto clicável
+          }
+        } catch (_) {}
+
+        showToast('Solicitação registrada! Abra o WhatsApp para notificar os noivos.', 'success');
       } catch (err) {
         showToast(err.message || 'Erro ao reservar presente.', 'error');
       }
@@ -542,7 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await window.weddingDB.contributeCota(giftId, amount, count, { guestName, phone, message });
         document.getElementById('cotaModal').classList.remove('active');
-        showToast('Contribuição registrada! Redirecionando para confirmação no WhatsApp...', 'success');
         await CatalogController.refresh();
         await MessagesController.refresh();
 
@@ -553,12 +582,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️\n\nAcabei de realizar uma contribuição de cota para a lua de mel no site de casamento:\n🌴 *${gift.title}*\n💳 *Valor:* ${formatCurrency(amount)} (${count} cota(s))\n\n---\n👤 *Convidado(a):* ${guestName}${phone ? `\n📱 *Contato:* ${phone}` : ''}${message ? `\n💌 *Mensagem:* "${message}"` : ''}`;
 
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(whatsappMsg)}`;
+        const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(whatsappMsg)}`;
 
-        const win = window.open(whatsappUrl, '_blank');
-        if (!win || win.closed || typeof win.closed === 'undefined') {
-          window.location.href = whatsappUrl;
+        const modal = document.getElementById('whatsappConfirmationModal');
+        const titleEl = document.getElementById('waConfirmModalTitle');
+        const descEl = document.getElementById('waConfirmModalDesc');
+        const btnLink = document.getElementById('waDirectBtnLink');
+
+        if (titleEl) titleEl.innerText = 'Cota Registrada com Sucesso!';
+        if (descEl) {
+          descEl.innerHTML = `Sua contribuição de <strong style="color: var(--color-olive-deep);">${count} cota(s) em "${escapeHTML(gift.title)}" (${formatCurrency(amount)})</strong> foi registrada com sucesso!<br><br>Clique no botão abaixo para abrir o comprovante/mensagem no WhatsApp oficial dos noivos:`;
         }
+        if (btnLink) {
+          btnLink.href = whatsappUrl;
+        }
+        if (modal) {
+          modal.classList.add('active');
+        }
+
+        try {
+          window.open(whatsappUrl, '_blank');
+        } catch (_) {}
+
+        showToast('Contribuição registrada! Abra o WhatsApp para confirmar.', 'success');
       } catch (err) {
         showToast(err.message || 'Erro ao registrar cota.', 'error');
       }
