@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.1
+   Versão: v.1.4.2
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -855,6 +855,30 @@ class WeddingDB {
 
     await this.saveGift(gift);
     return gift;
+  }
+
+  async unreserveMultipleGifts(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return [];
+    const unreserved = [];
+    for (const id of ids) {
+      try {
+        const gift = await this.unreserveGift(id);
+        if (gift) unreserved.push(gift);
+      } catch (_) {}
+    }
+    return unreserved;
+  }
+
+  async restoreMultipleGifts(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return [];
+    const restored = [];
+    for (const id of ids) {
+      try {
+        const gift = await this.restoreGift(id);
+        if (gift) restored.push(gift);
+      } catch (_) {}
+    }
+    return restored;
   }
 
   async toggleFeatured(id) {
