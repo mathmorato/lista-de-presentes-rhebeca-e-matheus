@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.5
+   Versão: v.1.4.6
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.4.5] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.4.6] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -377,16 +377,30 @@ const CatalogController = {
     document.getElementById('reserveGuestPhone').value = '';
     document.getElementById('reserveGuestMessage').value = '';
 
+    const urlBox = document.getElementById('reserveGiftUrlBox');
+    const urlInput = document.getElementById('reserveGiftUrlInput');
+    const btnCopyOnlyFooter = document.getElementById('btnReserveCopyLinkOnly');
     const submitBtn = document.getElementById('btnSubmitReserve');
     const submitBtnText = document.getElementById('btnSubmitReserveText');
 
-    if (gift.productUrl) {
-      if (submitBtnText) submitBtnText.innerText = 'Confirmar e Ir para a Loja';
+    let cleanUrl = (gift.productUrl || '').trim();
+    if (cleanUrl && !cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = 'https://' + cleanUrl;
+    }
+
+    if (cleanUrl) {
+      if (urlBox) urlBox.style.display = 'flex';
+      if (urlInput) urlInput.value = cleanUrl;
+      if (btnCopyOnlyFooter) btnCopyOnlyFooter.style.display = 'inline-flex';
+      if (submitBtnText) submitBtnText.innerText = 'Copiar Link e Prosseguir para a Loja';
       if (submitBtn) {
         submitBtn.className = 'btn btn-primary';
-        submitBtn.title = 'Salvar presente e abrir link da loja original';
+        submitBtn.title = 'Salvar escolha, copiar link da loja e abrir o produto';
       }
     } else {
+      if (urlBox) urlBox.style.display = 'none';
+      if (urlInput) urlInput.value = '';
+      if (btnCopyOnlyFooter) btnCopyOnlyFooter.style.display = 'none';
       if (submitBtnText) submitBtnText.innerText = 'Confirmar Escolha do Presente';
       if (submitBtn) {
         submitBtn.className = 'btn btn-primary';
@@ -461,7 +475,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const gift = await window.weddingDB.getGiftById(giftId);
-        const itemTitle = gift ? gift.title : 'Presente da Lista';
+        let cleanUrl = gift ? (gift.productUrl || '').trim() : '';
+        if (cleanUrl && !cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+          cleanUrl = 'https://' + cleanUrl;
+        }
+
+        // Se tiver link da loja virtual, copia para a área de transferência imediatamente no clique
+        if (cleanUrl) {
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(cleanUrl);
+            } else {
+              const ta = document.createElement('textarea');
+              ta.value = cleanUrl;
+              ta.style.position = 'fixed';
+              ta.style.opacity = '0';
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand('copy');
+              document.body.removeChild(ta);
+            }
+          } catch (_) {}
+        }
 
         // 1. Salvar no banco híbrido com status reservado e dados de quem presenteou
         await window.weddingDB.reserveGift(giftId, { guestName, phone, message });
@@ -470,9 +505,9 @@ document.addEventListener('DOMContentLoaded', () => {
         await CatalogController.refresh();
         await MessagesController.refresh();
 
-        // 2. Se o presente tiver link da loja virtual, abrir modal com opção de abrir em nova aba ou copiar o link
-        if (gift && gift.productUrl) {
-          showToast(`Presente registrado com sucesso, ${guestName}!`, 'success');
+        // 2. Se o presente tiver link da loja virtual, abrir nova aba e mostrar tela de confirmação
+        if (cleanUrl) {
+          showToast(`Link copiado e presente confirmado com sucesso, ${guestName}! Redirecionando para a loja...`, 'success');
           CatalogController.openStoreRedirectModal(gift, guestName);
         } else {
           showToast(`Muito obrigado, ${guestName}! Sua escolha de presente para Rhebeca & Matheus foi registrada com sucesso.`, 'success');
@@ -481,6 +516,61 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(err.message || 'Erro ao reservar presente.', 'error');
       }
     });
+
+    // Eventos dos botões "Copiar Link" do modal de reserva
+    const handleCopyReserveProductUrl = async () => {
+      const giftId = document.getElementById('reserveGiftId').value;
+      const gift = await window.weddingDB.getGiftById(giftId);
+      let cleanUrl = gift ? (gift.productUrl || '').trim() : '';
+      if (cleanUrl && !cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        cleanUrl = 'https://' + cleanUrl;
+      }
+      if (!cleanUrl) {
+        showToast('Link da loja não disponível para este item.', 'warning');
+        return;
+      }
+
+      let copied = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(cleanUrl);
+          copied = true;
+        }
+      } catch (_) {}
+
+      if (!copied) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = cleanUrl;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          copied = document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch (_) {}
+      }
+
+      if (copied) {
+        showToast('Link da loja copiado com sucesso!', 'success');
+        const textEls = [
+          document.getElementById('btnCopyReserveGiftUrlText'),
+          document.getElementById('btnReserveCopyLinkOnlyText')
+        ];
+        textEls.forEach(el => { if (el) el.innerText = 'Link Copiado!'; });
+        setTimeout(() => {
+          textEls.forEach(el => { if (el) el.innerText = 'Copiar Link'; });
+        }, 2500);
+      } else {
+        showToast('Não foi possível copiar automaticamente.', 'warning');
+      }
+    };
+
+    const btnCopyReserveGiftUrl = document.getElementById('btnCopyReserveGiftUrl');
+    if (btnCopyReserveGiftUrl) btnCopyReserveGiftUrl.addEventListener('click', handleCopyReserveProductUrl);
+
+    const btnReserveCopyLinkOnly = document.getElementById('btnReserveCopyLinkOnly');
+    if (btnReserveCopyLinkOnly) btnReserveCopyLinkOnly.addEventListener('click', handleCopyReserveProductUrl);
   }
 
 
