@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.3
+   Versão: v.1.2.4
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -342,10 +342,26 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
   updateImagePreview(url) {
     const previewBox = document.getElementById('adminImagePreviewBox');
     if (!previewBox) return;
-    if (url) {
-      previewBox.innerHTML = `<img src="${escapeHTML(url)}" alt="Preview" onerror="this.parentElement.innerHTML='<span style=\\'font-size: 0.8rem; color: var(--color-olive-muted);\\'>Falha ao carregar</span>';">`;
+
+    if (url && url.trim()) {
+      previewBox.innerHTML = `
+        <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+          <img src="${escapeHTML(url.trim())}" alt="Prévia do Presente" onerror="this.parentElement.innerHTML='<div style=\\'display: flex; flex-direction: column; align-items: center; gap: 0.35rem; color: var(--color-error); font-size: 0.8rem;\\'><svg class=\\'icon-line sm\\' viewBox=\\'0 0 24 24\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'></circle><line x1=\\'12\\' y1=\\'8\\' x2=\\'12\\' y2=\\'12\\'></line><line x1=\\'12\\' y1=\\'16\\' x2=\\'12.01\\' y2=\\'16\\'></line></svg><span>Falha ao carregar imagem</span></div>';">
+          <span style="position: absolute; bottom: 8px; right: 8px; background: rgba(40, 54, 24, 0.78); color: #ffffff; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; backdrop-filter: blur(2px); font-weight: 500;">Visão Completa</span>
+        </div>
+      `;
     } else {
-      previewBox.innerHTML = `<span style="font-size: 0.8rem; color: var(--color-olive-muted);">Nenhuma imagem</span>`;
+      previewBox.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; color: var(--color-olive-muted);">
+          <svg class="icon-line md" viewBox="0 0 24 24" style="color: var(--color-olive-frame); opacity: 0.7;">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          <span style="font-size: 0.82rem; font-weight: 500;">Prévia Retangular da Imagem</span>
+          <span style="font-size: 0.72rem; opacity: 0.75;">Visão completa sem cortes</span>
+        </div>
+      `;
     }
   },
 
