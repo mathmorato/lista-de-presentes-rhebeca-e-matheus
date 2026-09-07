@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos Oficiais do Projeto -->
-  <link rel="stylesheet" href="css/styles.css?v=1.4.1">
+  <link rel="stylesheet" href="css/styles.css?v=1.4.2">
 
   <!-- Supabase JS Client Oficial -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -113,7 +113,7 @@
               <h1 style="font-family: var(--font-serif); font-size: 1.35rem; color: var(--color-olive-deep); margin: 0;">
                 Painel de Gestão dos Noivos
               </h1>
-              <span class="admin-badge">Versão: v.1.4.1</span>
+              <span class="admin-badge">Versão: v.1.4.2</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.15rem; flex-wrap: wrap;">
               <span id="adminUserGreetingBadge" style="font-size: 0.8rem; color: var(--color-olive-frame); font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -178,7 +178,7 @@
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
-            <span>Gerenciar Já Presenteados</span>
+            <span>Já Presenteados</span>
             <span id="reservationsCountBadge" class="badge" style="font-size:0.75rem; padding:0.12rem 0.55rem; background:rgba(96, 108, 56, 0.15); color:var(--color-olive-deep); border-radius:999px; font-weight:700;">0</span>
           </button>
           <button class="admin-tab-btn" data-tab="trash" title="Lixeira de presentes excluídos">
@@ -450,10 +450,37 @@
           </div>
         </div>
 
+        <!-- Barra de Ações em Lote para Já Presenteados -->
+        <div id="bulkReservationsActionsBar" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; background: var(--color-warm-white); border: 1.5px solid var(--color-olive-primary); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(96, 108, 56, 0.08);">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span id="bulkReservationsSelectedCountBadge" class="badge" style="background: var(--color-olive-deep); color: var(--color-white); font-weight: 600; padding: 0.35rem 0.8rem; border-radius: var(--radius-full); font-size: 0.85rem;">
+              0 selecionados
+            </span>
+            <span style="font-size: 0.85rem; color: var(--color-olive-muted);">
+              Itens já presenteados selecionados para ações em massa
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <button type="button" id="btnDeselectAllReservations" class="btn btn-outline" style="font-size: 0.82rem; padding: 0.4rem 0.85rem; height: auto;">
+              Desmarcar Todos
+            </button>
+            <button type="button" id="btnBulkUnreserveReservations" class="btn btn-primary" style="font-size: 0.82rem; padding: 0.4rem 1rem; height: auto; display: inline-flex; align-items: center; gap: 0.45rem;">
+              <svg class="icon-line sm" viewBox="0 0 24 24">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              <span id="btnBulkUnreserveLabel">Liberar Selecionados</span>
+            </button>
+          </div>
+        </div>
+
         <div class="admin-table-container">
           <table class="admin-table">
             <thead>
               <tr>
+                <th class="col-checkbox" style="width: 44px; text-align: center; padding-left: 0.75rem; padding-right: 0.5rem;">
+                  <input type="checkbox" id="selectAllReservationsCheckbox" title="Selecionar ou desmarcar todos os itens" style="width: 18px; height: 18px; accent-color: var(--color-olive-primary); cursor: pointer; vertical-align: middle;">
+                </th>
                 <th style="width: 70px;">Item</th>
                 <th>Título do Presente</th>
                 <th>Valor</th>
@@ -507,10 +534,46 @@
             </div>
           </div>
 
+          <!-- Barra de Ações em Lote para a Lixeira (Ativada ao selecionar 1 ou mais itens) -->
+          <div id="bulkTrashActionsBar" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; background: var(--color-warm-white); border: 1.5px solid var(--color-olive-primary); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(96, 108, 56, 0.08);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span id="bulkTrashSelectedCountBadge" class="badge" style="background: var(--color-olive-deep); color: var(--color-white); font-weight: 600; padding: 0.35rem 0.8rem; border-radius: var(--radius-full); font-size: 0.85rem;">
+                0 selecionados
+              </span>
+              <span style="font-size: 0.85rem; color: var(--color-olive-muted);">
+                Itens selecionados na lixeira para ações em massa
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+              <button type="button" id="btnDeselectAllTrash" class="btn btn-outline" style="font-size: 0.82rem; padding: 0.4rem 0.85rem; height: auto;">
+                Desmarcar Todos
+              </button>
+              <button type="button" id="btnBulkRestoreTrash" class="btn btn-outline" style="color: var(--color-olive-primary); border-color: var(--color-olive-primary); font-size: 0.82rem; padding: 0.4rem 0.95rem; height: auto; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg class="icon-line sm" viewBox="0 0 24 24">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                <span id="btnBulkRestoreLabel">Restaurar Selecionados</span>
+              </button>
+              <button type="button" id="btnBulkPermDeleteTrash" class="btn btn-primary" style="background: var(--color-error); border-color: var(--color-error); font-size: 0.82rem; padding: 0.4rem 1rem; height: auto; display: inline-flex; align-items: center; gap: 0.45rem;">
+                <svg class="icon-line sm" viewBox="0 0 24 24">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                <span id="btnBulkPermDeleteLabel">Excluir Definitivo</span>
+              </button>
+            </div>
+          </div>
+
           <div class="table-container" style="overflow-x: auto;">
             <table class="admin-table">
               <thead>
                 <tr>
+                  <th class="col-checkbox" style="width: 44px; text-align: center; padding-left: 0.75rem; padding-right: 0.5rem;">
+                    <input type="checkbox" id="selectAllTrashCheckbox" title="Selecionar ou desmarcar todos os itens" style="width: 18px; height: 18px; accent-color: var(--color-olive-primary); cursor: pointer; vertical-align: middle;">
+                  </th>
                   <th style="width: 70px;">Item</th>
                   <th>Título do Presente</th>
                   <th>Categoria</th>
@@ -830,14 +893,14 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.4.1</span>
+        <span id="app-footer-version">v.1.4.2</span>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/extractor.js?v=1.4.1"></script>
-  <script src="js/db.js?v=1.4.1"></script>
-  <script src="js/admin.js?v=1.4.1"></script>
+  <script src="js/extractor.js?v=1.4.2"></script>
+  <script src="js/db.js?v=1.4.2"></script>
+  <script src="js/admin.js?v=1.4.2"></script>
 </body>
 </html>

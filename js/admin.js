@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.1
+   Versão: v.1.4.2
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -222,6 +222,8 @@ const AdminDashboard = {
   currentTab: 'gifts',
   isInitialized: false,
   selectedGiftIds: new Set(),
+  selectedReservationIds: new Set(),
+  selectedTrashIds: new Set(),
   sortField: null,
   sortOrder: 'asc',
 
@@ -285,6 +287,54 @@ const AdminDashboard = {
     }
   },
 
+  updateBulkReservationsActionsBar(totalReservationsCount) {
+    const bar = document.getElementById('bulkReservationsActionsBar');
+    const badge = document.getElementById('bulkReservationsSelectedCountBadge');
+    const label = document.getElementById('btnBulkUnreserveLabel');
+    const selectAllCb = document.getElementById('selectAllReservationsCheckbox');
+    const count = this.selectedReservationIds.size;
+
+    if (bar && badge && label) {
+      if (count > 0) {
+        bar.style.display = 'flex';
+        badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
+        label.innerText = `Liberar Selecionados (${count})`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    if (selectAllCb) {
+      selectAllCb.checked = totalReservationsCount > 0 && count === totalReservationsCount;
+      selectAllCb.indeterminate = count > 0 && count < totalReservationsCount;
+    }
+  },
+
+  updateBulkTrashActionsBar(totalTrashCount) {
+    const bar = document.getElementById('bulkTrashActionsBar');
+    const badge = document.getElementById('bulkTrashSelectedCountBadge');
+    const restoreLabel = document.getElementById('btnBulkRestoreLabel');
+    const permDeleteLabel = document.getElementById('btnBulkPermDeleteLabel');
+    const selectAllCb = document.getElementById('selectAllTrashCheckbox');
+    const count = this.selectedTrashIds.size;
+
+    if (bar && badge) {
+      if (count > 0) {
+        bar.style.display = 'flex';
+        badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
+        if (restoreLabel) restoreLabel.innerText = `Restaurar Selecionados (${count})`;
+        if (permDeleteLabel) permDeleteLabel.innerText = `Excluir Definitivo (${count})`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    if (selectAllCb) {
+      selectAllCb.checked = totalTrashCount > 0 && count === totalTrashCount;
+      selectAllCb.indeterminate = count > 0 && count < totalTrashCount;
+    }
+  },
+
   async init() {
     updateAdminTopbarHeight();
     this.updateGiftsBadge().catch(() => {});
@@ -299,7 +349,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.4.1] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.4.2] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -312,7 +362,7 @@ const AdminDashboard = {
         this.updateReservationsBadge().catch(() => {});
       });
     } catch (dbErr) {
-      console.error('[Admin v.1.4.1] Erro ao conectar/inicializar banco:', dbErr);
+      console.error('[Admin v.1.4.2] Erro ao conectar/inicializar banco:', dbErr);
     }
 
     // Configuração dos botões de classificação da tabela
@@ -1173,9 +1223,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     }
 
     if (trashItems.length === 0) {
+      this.selectedTrashIds.clear();
+      this.updateBulkTrashActionsBar(0);
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 3.5rem 1rem; color: var(--color-olive-muted);">
+          <td colspan="8" style="text-align: center; padding: 3.5rem 1rem; color: var(--color-olive-muted);">
             <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
               <svg class="icon-line lg" style="color: var(--color-olive-frame); opacity: 0.5;" viewBox="0 0 24 24">
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -1192,7 +1244,16 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       return;
     }
 
+    // Filtrar IDs selecionados para manter apenas os que ainda estão na lixeira
+    const existingIds = new Set(trashItems.map(g => g.id));
+    for (const sId of this.selectedTrashIds) {
+      if (!existingIds.has(sId)) {
+        this.selectedTrashIds.delete(sId);
+      }
+    }
+
     tbody.innerHTML = trashItems.map(g => {
+      const isChecked = this.selectedTrashIds.has(g.id);
       const priceText = formatCurrency(g.price);
       const deletedDateText = g.deletedAt 
         ? new Date(g.deletedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -1203,7 +1264,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
         : '';
 
       return `
-        <tr data-trash-id="${g.id}">
+        <tr class="${isChecked ? 'selected-row' : ''}" data-trash-id="${g.id}">
+          <td class="col-checkbox" style="text-align: center; padding-left: 0.75rem; padding-right: 0.5rem; vertical-align: middle;">
+            <input type="checkbox" class="trash-select-checkbox" data-id="${g.id}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--color-olive-primary); cursor: pointer; vertical-align: middle;">
+          </td>
           <td style="vertical-align: middle; width: 70px;">
             ${this.renderItemThumbnail(g.imageUrl, g.title)}
           </td>
@@ -1244,6 +1308,84 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
         </tr>
       `;
     }).join('');
+
+    // Atualiza barra de ações em massa da lixeira
+    this.updateBulkTrashActionsBar(trashItems.length);
+
+    // Eventos dos checkboxes individuais da lixeira
+    tbody.querySelectorAll('.trash-select-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.getAttribute('data-id');
+        const tr = cb.closest('tr');
+        if (cb.checked) {
+          this.selectedTrashIds.add(id);
+          if (tr) tr.classList.add('selected-row');
+        } else {
+          this.selectedTrashIds.delete(id);
+          if (tr) tr.classList.remove('selected-row');
+        }
+        this.updateBulkTrashActionsBar(trashItems.length);
+      });
+    });
+
+    // Evento do checkbox mestre (Selecionar Todos da lixeira)
+    const selectAllTrashCb = document.getElementById('selectAllTrashCheckbox');
+    if (selectAllTrashCb) {
+      selectAllTrashCb.onchange = () => {
+        const checkAll = selectAllTrashCb.checked;
+        tbody.querySelectorAll('.trash-select-checkbox').forEach(cb => {
+          cb.checked = checkAll;
+          const id = cb.getAttribute('data-id');
+          const tr = cb.closest('tr');
+          if (checkAll) {
+            this.selectedTrashIds.add(id);
+            if (tr) tr.classList.add('selected-row');
+          } else {
+            this.selectedTrashIds.delete(id);
+            if (tr) tr.classList.remove('selected-row');
+          }
+        });
+        this.updateBulkTrashActionsBar(trashItems.length);
+      };
+    }
+
+    // Botão Desmarcar Todos da lixeira
+    const btnDeselectAllTrash = document.getElementById('btnDeselectAllTrash');
+    if (btnDeselectAllTrash) {
+      btnDeselectAllTrash.onclick = () => {
+        this.selectedTrashIds.clear();
+        tbody.querySelectorAll('.trash-select-checkbox').forEach(cb => {
+          cb.checked = false;
+          const tr = cb.closest('tr');
+          if (tr) tr.classList.remove('selected-row');
+        });
+        this.updateBulkTrashActionsBar(trashItems.length);
+      };
+    }
+
+    // Botão Restaurar Selecionados da lixeira
+    const btnBulkRestoreTrash = document.getElementById('btnBulkRestoreTrash');
+    if (btnBulkRestoreTrash) {
+      btnBulkRestoreTrash.onclick = async () => {
+        if (this.selectedTrashIds.size === 0) {
+          showToast('Nenhum item selecionado para restaurar.', 'warning');
+          return;
+        }
+        await this.confirmBulkRestoreTrash(Array.from(this.selectedTrashIds));
+      };
+    }
+
+    // Botão Excluir Definitivo Selecionados da lixeira
+    const btnBulkPermDeleteTrash = document.getElementById('btnBulkPermDeleteTrash');
+    if (btnBulkPermDeleteTrash) {
+      btnBulkPermDeleteTrash.onclick = async () => {
+        if (this.selectedTrashIds.size === 0) {
+          showToast('Nenhum item selecionado para excluir definitivamente.', 'warning');
+          return;
+        }
+        await this.confirmBulkPermDeleteTrash(Array.from(this.selectedTrashIds));
+      };
+    }
 
     // Binds de ação
     tbody.querySelectorAll('.btn-restore-gift').forEach(btn => {
@@ -1343,6 +1485,87 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
       closeModal();
       showToast(`Item "${itemTitle}" excluído permanentemente!`, 'info');
+      await this.render();
+    };
+  },
+
+  async confirmBulkRestoreTrash(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+    const total = ids.length;
+    try {
+      await window.weddingDB.restoreMultipleGifts(ids);
+      this.selectedTrashIds.clear();
+      showToast(`${total} ${total === 1 ? 'item restaurado' : 'itens restaurados'} com sucesso para a vitrine pública!`, 'success');
+      await this.render();
+    } catch (err) {
+      showToast('Erro ao restaurar itens selecionados: ' + (err.message || err), 'error');
+    }
+  },
+
+  async confirmBulkPermDeleteTrash(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteItemTitleText = document.getElementById('deleteItemTitleText');
+    const deleteProgressBox = document.getElementById('deleteProgressBox');
+    const deleteProgressBar = document.getElementById('deleteProgressBar');
+    const deleteProgressStatusText = document.getElementById('deleteProgressStatusText');
+    const deleteProgressPercent = document.getElementById('deleteProgressPercent');
+    const deleteModalActions = document.getElementById('deleteModalActions');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+    const btnCancelDelete = document.getElementById('btnCancelDelete');
+
+    if (!deleteModal) return;
+
+    const total = ids.length;
+    deleteItemTitleText.innerHTML = `Tem certeza que deseja excluir permanentemente os <strong style="color: var(--color-error);">${total} presentes selecionados</strong> da Lixeira?<br><span style="font-size: 0.83rem; color: var(--color-error); font-weight: 500;">Esta ação é definitiva e não poderá ser desfeita. Os itens serão expurgados do IndexedDB e do Supabase.</span>`;
+
+    btnConfirmDelete.innerText = 'Sim, Excluir Definitivamente';
+    btnConfirmDelete.style.background = 'var(--color-error)';
+    btnConfirmDelete.style.borderColor = 'var(--color-error)';
+
+    deleteProgressBox.style.display = 'none';
+    deleteProgressBar.style.width = '0%';
+    deleteProgressPercent.innerText = '0%';
+    deleteProgressStatusText.innerText = 'Iniciando exclusão definitiva...';
+    deleteModalActions.style.display = 'flex';
+
+    deleteModal.classList.add('active');
+
+    const closeModal = () => {
+      deleteModal.classList.remove('active');
+      deleteModal.removeEventListener('click', onBackdropClick);
+    };
+
+    const onBackdropClick = (e) => {
+      if (e.target === deleteModal && deleteModalActions.style.display !== 'none') {
+        closeModal();
+      }
+    };
+
+    deleteModal.addEventListener('click', onBackdropClick);
+    btnCancelDelete.onclick = closeModal;
+
+    btnConfirmDelete.onclick = async () => {
+      deleteModalActions.style.display = 'none';
+      deleteProgressBox.style.display = 'block';
+
+      deleteProgressBar.style.width = '40%';
+      deleteProgressPercent.innerText = '40%';
+      deleteProgressStatusText.innerText = `Excluindo ${total} itens permanentemente...`;
+
+      await new Promise(r => setTimeout(r, 150));
+      await window.weddingDB.deleteMultipleGifts(ids);
+
+      deleteProgressBar.style.width = '100%';
+      deleteProgressPercent.innerText = '100%';
+      deleteProgressStatusText.innerText = `${total} itens excluídos definitivamente!`;
+
+      await new Promise(r => setTimeout(r, 150));
+
+      closeModal();
+      this.selectedTrashIds.clear();
+      showToast(`${total} itens excluídos permanentemente da lixeira!`, 'success');
       await this.render();
     };
   },
@@ -1712,17 +1935,35 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (statApprovedGifts) statApprovedGifts.innerText = reservedItems.filter(g => g.status === 'reserved' || g.status === 'completed').length;
 
     if (reservedItems.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum presente reservado ou aguardando aprovação no momento. Clique em "+ Lançar Quem Deu Manualmente" acima para adicionar!</td></tr>`;
+      this.selectedReservationIds.clear();
+      this.updateBulkReservationsActionsBar(0);
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum presente reservado ou aguardando aprovação no momento. Clique em "+ Lançar Quem Deu Manualmente" acima para adicionar!</td></tr>`;
       return;
     }
 
+    // Filtrar IDs selecionados para manter apenas os existentes na lista
+    const existingIds = new Set(reservedItems.map(g => g.id));
+    for (const sId of this.selectedReservationIds) {
+      if (!existingIds.has(sId)) {
+        this.selectedReservationIds.delete(sId);
+      }
+    }
+
     tbody.innerHTML = reservedItems.map(g => {
+      const isChecked = this.selectedReservationIds.has(g.id);
       const guestListStr = `<strong>${escapeHTML(g.reservedBy || 'Convidado')}</strong>`;
       let contactStr = '<span style="color:var(--color-olive-muted);">-</span>';
       if (g.guestPhone) {
         const clean = g.guestPhone.replace(/\D/g, '');
         const wa = clean.length <= 11 ? '55' + clean : clean;
-        contactStr = `<div>${escapeHTML(g.guestPhone)}</div><a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="margin-top:0.25rem; display:inline-flex; align-items:center; gap:0.25rem;"><svg class="icon-line xs" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Conversar WhatsApp</a>`;
+        contactStr = `
+          <div style="display: inline-flex; align-items: center; gap: 0.45rem;">
+            <span style="font-weight: 500; font-size: 0.88rem;">${escapeHTML(g.guestPhone)}</span>
+            <a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); color: var(--color-olive-primary); padding: 0;" title="Conversar no WhatsApp" aria-label="WhatsApp">
+              <svg class="icon-line xs" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            </a>
+          </div>
+        `;
       }
       const messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '<span style="color:var(--color-olive-muted);">-</span>';
 
@@ -1750,7 +1991,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       }
 
       return `
-        <tr>
+        <tr class="${isChecked ? 'selected-row' : ''}" data-reservation-id="${g.id}">
+          <td class="col-checkbox" style="text-align: center; padding-left: 0.75rem; padding-right: 0.5rem; vertical-align: middle;">
+            <input type="checkbox" class="reservation-select-checkbox" data-id="${g.id}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--color-olive-primary); cursor: pointer; vertical-align: middle;">
+          </td>
           <td style="vertical-align: middle; width: 70px;">
             ${this.renderItemThumbnail(g.imageUrl, g.title)}
           </td>
@@ -1762,14 +2006,14 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
               </div>
             </div>
           </td>
-          <td style="font-weight: 600; color: var(--color-olive-primary);">${formatCurrency(g.price)}</td>
-          <td>${guestListStr}</td>
-          <td style="max-width: 240px; font-size: 0.85rem;">
+          <td style="font-weight: 600; color: var(--color-olive-primary); vertical-align: middle;">${formatCurrency(g.price)}</td>
+          <td style="vertical-align: middle;">${guestListStr}</td>
+          <td style="max-width: 240px; font-size: 0.85rem; vertical-align: middle;">
             <div>${contactStr}</div>
             <div style="color: var(--color-olive-muted); font-style: italic; margin-top: 0.35rem;">${messageStr}</div>
           </td>
-          <td>${approvalStatusHtml}</td>
-          <td>
+          <td style="vertical-align: middle;">${approvalStatusHtml}</td>
+          <td style="vertical-align: middle; text-align: right;">
             <div class="table-actions-wrapper">
               ${g.status === 'pending_approval' ? `
                 <button class="btn-table-action btn-table-approve btn-admin-approve" data-id="${g.id}" title="Aprovar solicitação do convidado">
@@ -1797,6 +2041,72 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       `;
     }).join('');
 
+    // Atualiza barra de ações em lote para já presenteados
+    this.updateBulkReservationsActionsBar(reservedItems.length);
+
+    // Eventos dos checkboxes individuais
+    tbody.querySelectorAll('.reservation-select-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.getAttribute('data-id');
+        const tr = cb.closest('tr');
+        if (cb.checked) {
+          this.selectedReservationIds.add(id);
+          if (tr) tr.classList.add('selected-row');
+        } else {
+          this.selectedReservationIds.delete(id);
+          if (tr) tr.classList.remove('selected-row');
+        }
+        this.updateBulkReservationsActionsBar(reservedItems.length);
+      });
+    });
+
+    // Evento do checkbox mestre (Selecionar Todos de Já Presenteados)
+    const selectAllResCb = document.getElementById('selectAllReservationsCheckbox');
+    if (selectAllResCb) {
+      selectAllResCb.onchange = () => {
+        const checkAll = selectAllResCb.checked;
+        tbody.querySelectorAll('.reservation-select-checkbox').forEach(cb => {
+          cb.checked = checkAll;
+          const id = cb.getAttribute('data-id');
+          const tr = cb.closest('tr');
+          if (checkAll) {
+            this.selectedReservationIds.add(id);
+            if (tr) tr.classList.add('selected-row');
+          } else {
+            this.selectedReservationIds.delete(id);
+            if (tr) tr.classList.remove('selected-row');
+          }
+        });
+        this.updateBulkReservationsActionsBar(reservedItems.length);
+      };
+    }
+
+    // Botão Desmarcar Todos de Já Presenteados
+    const btnDeselectAllRes = document.getElementById('btnDeselectAllReservations');
+    if (btnDeselectAllRes) {
+      btnDeselectAllRes.onclick = () => {
+        this.selectedReservationIds.clear();
+        tbody.querySelectorAll('.reservation-select-checkbox').forEach(cb => {
+          cb.checked = false;
+          const tr = cb.closest('tr');
+          if (tr) tr.classList.remove('selected-row');
+        });
+        this.updateBulkReservationsActionsBar(reservedItems.length);
+      };
+    }
+
+    // Botão Liberar Selecionados em lote
+    const btnBulkUnreserve = document.getElementById('btnBulkUnreserveReservations');
+    if (btnBulkUnreserve) {
+      btnBulkUnreserve.onclick = async () => {
+        if (this.selectedReservationIds.size === 0) {
+          showToast('Nenhum item selecionado para liberar.', 'warning');
+          return;
+        }
+        await this.confirmBulkUnreserveReservations(Array.from(this.selectedReservationIds));
+      };
+    }
+
     tbody.querySelectorAll('.btn-admin-approve').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
@@ -1817,6 +2127,74 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
         await this.confirmUnreserveGift(id);
       });
     });
+  },
+
+  async confirmBulkUnreserveReservations(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteItemTitleText = document.getElementById('deleteItemTitleText');
+    const deleteProgressBox = document.getElementById('deleteProgressBox');
+    const deleteProgressBar = document.getElementById('deleteProgressBar');
+    const deleteProgressStatusText = document.getElementById('deleteProgressStatusText');
+    const deleteProgressPercent = document.getElementById('deleteProgressPercent');
+    const deleteModalActions = document.getElementById('deleteModalActions');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+    const btnCancelDelete = document.getElementById('btnCancelDelete');
+
+    if (!deleteModal) return;
+
+    const total = ids.length;
+    deleteItemTitleText.innerHTML = `Deseja liberar os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os dados de quem presenteou serão limpos e os itens voltarão a ficar disponíveis na vitrine pública para outros convidados.</span>`;
+
+    btnConfirmDelete.innerText = 'Liberar Selecionados';
+    btnConfirmDelete.style.background = 'var(--color-olive-primary)';
+    btnConfirmDelete.style.borderColor = 'var(--color-olive-primary)';
+
+    deleteProgressBox.style.display = 'none';
+    deleteProgressBar.style.width = '0%';
+    deleteProgressPercent.innerText = '0%';
+    deleteProgressStatusText.innerText = 'Iniciando liberação...';
+    deleteModalActions.style.display = 'flex';
+
+    deleteModal.classList.add('active');
+
+    const closeModal = () => {
+      deleteModal.classList.remove('active');
+      deleteModal.removeEventListener('click', onBackdropClick);
+    };
+
+    const onBackdropClick = (e) => {
+      if (e.target === deleteModal && deleteModalActions.style.display !== 'none') {
+        closeModal();
+      }
+    };
+
+    deleteModal.addEventListener('click', onBackdropClick);
+    btnCancelDelete.onclick = closeModal;
+
+    btnConfirmDelete.onclick = async () => {
+      deleteModalActions.style.display = 'none';
+      deleteProgressBox.style.display = 'block';
+
+      deleteProgressBar.style.width = '35%';
+      deleteProgressPercent.innerText = '35%';
+      deleteProgressStatusText.innerText = `Liberando ${total} presentes...`;
+
+      await new Promise(r => setTimeout(r, 150));
+      await window.weddingDB.unreserveMultipleGifts(ids);
+
+      deleteProgressBar.style.width = '100%';
+      deleteProgressPercent.innerText = '100%';
+      deleteProgressStatusText.innerText = `${total} itens liberados com sucesso!`;
+
+      await new Promise(r => setTimeout(r, 150));
+
+      closeModal();
+      this.selectedReservationIds.clear();
+      showToast(`${total} presentes liberados com sucesso!`, 'success');
+      await this.render();
+    };
   },
 
   async renderSettingsForm() {
