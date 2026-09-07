@@ -1,8 +1,21 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.7
+   Versão: v.1.3.8
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
+
+function updateAdminTopbarHeight() {
+  const topbar = document.getElementById('adminTopbar') || document.querySelector('.admin-topbar');
+  if (topbar) {
+    const h = topbar.getBoundingClientRect().height || topbar.offsetHeight;
+    if (h > 0) {
+      document.documentElement.style.setProperty('--admin-topbar-height', `${Math.round(h)}px`);
+    }
+  }
+}
+window.addEventListener('resize', updateAdminTopbarHeight);
+window.addEventListener('load', updateAdminTopbarHeight);
+document.addEventListener('DOMContentLoaded', updateAdminTopbarHeight);
 
 const AUTH_USERS = [
   { 
@@ -247,8 +260,10 @@ const AdminDashboard = {
   },
 
   async init() {
+    updateAdminTopbarHeight();
     // 0. Renderizar imediatamente para que o usuário veja as abas e layout sem qualquer atraso
     await this.render();
+    updateAdminTopbarHeight();
 
     if (this.isInitialized) return;
     this.isInitialized = true;
@@ -256,7 +271,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.3.7] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.3.8] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {

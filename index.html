@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos da Aplicação -->
-  <link rel="stylesheet" href="css/styles.css?v=1.3.7">
+  <link rel="stylesheet" href="css/styles.css?v=1.3.8">
 
   <!-- Supabase JS Client (Carregamento para persistência em nuvem) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -500,6 +500,58 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL DE SUCESSO & REDIRECIONAMENTO DE LOJA ==================== -->
+  <div id="storeRedirectModal" class="modal-backdrop">
+    <div class="modal-content sm" style="max-width: 500px; text-align: center; border-radius: var(--radius-lg);">
+      <div class="modal-header" style="justify-content: flex-end; border-bottom: none; padding-bottom: 0;">
+        <button class="modal-close" aria-label="Fechar modal">
+          <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 0 1.5rem 1.85rem;">
+        <div style="width: 68px; height: 68px; border-radius: 50%; background: var(--color-olive-light); color: var(--color-olive-deep); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.15rem auto; box-shadow: 0 4px 14px rgba(96, 108, 56, 0.2);">
+          <svg class="icon-line lg" viewBox="0 0 24 24" style="stroke-width: 2.2; width: 34px; height: 34px;">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h3 id="storeRedirectModalTitle" style="font-size: 1.35rem; color: var(--color-olive-deep); margin-bottom: 0.5rem; font-family: var(--font-serif);">
+          Presente Confirmado!
+        </h3>
+        <p id="storeRedirectModalDesc" style="font-size: 0.92rem; color: var(--color-olive-muted); margin-bottom: 1.25rem; line-height: 1.55;">
+          <!-- Preenchido dinamicamente via JS -->
+        </p>
+
+        <!-- Caixa com o Link da Loja e Botão de Copiar -->
+        <div style="background: var(--color-cream); border: 1px solid var(--color-olive-border); border-radius: var(--radius-md); padding: 0.85rem; margin-bottom: 1.25rem; text-align: left;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 600; color: var(--color-olive-frame); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">
+            Link Oficial da Loja:
+          </label>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" id="storeProductUrlInput" readonly onclick="this.select()" class="form-input" style="font-size: 0.82rem; background: var(--color-white); flex: 1; text-overflow: ellipsis; cursor: text;" value="">
+            <button type="button" id="btnCopyStoreUrl" class="btn btn-outline" style="white-space: nowrap; padding: 0.5rem 0.85rem; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.35rem;" title="Copiar link da loja">
+              <svg class="icon-line xs" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span id="btnCopyStoreUrlText">Copiar Link</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Botão Principal: Abrir Loja em Nova Aba -->
+        <a id="btnOpenStoreNewTab" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary lg" style="width: 100%; font-size: 1rem; padding: 0.85rem 1.25rem; justify-content: center; display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; margin-bottom: 0.75rem; border-radius: var(--radius-md); box-shadow: 0 4px 14px rgba(40, 54, 24, 0.2);">
+          <svg class="icon-line sm" viewBox="0 0 24 24" style="stroke-width: 2;">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          <span>Abrir Loja em Nova Aba</span>
+        </a>
+
+        <button type="button" class="btn btn-outline modal-close" style="width: 100%; font-size: 0.85rem; padding: 0.55rem;">
+          Concluir e Voltar à Lista
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== CONTAINER DE TOASTS ==================== -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -514,15 +566,15 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.3.7</span>
+          <span id="app-footer-version">v.1.3.8</span>
         </div>
       </div>
     </div>
   </footer>
 
   <!-- Scripts da Aplicação -->
-  <script src="js/extractor.js?v=1.3.7"></script>
-  <script src="js/db.js?v=1.3.7"></script>
-  <script src="js/app.js?v=1.3.7"></script>
+  <script src="js/extractor.js?v=1.3.8"></script>
+  <script src="js/db.js?v=1.3.8"></script>
+  <script src="js/app.js?v=1.3.8"></script>
 </body>
 </html>
