@@ -452,13 +452,13 @@
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.9) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.0) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content lg">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <h3>Painel de Gestão dos Noivos</h3>
-          <span class="admin-badge">Versão: v.1.0.9</span>
+          <span class="admin-badge">Versão: v.1.1.0</span>
         </div>
         <button class="modal-close" aria-label="Fechar painel">
           <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -687,21 +687,6 @@
               <textarea id="settingWelcomeMsg" class="form-textarea" rows="2"></textarea>
             </div>
 
-            <h4 style="margin: 1.5rem 0 1rem;">Sincronização em Nuvem (Supabase)</h4>
-            <p style="font-size: 0.85rem; color: var(--color-olive-muted); margin-bottom: 1rem;">
-              Persistência compartilhada em nuvem garantindo atualização instantânea para noivos e convidados:
-            </p>
-
-            <div class="form-group">
-              <label class="form-label" for="settingSupabaseUrl">Supabase Project URL</label>
-              <input type="url" id="settingSupabaseUrl" class="form-input" placeholder="https://ttggcvricfkoqlorbmnv.supabase.co">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="settingSupabaseKey">Supabase Publishable / Anon Key</label>
-              <input type="text" id="settingSupabaseKey" class="form-input" placeholder="sb_publishable_...">
-            </div>
-
             <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Salvar Configurações</button>
           </form>
         </div>
@@ -709,40 +694,38 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL CUSTOMIZADO DE CONFIRMAÇÃO DE EXCLUSÃO ==================== -->
-  <div id="deleteModal" class="modal-backdrop">
+  <!-- ==================== MODAL CUSTOMIZADO DE CONFIRMAÇÃO DE LIBERAÇÃO ==================== -->
+  <div id="unreserveModal" class="modal-backdrop">
     <div class="modal-content sm" style="max-width: 440px; text-align: center;">
       <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
-        <div class="delete-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; background: rgba(188, 108, 37, 0.12); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto;">
-          <svg class="icon-line lg" style="color: var(--color-error);" viewBox="0 0 24 24">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            <line x1="10" y1="11" x2="10" y2="17"></line>
-            <line x1="14" y1="11" x2="14" y2="17"></line>
+        <div class="unreserve-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; background: rgba(221, 161, 94, 0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto;">
+          <svg class="icon-line lg" style="color: var(--color-gold-accent);" viewBox="0 0 24 24">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
           </svg>
         </div>
       </div>
       <div class="modal-body" style="padding-top: 0.5rem;">
-        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-olive-deep);">Excluir Item Permanentemente?</h3>
-        <p id="deleteItemTitleText" style="font-size: 0.92rem; color: var(--color-olive-muted); margin-bottom: 1.25rem; line-height: 1.5;">
-          Tem certeza que deseja excluir este item da lista? Essa ação removerá os dados no cache local e no Supabase.
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-olive-deep);">Liberar Item para a Vitrine?</h3>
+        <p id="unreserveItemTitleText" style="font-size: 0.92rem; color: var(--color-olive-muted); margin-bottom: 1.25rem; line-height: 1.5;">
+          Tem certeza que deseja liberar este item? Ele ficará disponível novamente para todos os convidados na lista.
         </p>
 
-        <!-- Barra de Carregamento da Exclusão -->
-        <div id="deleteProgressBox" style="display: none; margin-bottom: 1.25rem;">
+        <!-- Barra de Carregamento da Liberação -->
+        <div id="unreserveProgressBox" style="display: none; margin-bottom: 1.25rem;">
           <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--color-olive-muted); margin-bottom: 0.4rem; font-weight: 500;">
-            <span id="deleteProgressStatusText">Excluindo do cache e sincronizando...</span>
-            <span id="deleteProgressPercent">0%</span>
+            <span id="unreserveProgressStatusText">Liberando item no cache e na nuvem...</span>
+            <span id="unreserveProgressPercent">0%</span>
           </div>
           <div class="progress-bar-container" style="width: 100%; height: 10px; background: var(--color-cream); border-radius: 999px; overflow: hidden; border: 1px solid var(--color-olive-border);">
-            <div id="deleteProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--color-error) 0%, var(--color-gold-accent) 100%); border-radius: 999px; transition: width 0.25s ease;"></div>
+            <div id="unreserveProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--color-gold-accent) 0%, var(--color-olive-primary) 100%); border-radius: 999px; transition: width 0.25s ease;"></div>
           </div>
         </div>
 
-        <div id="deleteModalActions" style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
-          <button type="button" id="btnCancelDelete" class="btn btn-outline" style="flex: 1;">Cancelar</button>
-          <button type="button" id="btnConfirmDelete" class="btn btn-primary" style="flex: 1; background-color: var(--color-error); border-color: var(--color-error);">
-            Sim, Excluir
+        <div id="unreserveModalActions" style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
+          <button type="button" id="btnCancelUnreserve" class="btn btn-outline" style="flex: 1;">Cancelar</button>
+          <button type="button" id="btnConfirmUnreserve" class="btn btn-gold" style="flex: 1;">
+            Sim, Liberar
           </button>
         </div>
       </div>
@@ -763,7 +746,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.0.9</span>
+          <span id="app-footer-version">v.1.1.0</span>
         </div>
       </div>
     </div>
