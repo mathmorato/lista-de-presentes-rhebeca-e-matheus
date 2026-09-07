@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.8
+   Versão: v.1.1.9
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.1.8] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.1.9] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -293,7 +293,7 @@ const CatalogController = {
     } else if (isReserved) {
       statusBadgeHTML = `<span class="gift-badge badge-reserved">Reservado</span>`;
     } else {
-      statusBadgeHTML = `<span class="gift-badge badge-available">Disponível</span>`;
+      statusBadgeHTML = '';
     }
 
     const featuredBadgeHTML = gift.isFeatured 
@@ -782,7 +782,7 @@ const AdminController = {
         <td>${escapeHTML(g.category)}</td>
         <td>${g.isCota ? `${formatCurrency(g.quotaValue)}/cota (${g.quotaCurrent || 0}/${g.quotaTotal})` : formatCurrency(g.price)}</td>
         <td>
-          <span class="gift-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}">
+          <span class="table-status-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}">
             ${g.status === 'reserved' ? `Reservado (${escapeHTML(g.reservedBy || '')})` : (g.status === 'completed' ? 'Concluído' : 'Disponível')}
           </span>
         </td>
@@ -1089,7 +1089,7 @@ const AdminController = {
             </div>
           </td>
           <td>
-            <span class="gift-badge ${g.isCota ? 'badge-cota' : 'badge-reserved'}">
+            <span class="table-status-badge ${g.isCota ? 'badge-cota' : 'badge-reserved'}">
               ${g.isCota ? 'Cota Lua de Mel' : 'Presente Físico'}
             </span>
           </td>
