@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.9
+   Versão: v.1.2.0
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -33,17 +33,17 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.1.9] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.2.0] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background bidirecionalmente entre IndexedDB e Supabase
         this.syncWithSupabase().catch(err => {
-          console.warn('[WeddingDB v.1.1.9] Sincronização inicial em background (IndexedDB ativo):', err);
+          console.warn('[WeddingDB v.1.2.0] Sincronização inicial em background (IndexedDB ativo):', err);
         });
       } catch (err) {
-        console.warn('[WeddingDB v.1.1.9] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.2.0] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -146,7 +146,7 @@ class WeddingDB {
     }
 
     try {
-      console.log('[WeddingDB v.1.1.9] Iniciando sincronização bidirecional completa com Supabase...');
+      console.log('[WeddingDB v.1.2.0] Iniciando sincronização bidirecional completa com Supabase...');
 
       // 0. Processar exclusões pendentes feitas em modo offline
       let pendingDeletes = [];
@@ -285,7 +285,7 @@ class WeddingDB {
 
       const totalLocalGifts = (await this.getAllGifts()).length;
 
-      console.log(`[WeddingDB v.1.1.9] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
+      console.log(`[WeddingDB v.1.2.0] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
 
       return {
         success: true,
@@ -668,6 +668,7 @@ class WeddingDB {
       pixKey: 'rhebecaematheuscasamento@gmail.com',
       pixName: 'Rhebeca e Matheus',
       pixCity: 'São Luís de Montes Belos',
+      whatsappPhone: '5564993409360',
       supabaseUrl: 'https://ttggcvricfkoqlorbmnv.supabase.co',
       supabaseKey: 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN'
     };

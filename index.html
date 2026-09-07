@@ -351,8 +351,8 @@
       <form id="reserveGiftForm">
         <div class="modal-body">
           <input type="hidden" id="reserveGiftId">
-          <p style="margin-bottom: 1.25rem;">
-            Você está reservando este presente para os noivos. Ao confirmar, o item será imediatamente marcado como reservado para evitar presentes repetidos.
+          <p style="margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--color-olive-deep); line-height: 1.5;">
+            Você está escolhendo presentear os noivos com este item especial! Ao confirmar, os dados serão registrados e você será direcionado para o <strong>WhatsApp oficial dos noivos (+55 64 99340-9360)</strong> com a mensagem pronta para solicitar o endereço de entrega e a marcação como presenteado.
           </p>
 
           <div style="background: var(--color-cream); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
@@ -366,8 +366,8 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="reserveGuestPhone">Telefone / WhatsApp / E-mail</label>
-            <input type="text" id="reserveGuestPhone" class="form-input" placeholder="(00) 00000-0000 ou seu@email.com">
+            <label class="form-label" for="reserveGuestPhone">Seu Telefone / WhatsApp</label>
+            <input type="text" id="reserveGuestPhone" class="form-input" placeholder="(64) 90000-0000">
           </div>
 
           <div class="form-group">
@@ -380,9 +380,11 @@
             <svg class="icon-line sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             Cancelar
           </button>
-          <button type="submit" class="btn btn-primary">
-            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-            Confirmar Reserva
+          <button type="submit" class="btn btn-whatsapp" id="btnSubmitReserve" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <svg class="icon-line sm" viewBox="0 0 24 24" style="stroke-width: 2;">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            Confirmar e Enviar no WhatsApp
           </button>
         </div>
       </form>
@@ -464,7 +466,7 @@
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.9) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.2.0) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content xl">
       <div class="modal-header">
@@ -480,7 +482,7 @@
           <div>
             <h3 style="margin: 0; font-family: var(--font-serif); color: var(--color-olive-deep); font-size: 1.35rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
               Painel de Gestão dos Noivos
-              <span class="admin-badge">Versão: v.1.1.9</span>
+              <span class="admin-badge">Versão: v.1.2.0</span>
             </h3>
             <p style="margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--color-olive-muted);">
               Gestão da lista de presentes, cotas financeiras e sincronização com a nuvem
@@ -815,6 +817,12 @@
               <textarea id="settingWelcomeMsg" class="form-textarea" rows="2"></textarea>
             </div>
 
+            <div class="form-group">
+              <label class="form-label" for="settingWhatsappPhone">WhatsApp dos Noivos para Recebimento de Presentes</label>
+              <input type="text" id="settingWhatsappPhone" class="form-input" placeholder="5564993409360" value="5564993409360">
+              <small style="color: var(--color-olive-muted); font-size: 0.78rem; display: block; margin-top: 0.25rem;">Número com DDI e DDD (padrão: 5564993409360) para onde os convidados enviarão a mensagem de entrega e confirmação.</small>
+            </div>
+
             <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Parâmetros da Conexão Supabase (Nuvem)</h4>
             <div class="form-grid grid-2col">
               <div class="form-group">
@@ -933,7 +941,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.1.9</span>
+          <span id="app-footer-version">v.1.2.0</span>
         </div>
       </div>
     </div>
