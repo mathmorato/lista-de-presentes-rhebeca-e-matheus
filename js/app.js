@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.1
+   Versão: v.1.3.2
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.3.1] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.3.2] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -1364,18 +1364,11 @@ const AdminController = {
 
     const whatsappInput = document.getElementById('settingWhatsappPhone');
     if (whatsappInput) whatsappInput.value = settings.whatsappPhone || '5564993409360';
-
-    const urlInput = document.getElementById('settingSupabaseUrl');
-    if (urlInput) urlInput.value = settings.supabaseUrl || '';
-    const keyInput = document.getElementById('settingSupabaseKey');
-    if (keyInput) keyInput.value = settings.supabaseKey || '';
   },
 
   async handleSaveSettings() {
     const currentSettings = await window.weddingDB.getSettings();
     const whatsappInput = document.getElementById('settingWhatsappPhone');
-    const urlInput = document.getElementById('settingSupabaseUrl');
-    const keyInput = document.getElementById('settingSupabaseKey');
 
     const newSettings = {
       ...currentSettings,
@@ -1386,23 +1379,11 @@ const AdminController = {
       welcomeMessage: document.getElementById('settingWelcomeMsg').value.trim(),
       ceremonyPlace: document.getElementById('settingCeremonyPlace').value.trim(),
       ceremonyCity: document.getElementById('settingCeremonyCity').value.trim(),
-      whatsappPhone: whatsappInput ? whatsappInput.value.trim().replace(/\D/g, '') : (currentSettings.whatsappPhone || '5564993409360'),
-      supabaseUrl: urlInput ? urlInput.value.trim() : (currentSettings.supabaseUrl || ''),
-      supabaseKey: keyInput ? keyInput.value.trim() : (currentSettings.supabaseKey || '')
+      whatsappPhone: whatsappInput ? whatsappInput.value.trim().replace(/\D/g, '') : (currentSettings.whatsappPhone || '5564993409360')
     };
 
     await window.weddingDB.saveSettings(newSettings);
 
-    // Reconectar Supabase caso as credenciais tenham sido alteradas
-    if (window.supabase && newSettings.supabaseUrl && newSettings.supabaseKey) {
-      try {
-        window.weddingDB.supabaseClient = window.supabase.createClient(newSettings.supabaseUrl, newSettings.supabaseKey);
-        window.weddingDB._setupRealtimeListeners();
-      } catch (e) {
-        console.warn('Falha ao reconectar Supabase com novos parâmetros:', e);
-      }
-    }
-    
     const heroSubtitle = document.querySelector('.hero-subtitle');
     if (heroSubtitle && newSettings.welcomeMessage) {
       heroSubtitle.innerText = newSettings.welcomeMessage;

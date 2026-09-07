@@ -1,8 +1,27 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.1
+   Versão: v.1.3.2
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
+
+/* ==========================================================================
+   CONFIGURAÇÃO ESTÁTICA DO SUPABASE (IMUTÁVEL NA WEB)
+   Acesso e conexão direta embutidos no código-fonte.
+   - URL: https://ttggcvricfkoqlorbmnv.supabase.co
+   - Public/Anon Key: sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN
+   - Project Ref: ttggcvricfkoqlorbmnv
+   - Postgres URL: postgresql://postgres:[Mhmm*2738]@db.ttggcvricfkoqlorbmnv.supabase.co:5432/postgres
+   - CLI Setup:
+       supabase login
+       supabase init
+       supabase link --project-ref ttggcvricfkoqlorbmnv
+   ========================================================================== */
+const SUPABASE_CONFIG = Object.freeze({
+  url: 'https://ttggcvricfkoqlorbmnv.supabase.co',
+  anonKey: 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN',
+  projectRef: 'ttggcvricfkoqlorbmnv',
+  postgresUrl: 'postgresql://postgres:[Mhmm*2738]@db.ttggcvricfkoqlorbmnv.supabase.co:5432/postgres'
+});
 
 const DB_NAME = 'WeddingGiftList_RhebecaMatheus';
 const DB_VERSION = 2;
@@ -29,28 +48,27 @@ class WeddingDB {
     // 1. Inicializar IndexedDB Local
     await this._initIndexedDB();
 
-    // 2. Carregar configurações locais e inicializar Supabase com credenciais padrão ou salvas
-    const settings = await this.getSettings();
-    const supabaseUrl = settings.supabaseUrl || 'https://ttggcvricfkoqlorbmnv.supabase.co';
-    const supabaseKey = settings.supabaseKey || 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN';
+    // 2. Inicializar Supabase diretamente com credenciais estáticas do código-fonte (imutável pela interface web)
+    const supabaseUrl = SUPABASE_CONFIG.url;
+    const supabaseKey = SUPABASE_CONFIG.anonKey;
 
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.3.0] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.3.2] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background bidirecionalmente entre IndexedDB e Supabase
         this.syncWithSupabase({ silent: true }).catch(err => {
-          console.warn('[WeddingDB v.1.3.0] Sincronização inicial em background (IndexedDB ativo):', err);
+          console.warn('[WeddingDB v.1.3.2] Sincronização inicial em background (IndexedDB ativo):', err);
         });
 
         // Iniciar sincronização automática periódica a cada 15 segundos
         this.startAutoSync(15);
       } catch (err) {
-        console.warn('[WeddingDB v.1.3.0] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.3.2] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -195,9 +213,8 @@ class WeddingDB {
     }
 
     if (!this.supabaseClient) {
-      const settings = await this.getSettings();
-      const supabaseUrl = settings.supabaseUrl || 'https://ttggcvricfkoqlorbmnv.supabase.co';
-      const supabaseKey = settings.supabaseKey || 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN';
+      const supabaseUrl = SUPABASE_CONFIG.url;
+      const supabaseKey = SUPABASE_CONFIG.anonKey;
       if (window.supabase && supabaseUrl && supabaseKey) {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
         this._setupRealtimeListeners();
@@ -210,7 +227,7 @@ class WeddingDB {
 
     try {
       if (!isSilent) {
-        console.log('[WeddingDB v.1.3.0] Iniciando sincronização bidirecional completa com Supabase...');
+        console.log('[WeddingDB v.1.3.2] Iniciando sincronização bidirecional completa com Supabase...');
       }
 
       // 0. Processar exclusões pendentes feitas em modo offline e carregar tombstones de itens deletados
@@ -1072,6 +1089,10 @@ class WeddingDB {
   }
 
   async saveSettings(settingsData) {
+    // Proteger e garantir que as credenciais do Supabase sejam sempre as fixadas no código
+    settingsData.supabaseUrl = SUPABASE_CONFIG.url;
+    settingsData.supabaseKey = SUPABASE_CONFIG.anonKey;
+
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('settings', 'readwrite');
       const store = tx.objectStore('settings');
@@ -1095,8 +1116,9 @@ class WeddingDB {
       pixName: 'Rhebeca e Matheus',
       pixCity: 'São Luís de Montes Belos',
       whatsappPhone: '5564993409360',
-      supabaseUrl: 'https://ttggcvricfkoqlorbmnv.supabase.co',
-      supabaseKey: 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN'
+      supabaseUrl: SUPABASE_CONFIG.url,
+      supabaseKey: SUPABASE_CONFIG.anonKey
+    };
   }
 }
 

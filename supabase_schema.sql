@@ -2,7 +2,16 @@
 -- LISTA DE PRESENTES DE CASAMENTO - RHEBECA & MATHEUS
 -- Data do Casamento: 09/01/2027 • São Luís de Montes Belos - GO
 -- Script de Configuração Completa do Supabase (PostgreSQL)
--- Versão: v.1.3.1
+-- Versão: v.1.3.2
+-- ==============================================================================
+-- PARÂMETROS FIXOS DO PROJETO:
+-- URL: https://ttggcvricfkoqlorbmnv.supabase.co
+-- Anon/Public Key: sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN
+-- Connection String: postgresql://postgres:[Mhmm*2738]@db.ttggcvricfkoqlorbmnv.supabase.co:5432/postgres
+-- CLI Setup:
+--   supabase login
+--   supabase init
+--   supabase link --project-ref ttggcvricfkoqlorbmnv
 -- ==============================================================================
 -- INSTRUÇÕES DE EXECUÇÃO:
 -- 1. Acesse o painel do seu projeto Supabase (https://supabase.com/dashboard).
