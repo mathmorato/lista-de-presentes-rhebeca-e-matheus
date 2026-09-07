@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.7
+   Versão: v.1.3.8
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.3.7] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.3.8] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -179,10 +179,10 @@ const CatalogController = {
     }
 
     // 6. Fechamento de Modais
-    document.querySelectorAll('.modal-close, .modal-backdrop').forEach(el => {
-      el.addEventListener('click', (e) => {
-        if (e.target === el) {
-          document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal || e.target.closest('.modal-close')) {
+          modal.classList.remove('active');
         }
       });
     });
@@ -486,12 +486,55 @@ const CatalogController = {
     document.getElementById('cotaGuestMessage').value = '';
 
     modal.classList.add('active');
+  },
+
+  openStoreRedirectModal(gift, guestName) {
+    const modal = document.getElementById('storeRedirectModal');
+    if (!modal) return;
+
+    let cleanUrl = (gift.productUrl || '').trim();
+    if (cleanUrl && !cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = 'https://' + cleanUrl;
+    }
+
+    const titleEl = document.getElementById('storeRedirectModalTitle');
+    const descEl = document.getElementById('storeRedirectModalDesc');
+    const inputEl = document.getElementById('storeProductUrlInput');
+    const openBtn = document.getElementById('btnOpenStoreNewTab');
+    const copyBtnText = document.getElementById('btnCopyStoreUrlText');
+
+    if (titleEl) titleEl.innerText = 'Presente Confirmado! 🎉';
+    if (descEl) {
+      descEl.innerHTML = `Muito obrigado, <strong style="color: var(--color-olive-deep);">${escapeHTML(guestName)}</strong>!<br>Sua escolha de presentear <strong>"${escapeHTML(gift.title)}"</strong> para Rhebeca & Matheus foi registrada com sucesso.<br><br>Você pode acessar a loja virtual do produto em uma nova aba ou copiar o link oficial abaixo:`;
+    }
+    if (inputEl) inputEl.value = cleanUrl;
+    if (openBtn) {
+      openBtn.href = cleanUrl || '#';
+      openBtn.onclick = (e) => {
+        if (!cleanUrl || cleanUrl === '#') {
+          e.preventDefault();
+          showToast('Link da loja não disponível para este item.', 'warning');
+        }
+      };
+    }
+    if (copyBtnText) copyBtnText.innerText = 'Copiar Link';
+
+    modal.classList.add('active');
+
+    // Tenta também abrir em nova aba automaticamente em navegadores que permitem
+    if (cleanUrl && cleanUrl !== '#') {
+      try {
+        window.open(cleanUrl, '_blank', 'noopener,noreferrer');
+      } catch (err) {
+        console.log('Abertura direta bloqueada pelo navegador; modal disponível com os botões.', err);
+      }
+    }
   }
 };
 
 /* ==========================================================================
    SUBMISSÃO DE RESERVAS E COTAS PIX
-   ========================================================================= */
+   ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   const reserveForm = document.getElementById('reserveGiftForm');
   if (reserveForm) {
@@ -518,12 +561,10 @@ document.addEventListener('DOMContentLoaded', () => {
         await CatalogController.refresh();
         await MessagesController.refresh();
 
-        // 2. Se o presente tiver link da loja virtual, redirecionar diretamente para a loja original
+        // 2. Se o presente tiver link da loja virtual, abrir modal com opção de abrir em nova aba ou copiar o link
         if (gift && gift.productUrl) {
-          showToast(`Obrigado, ${guestName}! Presente registrado com sucesso. Redirecionando para a loja...`, 'success');
-          setTimeout(() => {
-            window.location.href = gift.productUrl;
-          }, 400);
+          showToast(`Presente registrado com sucesso, ${guestName}!`, 'success');
+          CatalogController.openStoreRedirectModal(gift, guestName);
         } else {
           showToast(`Muito obrigado, ${guestName}! Sua escolha de presente para Rhebeca & Matheus foi registrada com sucesso.`, 'success');
         }
@@ -610,6 +651,39 @@ document.addEventListener('DOMContentLoaded', () => {
         document.execCommand('copy');
         document.body.removeChild(tempInput);
         showToast('Chave Pix copiada!', 'success');
+      }
+    });
+  }
+
+  const btnCopyStoreUrl = document.getElementById('btnCopyStoreUrl');
+  if (btnCopyStoreUrl) {
+    btnCopyStoreUrl.addEventListener('click', async () => {
+      const inputEl = document.getElementById('storeProductUrlInput');
+      const textToCopy = inputEl ? inputEl.value.trim() : '';
+      if (!textToCopy) {
+        showToast('Nenhum link da loja disponível para copiar.', 'warning');
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        showToast('Link da loja copiado com sucesso!', 'success');
+        const label = document.getElementById('btnCopyStoreUrlText');
+        if (label) {
+          label.innerText = 'Copiado!';
+          setTimeout(() => { label.innerText = 'Copiar Link'; }, 2500);
+        }
+      } catch (err) {
+        if (inputEl) {
+          inputEl.select();
+          document.execCommand('copy');
+        }
+        showToast('Link da loja copiado!', 'success');
+        const label = document.getElementById('btnCopyStoreUrlText');
+        if (label) {
+          label.innerText = 'Copiado!';
+          setTimeout(() => { label.innerText = 'Copiar Link'; }, 2500);
+        }
       }
     });
   }
