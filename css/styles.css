@@ -1,25 +1,29 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.1
-   Design System: Paleta Branco e Verde Oliva Nobre
+   Versão: v.1.0.4
+   Design System: Baseado estritamente no Save The Date Oficial
+   Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
 
 :root {
-  /* Paleta Branco e Off-White */
+  /* Fundo e Bases do Convite */
   --color-white: #ffffff;
   --color-pearl: #fafaf7;
-  --color-cream: #f4f5f0;
-  --color-surface-translucent: rgba(255, 255, 255, 0.9);
+  --color-card-bg: #fcfdf9;
+  --color-cream: #f3f5ee;
+  --color-surface-translucent: rgba(250, 250, 247, 0.94);
 
-  /* Paleta Verde Oliva Nobre e Suportes */
-  --color-olive-deep: #283618;
-  --color-olive-primary: #606c38;
-  --color-olive-hover: #4d572b;
+  /* Tons de Verde Oliva do Save The Date */
+  --color-olive-deep: #1d2a12;
+  --color-olive-frame: #4e5d30;
+  --color-olive-primary: #556b2f;
+  --color-olive-hover: #3e4f20;
   --color-olive-light: #e8ece0;
-  --color-olive-border: rgba(96, 108, 56, 0.22);
-  --color-olive-muted: #5e6b52;
-  
-  /* Dourado Champagne & Estados */
+  --color-olive-ampersand: #7b8f55;
+  --color-olive-border: rgba(78, 93, 48, 0.25);
+  --color-olive-muted: #536244;
+
+  /* Destaques e Estados */
   --color-gold-accent: #dda15e;
   --color-gold-hover: #c98e4b;
   --color-gold-soft: #bc6c25;
@@ -31,49 +35,46 @@
   --color-error-light: #faece5;
 
   /* Sombras e Molduras */
-  --shadow-sm: 0 2px 10px rgba(40, 54, 24, 0.05);
-  --shadow-md: 0 8px 24px rgba(40, 54, 24, 0.08);
-  --shadow-lg: 0 16px 40px rgba(40, 54, 24, 0.12);
+  --shadow-sm: 0 2px 10px rgba(29, 42, 18, 0.05);
+  --shadow-md: 0 8px 24px rgba(29, 42, 18, 0.08);
+  --shadow-lg: 0 16px 40px rgba(29, 42, 18, 0.12);
   --radius-sm: 8px;
   --radius-md: 14px;
-  --radius-lg: 22px;
+  --radius-lg: 20px;
   --radius-full: 9999px;
 
   /* Tipografia */
+  --font-script: 'Great Vibes', 'Alex Brush', cursive;
   --font-serif: 'Playfair Display', Cormorant Garamond, Georgia, serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
+
   --transition-smooth: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Modo Escuro Sofisticado (Verde Musgo Profundo) */
+/* Modo Escuro Elegante (Verde Musgo Ultra Escuro) */
 [data-theme="dark"] {
-  --color-white: #1a2312;
-  --color-pearl: #131a0d;
-  --color-cream: #1f2b16;
-  --color-surface-translucent: rgba(26, 35, 18, 0.92);
+  --color-white: #161f11;
+  --color-pearl: #11170d;
+  --color-card-bg: #1a2414;
+  --color-cream: #1f2c18;
+  --color-surface-translucent: rgba(17, 23, 13, 0.94);
 
-  --color-olive-deep: #f7f9f3;
+  --color-olive-deep: #f6f8f2;
+  --color-olive-frame: #8da167;
   --color-olive-primary: #8fa358;
   --color-olive-hover: #a3b86b;
-  --color-olive-light: #2c3c20;
-  --color-olive-border: rgba(143, 163, 88, 0.3);
-  --color-olive-muted: #c4d0b7;
-  
+  --color-olive-light: #28361c;
+  --color-olive-ampersand: #a9bc83;
+  --color-olive-border: rgba(141, 161, 103, 0.3);
+  --color-olive-muted: #c7d4bc;
+
   --color-gold-accent: #e5b376;
   --color-gold-hover: #f0c592;
   --color-gold-soft: #cca062;
 
-  --color-success: #74a673;
-  --color-success-light: #1e301d;
-  --color-warning: #e5b376;
-  --color-warning-light: #342817;
-  --color-error: #db8a44;
-  --color-error-light: #3d2214;
-
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.65);
 }
 
 /* Reset e Base */
@@ -115,8 +116,8 @@ body {
 }
 
 .icon-line.lg {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
 }
 
 .icon-line.sm {
@@ -132,6 +133,10 @@ h1, h2, h3, h4, .serif-font {
   line-height: 1.25;
 }
 
+.font-script {
+  font-family: var(--font-script);
+}
+
 p {
   color: var(--color-olive-muted);
 }
@@ -141,7 +146,6 @@ a {
   text-decoration: none;
 }
 
-/* Containers */
 .container {
   width: 100%;
   max-width: 1240px;
@@ -178,14 +182,14 @@ a {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1.8px solid var(--color-olive-primary);
+  border: 1.5px solid var(--color-olive-frame);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-serif);
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
   background: var(--color-cream);
   letter-spacing: 1px;
 }
@@ -213,7 +217,7 @@ a {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 1.75rem;
+  gap: 2rem;
   list-style: none;
 }
 
@@ -227,7 +231,7 @@ a {
 }
 
 .nav-link:hover, .nav-link.active {
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
 }
 
 .nav-link::after {
@@ -237,7 +241,7 @@ a {
   left: 0;
   width: 0;
   height: 2px;
-  background-color: var(--color-olive-primary);
+  background-color: var(--color-olive-frame);
   transition: var(--transition-smooth);
   border-radius: 2px;
 }
@@ -268,8 +272,8 @@ a {
 
 .btn-icon:hover {
   background: var(--color-olive-light);
-  color: var(--color-olive-primary);
-  border-color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
+  border-color: var(--color-olive-frame);
   transform: translateY(-1px);
 }
 
@@ -277,153 +281,215 @@ a {
   display: none;
 }
 
-/* Hero Section com Save The Date Oficial */
-.hero-section {
+/* ==========================================================================
+   CONVITE SAVE THE DATE PRINCIPAL (Design Fiel à Imagem)
+   ========================================================================== */
+.wedding-invitation-hero {
+  padding: 3.5rem 0 4.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.save-the-date-frame {
   position: relative;
-  padding: 4.5rem 0 3.5rem;
+  width: 100%;
+  max-width: 820px;
+  background-color: var(--color-card-bg);
+  border: 1.8px solid var(--color-olive-frame);
+  padding: 4rem 3.5rem;
   text-align: center;
-  background: radial-gradient(circle at 50% 10%, var(--color-olive-light) 0%, var(--color-pearl) 75%);
-  border-bottom: 1px solid var(--color-olive-border);
-  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border-radius: 4px;
 }
 
-.hero-ornament {
-  width: 80px;
-  height: 2px;
-  background: var(--color-gold-accent);
-  margin: 0 auto 1.5rem;
-  position: relative;
-}
-
-.hero-ornament::before, .hero-ornament::after {
-  content: '✦';
+/* Folhagens Botânicas nos Cantos Superior-Esquerdo e Inferior-Direito */
+.botanical-branch-top-left {
   position: absolute;
-  top: -11px;
+  top: -12px;
+  left: -12px;
+  width: 180px;
+  height: 180px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.botanical-branch-bottom-right {
+  position: absolute;
+  bottom: -12px;
+  right: -12px;
+  width: 180px;
+  height: 180px;
+  pointer-events: none;
+  z-index: 2;
+  transform: rotate(180deg);
+}
+
+/* Elementos Textuais do Save The Date */
+.std-header-script {
+  font-family: var(--font-script);
+  font-size: 4.2rem;
+  color: var(--color-olive-deep);
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+/* Divisores Elegantes com Coração: ─── ♥ ─── */
+.heart-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin: 1.5rem auto;
+  max-width: 320px;
+}
+
+.heart-divider .line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-olive-frame);
+  opacity: 0.7;
+}
+
+.heart-divider .heart-icon {
+  color: var(--color-olive-deep);
   font-size: 0.95rem;
-  color: var(--color-gold-accent);
+  display: inline-block;
 }
 
-.hero-ornament::before { left: -16px; }
-.hero-ornament::after { right: -16px; }
-
-.save-the-date-script {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 2.2rem;
-  color: var(--color-olive-primary);
-  margin-bottom: 0.2rem;
-}
-
-.hero-tagline {
-  font-size: 0.85rem;
-  letter-spacing: 3px;
+.std-tagline {
+  font-size: 0.95rem;
+  letter-spacing: 4px;
   text-transform: uppercase;
   font-weight: 700;
-  color: var(--color-gold-soft);
-  margin-bottom: 0.8rem;
+  color: var(--color-olive-deep);
+  margin-bottom: 1.25rem;
 }
 
-.hero-title {
-  font-size: 3.6rem;
+.std-couple-names {
+  font-family: var(--font-serif);
+  font-size: 4rem;
   font-weight: 700;
   color: var(--color-olive-deep);
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   letter-spacing: -0.5px;
 }
 
-.hero-title .ampersand {
+.std-couple-names .ampersand {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  color: var(--color-olive-primary);
+  color: var(--color-olive-ampersand);
+  margin: 0 0.2rem;
 }
 
-.biblical-verse-box {
-  max-width: 680px;
+.std-biblical-verse {
+  max-width: 600px;
   margin: 0 auto 2.5rem;
-  padding: 1.25rem 2rem;
-  background: var(--color-white);
-  border: 1px solid var(--color-olive-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  position: relative;
 }
 
-.biblical-verse-text {
+.std-biblical-verse .verse-text {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   color: var(--color-olive-deep);
   line-height: 1.6;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
 }
 
-.biblical-verse-reference {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--color-gold-accent);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+.std-biblical-verse .verse-ref {
+  font-size: 0.95rem;
+  color: var(--color-olive-muted);
+  font-weight: 500;
 }
 
-/* 3 Badges em Destaque do Save The Date (Data, Hora, Local) */
-.save-the-date-triad {
+/* Tríade Oficial com Divisores Verticais (Data | Horário | Igreja) */
+.std-triad-container {
   display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
-  gap: 1.5rem;
-  max-width: 820px;
-  margin: 0 auto 2.5rem;
+  gap: 2rem;
+  margin: 2rem auto 2.5rem;
+  padding: 1.5rem 0;
 }
 
-.triad-card {
+.std-triad-item {
   flex: 1;
-  min-width: 220px;
-  background: var(--color-white);
-  border: 1.5px solid var(--color-olive-border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition-smooth);
 }
 
-.triad-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--color-olive-primary);
-  box-shadow: var(--shadow-md);
+.std-triad-divider {
+  width: 1px;
+  height: 70px;
+  background-color: var(--color-olive-frame);
+  opacity: 0.5;
 }
 
-.triad-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--color-cream);
-  color: var(--color-olive-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.std-icon-box {
+  color: var(--color-olive-frame);
   margin-bottom: 0.75rem;
-  border: 1px solid var(--color-olive-border);
 }
 
-.triad-title {
+.std-triad-val {
   font-family: var(--font-serif);
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: var(--color-olive-deep);
   margin-bottom: 0.2rem;
 }
 
-.triad-sub {
-  font-size: 0.8rem;
-  text-transform: uppercase;
+.std-triad-church-title {
+  font-size: 0.88rem;
+  font-weight: 700;
   letter-spacing: 1px;
+  color: var(--color-olive-deep);
+  text-transform: uppercase;
+}
+
+.std-triad-church-city {
+  font-size: 0.78rem;
   color: var(--color-olive-muted);
+  margin-top: 0.15rem;
+}
+
+.std-footer-phrase {
+  font-size: 0.92rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-olive-deep);
+  margin-top: 0.5rem;
+}
+
+.std-small-heart {
+  color: var(--color-olive-deep);
+  font-size: 0.85rem;
+  margin: 0.75rem auto;
+}
+
+.std-official-invite-soon {
+  font-family: var(--font-script);
+  font-size: 2.8rem;
+  color: var(--color-olive-deep);
+  line-height: 1;
+}
+
+/* Contagem Regressiva Minimalista */
+.countdown-strip-wrapper {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px dashed var(--color-olive-border);
+}
+
+.countdown-strip-title {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+  color: var(--color-olive-muted);
+  margin-bottom: 1.25rem;
 }
 
 .countdown-box {
@@ -431,7 +497,7 @@ a {
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
-  max-width: 500px;
+  max-width: 480px;
   margin: 0 auto;
 }
 
@@ -448,7 +514,7 @@ a {
   font-family: var(--font-serif);
   font-size: 2rem;
   font-weight: 700;
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
   display: block;
 }
 
@@ -459,24 +525,13 @@ a {
   color: var(--color-olive-muted);
 }
 
-/* Modal de Visualização da Arte Oficial */
-.save-the-date-modal-content {
-  max-width: 520px;
-  padding: 1.5rem;
-  text-align: center;
-}
-
-.save-the-date-img {
-  width: 100%;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-olive-border);
-  box-shadow: var(--shadow-md);
-}
-
-/* Resumo & Métricas */
+/* ==========================================================================
+   RESUMO & MÉTRICAS
+   ========================================================================== */
 .summary-strip {
   padding: 2.5rem 0;
   background: var(--color-white);
+  border-top: 1px solid var(--color-olive-border);
   border-bottom: 1px solid var(--color-olive-border);
 }
 
@@ -491,7 +546,7 @@ a {
   align-items: center;
   gap: 1.25rem;
   padding: 1.35rem 1.6rem;
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-md);
   transition: var(--transition-smooth);
@@ -500,7 +555,7 @@ a {
 .summary-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-sm);
-  border-color: var(--color-olive-primary);
+  border-color: var(--color-olive-frame);
 }
 
 .summary-card-icon {
@@ -508,7 +563,7 @@ a {
   height: 50px;
   border-radius: 50%;
   background: var(--color-white);
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -528,9 +583,11 @@ a {
   color: var(--color-olive-deep);
 }
 
-/* Seção do Catálogo com Filtros Avançados */
+/* ==========================================================================
+   CATÁLOGO DE PRESENTES COM ESTÉTICA BOTÂNICA
+   ========================================================================== */
 .catalog-section {
-  padding: 4rem 0 5rem;
+  padding: 4.5rem 0 5rem;
   flex: 1;
 }
 
@@ -545,7 +602,7 @@ a {
   letter-spacing: 2px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
   background: var(--color-olive-light);
   padding: 0.35rem 0.95rem;
   border-radius: var(--radius-full);
@@ -553,7 +610,7 @@ a {
 }
 
 .section-title {
-  font-size: 2.5rem;
+  font-size: 2.6rem;
   margin-bottom: 0.75rem;
 }
 
@@ -563,10 +620,10 @@ a {
   font-size: 1.08rem;
 }
 
-/* Painel de Filtros e Busca Completo */
+/* Painel de Filtros */
 .advanced-filters-panel {
   background: var(--color-white);
-  border: 1px solid var(--color-olive-border);
+  border: 1.5px solid var(--color-olive-border);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
@@ -594,7 +651,7 @@ a {
   padding: 0.5rem 1.1rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--color-olive-border);
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   color: var(--color-olive-deep);
   font-size: 0.88rem;
   font-weight: 500;
@@ -603,16 +660,16 @@ a {
 }
 
 .chip-btn:hover, .chip-btn.active {
-  background: var(--color-olive-primary);
+  background: var(--color-olive-frame);
   color: #ffffff;
-  border-color: var(--color-olive-primary);
+  border-color: var(--color-olive-frame);
 }
 
 .search-box-wrapper {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-full);
   padding: 0.5rem 1.1rem;
@@ -654,7 +711,7 @@ a {
   padding: 0.45rem 0.9rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-olive-border);
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   color: var(--color-olive-deep);
   font-size: 0.85rem;
   outline: none;
@@ -664,7 +721,7 @@ a {
 }
 
 .filter-select:focus {
-  border-color: var(--color-olive-primary);
+  border-color: var(--color-olive-frame);
 }
 
 /* Grid de Presentes */
@@ -677,7 +734,7 @@ a {
 .gift-card {
   background: var(--color-white);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-olive-border);
+  border: 1.5px solid var(--color-olive-border);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   display: flex;
@@ -689,7 +746,7 @@ a {
 .gift-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
-  border-color: var(--color-olive-primary);
+  border-color: var(--color-olive-frame);
 }
 
 .gift-card-media {
@@ -720,11 +777,11 @@ a {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
   opacity: 0.85;
 }
 
-/* Badges e Destaque */
+/* Badges */
 .gift-badge {
   position: absolute;
   top: 12px;
@@ -769,7 +826,7 @@ a {
 
 .badge-cota {
   background: var(--color-olive-light);
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
   border: 1px solid var(--color-olive-border);
 }
 
@@ -842,7 +899,7 @@ a {
 }
 
 .btn-store-link:hover {
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
 }
 
 /* Progresso de Cotas */
@@ -861,7 +918,7 @@ a {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-olive-primary), var(--color-gold-accent));
+  background: linear-gradient(90deg, var(--color-olive-frame), var(--color-gold-accent));
   border-radius: var(--radius-full);
   transition: width 0.4s ease;
 }
@@ -891,30 +948,30 @@ a {
 }
 
 .btn-primary {
-  background: var(--color-olive-primary);
+  background: var(--color-olive-frame);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(96, 108, 56, 0.25);
+  box-shadow: 0 4px 14px rgba(78, 93, 48, 0.25);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--color-olive-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(96, 108, 56, 0.35);
+  box-shadow: 0 6px 18px rgba(78, 93, 48, 0.35);
 }
 
 .btn-outline {
   background: transparent;
-  border: 1px solid var(--color-olive-primary);
-  color: var(--color-olive-primary);
+  border: 1.5px solid var(--color-olive-frame);
+  color: var(--color-olive-frame);
 }
 
 .btn-outline:hover:not(:disabled) {
   background: var(--color-olive-light);
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
 }
 
 .btn-secondary {
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   color: var(--color-olive-deep);
   border: 1px solid var(--color-olive-border);
 }
@@ -945,9 +1002,11 @@ a {
   width: 100%;
 }
 
-/* Seção de Mural de Mensagens */
+/* ==========================================================================
+   MURAL DE MENSAGENS
+   ========================================================================== */
 .messages-section {
-  padding: 4rem 0;
+  padding: 4.5rem 0;
   background: var(--color-white);
   border-top: 1px solid var(--color-olive-border);
   border-bottom: 1px solid var(--color-olive-border);
@@ -961,8 +1020,8 @@ a {
 }
 
 .message-form-card {
-  background: var(--color-pearl);
-  border: 1px solid var(--color-olive-border);
+  background: var(--color-card-bg);
+  border: 1.5px solid var(--color-olive-border);
   border-radius: var(--radius-md);
   padding: 2rem;
   box-shadow: var(--shadow-sm);
@@ -994,8 +1053,8 @@ a {
 }
 
 .form-input:focus, .form-textarea:focus, .form-select:focus {
-  border-color: var(--color-olive-primary);
-  box-shadow: 0 0 0 3px rgba(96, 108, 56, 0.15);
+  border-color: var(--color-olive-frame);
+  box-shadow: 0 0 0 3px rgba(78, 93, 48, 0.15);
 }
 
 .messages-wall {
@@ -1008,7 +1067,7 @@ a {
 }
 
 .message-bubble {
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-md);
   padding: 1.25rem;
@@ -1042,32 +1101,15 @@ a {
   font-style: italic;
 }
 
-/* Seção RSVP */
-.rsvp-section {
-  padding: 4.5rem 0;
-  text-align: center;
-  background: radial-gradient(circle at 50% 50%, var(--color-cream) 0%, var(--color-pearl) 100%);
-  border-bottom: 1px solid var(--color-olive-border);
-}
-
-.rsvp-box {
-  max-width: 620px;
-  margin: 0 auto;
-  background: var(--color-white);
-  border: 1px solid var(--color-olive-border);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem 2rem;
-  box-shadow: var(--shadow-md);
-  text-align: left;
-}
-
-/* Modais */
+/* ==========================================================================
+   MODAIS E PAINEL ADMINISTRATIVO
+   ========================================================================== */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(40, 54, 24, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(29, 42, 18, 0.65);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -1086,7 +1128,7 @@ a {
 .modal-content {
   background: var(--color-white);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-olive-border);
+  border: 1.5px solid var(--color-olive-frame);
   box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 540px;
@@ -1124,7 +1166,7 @@ a {
   gap: 0.75rem;
   padding: 1.25rem 2rem;
   border-top: 1px solid var(--color-olive-border);
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
@@ -1145,7 +1187,7 @@ a {
 
 /* Pix Box */
 .pix-details-card {
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-md);
   padding: 1.5rem;
@@ -1168,9 +1210,9 @@ a {
   margin-top: 0.75rem;
 }
 
-/* Caixa do Extrator Inteligente de Links */
+/* Extrator de Links */
 .smart-extractor-box {
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-md);
   padding: 1.5rem;
@@ -1213,7 +1255,7 @@ a {
   padding: 0.25rem 0.6rem;
   border-radius: var(--radius-full);
   background: var(--color-olive-light);
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
   border: 1px solid var(--color-olive-border);
   font-family: monospace;
 }
@@ -1237,8 +1279,8 @@ a {
 }
 
 .admin-tab-btn.active {
-  color: var(--color-olive-primary);
-  border-bottom-color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
+  border-bottom-color: var(--color-olive-frame);
 }
 
 .admin-table {
@@ -1254,12 +1296,14 @@ a {
 }
 
 .admin-table th {
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   color: var(--color-olive-deep);
   font-weight: 600;
 }
 
-/* Rodapé */
+/* ==========================================================================
+   RODAPÉ
+   ========================================================================== */
 .site-footer {
   background: var(--color-white);
   border-top: 1px solid var(--color-olive-border);
@@ -1272,13 +1316,13 @@ a {
   font-family: var(--font-serif);
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--color-olive-primary);
+  color: var(--color-olive-frame);
   margin-bottom: 0.5rem;
 }
 
 .footer-quote {
   font-style: italic;
-  max-width: 520px;
+  max-width: 560px;
   margin: 0 auto 1.5rem;
   font-size: 0.95rem;
 }
@@ -1299,7 +1343,7 @@ a {
   align-items: center;
   gap: 0.4rem;
   padding: 0.3rem 0.85rem;
-  background: var(--color-cream);
+  background: var(--color-card-bg);
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-full);
   font-weight: 700;
@@ -1361,16 +1405,11 @@ a {
   .messages-layout {
     grid-template-columns: 1fr;
   }
-  .hero-title {
-    font-size: 2.7rem;
+  .std-couple-names {
+    font-size: 3rem;
   }
-  .save-the-date-triad {
-    flex-direction: column;
-    align-items: center;
-  }
-  .triad-card {
-    width: 100%;
-    max-width: 380px;
+  .std-header-script {
+    font-size: 3.2rem;
   }
 }
 
@@ -1395,6 +1434,29 @@ a {
 
   .mobile-menu-toggle {
     display: flex;
+  }
+
+  .save-the-date-frame {
+    padding: 3rem 1.5rem;
+    border-width: 1.5px;
+  }
+
+  .std-couple-names {
+    font-size: 2.3rem;
+  }
+
+  .std-header-script {
+    font-size: 2.8rem;
+  }
+
+  .std-triad-container {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .std-triad-divider {
+    width: 60px;
+    height: 1px;
   }
 
   .countdown-box {
@@ -1425,17 +1487,5 @@ a {
 
   .extractor-input-group {
     flex-direction: column;
-  }
-
-  .hero-title {
-    font-size: 2.2rem;
-  }
-
-  .biblical-verse-box {
-    padding: 1rem;
-  }
-
-  .biblical-verse-text {
-    font-size: 1rem;
   }
 }

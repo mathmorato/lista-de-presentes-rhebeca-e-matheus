@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.2
+   Versão: v.1.0.4
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.0.2] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.0.4] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   CountdownController.init();
   CatalogController.init();
   MessagesController.init();
-  RsvpController.init();
   AdminController.init();
 
   // 3. Menu Mobile
@@ -607,44 +606,7 @@ const MessagesController = {
 };
 
 /* ==========================================================================
-   RSVP (CONFIRMAÇÃO DE PRESENÇA)
-   ========================================================================== */
-const RsvpController = {
-  init() {
-    const form = document.getElementById('rsvpForm');
-    if (!form) return;
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const guestName = document.getElementById('rsvpName').value.trim();
-      const email = document.getElementById('rsvpEmail').value.trim();
-      const phone = document.getElementById('rsvpPhone').value.trim();
-      const companions = parseInt(document.getElementById('rsvpCompanions').value) || 0;
-      const status = document.querySelector('input[name="rsvpStatus"]:checked').value;
-      const dietary = document.getElementById('rsvpDietary').value.trim();
-
-      if (!guestName) {
-        showToast('Por favor, informe seu nome completo.', 'error');
-        return;
-      }
-
-      await window.weddingDB.saveRsvp({
-        guestName,
-        email,
-        phone,
-        companions,
-        status,
-        dietary
-      });
-
-      form.reset();
-      showToast('Presença confirmada com sucesso! Mal podemos esperar por esse grande dia!', 'success');
-    });
-  }
-};
-
-/* ==========================================================================
-   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.2) COM EXTRATOR APRIMORADO
+   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.4) COM EXTRATOR APRIMORADO
    ========================================================================== */
 const AdminController = {
   currentTab: 'gifts',
@@ -772,9 +734,6 @@ const AdminController = {
     if (this.currentTab === 'gifts') {
       document.getElementById('adminTabGifts').style.display = 'block';
       await this.renderGiftsTable();
-    } else if (this.currentTab === 'rsvps') {
-      document.getElementById('adminTabRsvps').style.display = 'block';
-      await this.renderRsvpsTable();
     } else if (this.currentTab === 'settings') {
       document.getElementById('adminTabSettings').style.display = 'block';
       await this.renderSettingsForm();
@@ -933,31 +892,6 @@ const AdminController = {
     this.resetGiftForm();
     await this.renderGiftsTable();
     await CatalogController.refresh();
-  },
-
-  async renderRsvpsTable() {
-    const tbody = document.getElementById('adminRsvpsTableBody');
-    if (!tbody) return;
-
-    const rsvps = await window.weddingDB.getAllRsvps();
-    if (rsvps.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem;">Nenhuma confirmação de presença registrada ainda.</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = rsvps.map(r => `
-      <tr>
-        <td><strong>${escapeHTML(r.guestName)}</strong></td>
-        <td>${escapeHTML(r.phone || '-')} / ${escapeHTML(r.email || '-')}</td>
-        <td>${(r.companions || 0) + 1} pessoa(s)</td>
-        <td>
-          <span class="gift-badge ${r.status === 'confirmed' ? 'badge-available' : 'badge-reserved'}">
-            ${r.status === 'confirmed' ? 'Confirmado' : 'Não poderá comparecer'}
-          </span>
-        </td>
-        <td>${escapeHTML(r.dietary || '-')}</td>
-      </tr>
-    `).join('');
   },
 
   async renderSettingsForm() {
