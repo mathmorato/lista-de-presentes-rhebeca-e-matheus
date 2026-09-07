@@ -492,13 +492,13 @@
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.7) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.8) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content lg">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <h3>Painel de Gestão dos Noivos</h3>
-          <span class="admin-badge">Versão: v.1.0.7</span>
+          <span class="admin-badge">Versão: v.1.0.8</span>
         </div>
         <button class="modal-close" aria-label="Fechar painel">
           <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -508,6 +508,7 @@
       <div class="modal-body">
         <div class="admin-tabs">
           <button class="admin-tab-btn active" data-tab="gifts">Gerenciar Presentes</button>
+          <button class="admin-tab-btn" data-tab="reservations">Gerenciar Já Presenteados</button>
           <button class="admin-tab-btn" data-tab="settings">Configurações & Nuvem</button>
         </div>
 
@@ -646,6 +647,44 @@
           </div>
         </div>
 
+        <!-- ABA 2: GERENCIAR JÁ PRESENTEADOS & RESERVAS -->
+        <div id="adminTabReservations" class="admin-tab-content" style="display: none;">
+          <!-- Cartões Resumo dos Presenteados -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background: var(--color-cream); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-olive-border); text-align: center;">
+              <span style="font-size: 0.8rem; color: var(--color-olive-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Itens Reservados</span>
+              <div id="statTotalReserved" style="font-size: 1.8rem; font-weight: 700; color: var(--color-olive-deep); margin-top: 0.25rem;">0</div>
+            </div>
+            <div style="background: var(--color-cream); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-olive-border); text-align: center;">
+              <span style="font-size: 0.8rem; color: var(--color-olive-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Arrecadado em Cotas</span>
+              <div id="statTotalCotasAmount" style="font-size: 1.8rem; font-weight: 700; color: var(--color-olive-primary); margin-top: 0.25rem;">R$ 0,00</div>
+            </div>
+            <div style="background: var(--color-cream); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-olive-border); text-align: center;">
+              <span style="font-size: 0.8rem; color: var(--color-olive-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Convidados Presenteadores</span>
+              <div id="statTotalGuests" style="font-size: 1.8rem; font-weight: 700; color: var(--color-gold-accent); margin-top: 0.25rem;">0</div>
+            </div>
+          </div>
+
+          <!-- Tabela de Itens Presenteados -->
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Item Presenteado</th>
+                  <th>Tipo / Categoria</th>
+                  <th>Convidado(s) Presenteador(es)</th>
+                  <th>Contato / Recado</th>
+                  <th>Progresso / Valor</th>
+                  <th>Ações de Gestão</th>
+                </tr>
+              </thead>
+              <tbody id="adminReservationsTableBody">
+                <!-- Preenchido dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- ABA 2: CONFIGURAÇÕES & SUPABASE -->
         <div id="adminTabSettings" class="admin-tab-content" style="display: none;">
           <form id="adminSettingsForm">
@@ -724,7 +763,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.0.7</span>
+          <span id="app-footer-version">v.1.0.8</span>
         </div>
       </div>
     </div>
