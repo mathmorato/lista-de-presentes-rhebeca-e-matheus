@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.5
+   Versão: v.1.2.6
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -1468,6 +1468,23 @@ a {
 .admin-table td:last-child {
   text-align: right;
   min-width: 220px;
+}
+
+.admin-table th.col-checkbox,
+.admin-table td.col-checkbox {
+  width: 44px;
+  text-align: center;
+  padding-left: 0.75rem !important;
+  padding-right: 0.5rem !important;
+}
+
+/* Linha selecionada na tabela de presentes */
+.admin-table tbody tr.selected-row {
+  background-color: var(--color-olive-light, #e8ece0) !important;
+}
+
+.admin-table tbody tr.selected-row td {
+  border-bottom-color: var(--color-olive-border);
 }
 
 /* Ações da Tabela de Gestão */
