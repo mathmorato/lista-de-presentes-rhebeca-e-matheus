@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.7
+   Versão: v.1.2.8
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -88,7 +88,7 @@ const AdminDashboard = {
 
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real
     await window.weddingDB.init((changeType) => {
-      console.log('[Admin v.1.2.7] Mudança em tempo real recebida:', changeType);
+      console.log('[Admin v.1.2.8] Mudança em tempo real recebida:', changeType);
       if (this.currentTab === 'gifts') {
         this.renderGiftsTable();
       } else if (this.currentTab === 'reservations') {

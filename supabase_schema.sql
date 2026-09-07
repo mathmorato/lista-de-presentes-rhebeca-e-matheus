@@ -2,7 +2,7 @@
 -- LISTA DE PRESENTES DE CASAMENTO - RHEBECA & MATHEUS
 -- Data do Casamento: 09/01/2027 • São Luís de Montes Belos - GO
 -- Script de Configuração Completa do Supabase (PostgreSQL)
--- Versão: v.1.2.2
+-- Versão: v.1.2.8
 -- ==============================================================================
 -- INSTRUÇÕES DE EXECUÇÃO:
 -- 1. Acesse o painel do seu projeto Supabase (https://supabase.com/dashboard).
@@ -127,35 +127,3 @@ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.rsvps;
   END IF;
 END $$;
-
--- ==============================================================================
--- CARGA INICIAL DE PRESENTES DO CATÁLOGO DE CASAMENTO
--- ==============================================================================
-INSERT INTO public.gifts (id, title, category, price, is_cota, status, is_featured, description, image_url, product_url, updated_at)
-VALUES
-  ('gift_1', 'Faqueiro 101 Peças em Aço Inox Nobre', 'cozinha', 850.00, false, 'available', true, 'Conjunto completo de talheres em aço inox com acabamento espelhado e estojo nobre.', 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=600&q=80', 'https://www.amazon.com.br', now()),
-  ('gift_2', 'Jogo de Panelas Cerâmica Antiaderente Verde Oliva', 'cozinha', 1200.00, false, 'available', true, 'Linha premium em cerâmica atóxica com pegadores em aço escovado e tampas de vidro temperado.', 'https://images.unsplash.com/photo-1556911073-38141963c9e0?auto=format&fit=crop&w=600&q=80', 'https://www.magazineluiza.com.br', now()),
-  ('gift_3', 'Cafeteira Espresso para Grãos e Cápsulas', 'eletro', 1450.00, false, 'available', true, 'Bomba italiana de 19 bar com vaporizador integrado para expressos, cappuccinos e lattes cremosos.', 'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?auto=format&fit=crop&w=600&q=80', 'https://www.mercadolivre.com.br', now()),
-  ('gift_4', 'Jogo de Cama 400 Fios Cetim de Algodão Egípcio', 'quarto', 680.00, false, 'available', false, 'Toque acetinado ultra macio na tonalidade pérola com detalhes elegantes em ponto ajour.', 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80', '', now()),
-  ('gift_5', 'Fritadeira Elétrica Air Fryer Digital 5.5L', 'eletro', 520.00, false, 'available', false, 'Painel digital sensível ao toque, cesto antiaderente e acabamento em inox escovado.', 'https://images.unsplash.com/photo-1585659722983-3a675dabf23d?auto=format&fit=crop&w=600&q=80', '', now()),
-  ('gift_6', 'Aparelho de Jantar 30 Peças em Porcelana', 'sala', 980.00, false, 'available', false, 'Porcelana nobre esmaltada com suave filete dourado fosco e pratos de sobremesa refinados.', 'https://images.unsplash.com/photo-1615529182904-14819c35db37?auto=format&fit=crop&w=600&q=80', '', now()),
-  ('gift_7', 'Aspirador de Pó Robô Inteligente com Mop', 'eletro', 1600.00, false, 'available', false, 'Mapeamento a laser, controle por aplicativo e função simultânea de varrer e passar pano.', 'https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=600&q=80', '', now()),
-  ('gift_8', 'Conjunto de Taças de Cristal Lapidado para Vinho e Brinde', 'cozinha', 420.00, false, 'available', false, 'Cristal com titânio de alta resistência e sonoridade impecável para celebrações especiais.', 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80', '', now()),
-  ('gift_cota_1', 'Cotas para Passagens Aéreas da Lua de Mel', 'cotas', 4000.00, true, 'available', true, 'Ajude os noivos a voarem rumo ao destino dos sonhos para celebrar o início dessa nova família.', 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80', '', now()),
-  ('gift_cota_2', 'Jantar Romântico à Luz de Velas na Lua de Mel', 'cotas', 1500.00, true, 'available', false, 'Uma experiência gastronômica inesquecível e intimista para os recém-casados.', 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80', '', now()),
-  ('gift_cota_3', 'Passeio de Barco e Mergulho no Paraíso', 'cotas', 2000.00, true, 'available', false, 'Dia de aventura e passeios pelas águas cristalinas para colecionar memórias inesquecíveis.', 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80', '', now())
-ON CONFLICT (id) DO UPDATE SET
-  title = EXCLUDED.title,
-  category = EXCLUDED.category,
-  price = EXCLUDED.price,
-  is_cota = EXCLUDED.is_cota,
-  description = EXCLUDED.description,
-  image_url = EXCLUDED.image_url,
-  product_url = EXCLUDED.product_url,
-  is_featured = EXCLUDED.is_featured,
-  updated_at = EXCLUDED.updated_at;
-
--- Configurar cotas específicas para os presentes do tipo cota
-UPDATE public.gifts SET quota_value = 200, quota_total = 20, quota_current = 8, amount_raised = 1600 WHERE id = 'gift_cota_1';
-UPDATE public.gifts SET quota_value = 150, quota_total = 10, quota_current = 3, amount_raised = 450 WHERE id = 'gift_cota_2';
-UPDATE public.gifts SET quota_value = 100, quota_total = 20, quota_current = 5, amount_raised = 500 WHERE id = 'gift_cota_3';

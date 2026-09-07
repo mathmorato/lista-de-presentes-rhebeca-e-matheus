@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.7
+   Versão: v.1.2.8
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -37,28 +37,39 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.2.7] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.2.8] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background bidirecionalmente entre IndexedDB e Supabase
         this.syncWithSupabase({ silent: true }).catch(err => {
-          console.warn('[WeddingDB v.1.2.7] Sincronização inicial em background (IndexedDB ativo):', err);
+          console.warn('[WeddingDB v.1.2.8] Sincronização inicial em background (IndexedDB ativo):', err);
         });
 
         // Iniciar sincronização automática periódica a cada 15 segundos
         this.startAutoSync(15);
       } catch (err) {
-        console.warn('[WeddingDB v.1.2.7] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.2.8] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
-    // 3. Popular dados iniciais se banco local estiver vazio
-    const currentGifts = await this.getAllGifts();
-    if (!currentGifts || currentGifts.length === 0) {
-      await this._seedInitialData();
-    }
+    // 3. Expurgar permanentemente dados de exemplo legados do IndexedDB e registrar tombstones
+    const legacyMockIds = ['gift_1', 'gift_2', 'gift_3', 'gift_4', 'gift_5', 'gift_6', 'gift_7', 'gift_8', 'gift_9', 'gift_10', 'gift_cota_1', 'gift_cota_2', 'gift_cota_3'];
+    try {
+      let tombstones = JSON.parse(localStorage.getItem('wedding_deleted_tombstones') || '[]');
+      let modified = false;
+      for (const mId of legacyMockIds) {
+        if (!tombstones.includes(mId)) {
+          tombstones.push(mId);
+          modified = true;
+        }
+        await this._deleteGiftLocalOnly(mId);
+      }
+      if (modified) {
+        localStorage.setItem('wedding_deleted_tombstones', JSON.stringify(tombstones));
+      }
+    } catch (_) {}
 
     this.isInitialized = true;
     return this;
@@ -146,7 +157,7 @@ class WeddingDB {
     this.stopAutoSync();
     this.autoSyncIntervalSeconds = intervalSeconds || 15;
     const intervalMs = this.autoSyncIntervalSeconds * 1000;
-    console.log(`[WeddingDB v.1.2.7] AutoSync ativado: sincronizando a cada ${this.autoSyncIntervalSeconds} segundos.`);
+    console.log(`[WeddingDB v.1.2.8] AutoSync ativado: sincronizando a cada ${this.autoSyncIntervalSeconds} segundos.`);
 
     this.autoSyncTimer = setInterval(async () => {
       // Executa apenas se o dispositivo estiver online e não houver sincronização em curso
@@ -157,7 +168,7 @@ class WeddingDB {
         try {
           await this.syncWithSupabase({ silent: true });
         } catch (err) {
-          console.warn('[WeddingDB v.1.2.7 AutoSync] Erro na sincronização periódica (silenciosa):', err.message || err);
+          console.warn('[WeddingDB v.1.2.8 AutoSync] Erro na sincronização periódica (silenciosa):', err.message || err);
         }
       }
     }, intervalMs);
@@ -170,7 +181,7 @@ class WeddingDB {
     if (this.autoSyncTimer) {
       clearInterval(this.autoSyncTimer);
       this.autoSyncTimer = null;
-      console.log('[WeddingDB v.1.2.7] AutoSync pausado.');
+      console.log('[WeddingDB v.1.2.8] AutoSync pausado.');
     }
   }
 
@@ -199,16 +210,26 @@ class WeddingDB {
 
     try {
       if (!isSilent) {
-        console.log('[WeddingDB v.1.2.7] Iniciando sincronização bidirecional completa com Supabase...');
+        console.log('[WeddingDB v.1.2.8] Iniciando sincronização bidirecional completa com Supabase...');
       }
 
-      // 0. Processar exclusões pendentes feitas em modo offline
+      // 0. Processar exclusões pendentes feitas em modo offline e carregar tombstones de itens deletados
       let pendingDeletes = [];
       try {
         pendingDeletes = JSON.parse(localStorage.getItem('wedding_deleted_gift_ids') || '[]');
       } catch (_) {}
 
-      if (Array.isArray(pendingDeletes) && pendingDeletes.length > 0) {
+      let tombstones = new Set();
+      try {
+        const storedTombstones = JSON.parse(localStorage.getItem('wedding_deleted_tombstones') || '[]');
+        if (Array.isArray(storedTombstones)) tombstones = new Set(storedTombstones);
+      } catch (_) {}
+
+      for (const delId of pendingDeletes) {
+        tombstones.add(delId);
+      }
+
+      if (pendingDeletes.length > 0) {
         for (const delId of pendingDeletes) {
           try {
             await this.supabaseClient.from('gifts').delete().eq('id', delId);
@@ -228,14 +249,31 @@ class WeddingDB {
         throw giftsError;
       }
 
+      // Filtrar e expurgar do Supabase qualquer item que esteja na lista de excluídos (tombstones)
+      const sanitizedRemoteGifts = [];
+      for (const rg of (remoteGifts || [])) {
+        if (tombstones.has(rg.id)) {
+          try {
+            await this.supabaseClient.from('gifts').delete().eq('id', rg.id);
+          } catch (_) {}
+        } else {
+          sanitizedRemoteGifts.push(rg);
+        }
+      }
+
       const localGifts = await this.getAllGifts();
-      const remoteMap = new Map((remoteGifts || []).map(rg => [rg.id, rg]));
+      const remoteMap = new Map(sanitizedRemoteGifts.map(rg => [rg.id, rg]));
 
       // 1a. Upload e Conciliação Bidirecional com base em timestamp (updatedAt)
       let uploadCount = 0;
       let downloadCount = 0;
 
       for (const localG of localGifts) {
+        if (tombstones.has(localG.id)) {
+          await this._deleteGiftLocalOnly(localG.id);
+          continue;
+        }
+
         const remoteG = remoteMap.get(localG.id);
         if (!remoteG) {
           // Presente existe apenas localmente -> Enviar para o Supabase
@@ -271,6 +309,7 @@ class WeddingDB {
 
       // 1b. Download de presentes remotos cadastrados na nuvem que não existem localmente
       for (const [rId, remoteG] of remoteMap.entries()) {
+        if (tombstones.has(rId)) continue;
         const localExists = await this.getGiftById(rId);
         if (!localExists) {
           const mappedRemote = this._mapFromSupabaseGift(remoteG);
@@ -383,7 +422,7 @@ class WeddingDB {
       const timeString = this.lastSyncTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
       if (!isSilent) {
-        console.log(`[WeddingDB v.1.2.7] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
+        console.log(`[WeddingDB v.1.2.8] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
       }
 
       const syncResult = {
@@ -543,6 +582,15 @@ class WeddingDB {
   async deleteGift(id) {
     await this._deleteGiftLocalOnly(id);
 
+    // Registrar no tombstone permanente para evitar que o item ressurja da nuvem
+    try {
+      let tombstones = JSON.parse(localStorage.getItem('wedding_deleted_tombstones') || '[]');
+      if (!tombstones.includes(id)) {
+        tombstones.push(id);
+        localStorage.setItem('wedding_deleted_tombstones', JSON.stringify(tombstones));
+      }
+    } catch (_) {}
+
     // Salvar ID para garantia de exclusão em caso de offline
     let pendingDeletes = [];
     try {
@@ -573,6 +621,21 @@ class WeddingDB {
       await this._deleteGiftLocalOnly(id);
     }
 
+    // Registrar no tombstone permanente
+    try {
+      let tombstones = JSON.parse(localStorage.getItem('wedding_deleted_tombstones') || '[]');
+      let mod = false;
+      for (const id of ids) {
+        if (!tombstones.includes(id)) {
+          tombstones.push(id);
+          mod = true;
+        }
+      }
+      if (mod) {
+        localStorage.setItem('wedding_deleted_tombstones', JSON.stringify(tombstones));
+      }
+    } catch (_) {}
+
     // 2. Registrar IDs pendentes para proteção offline
     let pendingDeletes = [];
     try {
@@ -596,7 +659,7 @@ class WeddingDB {
           // Exclusão confirmada no Supabase: limpar pendências
           pendingDeletes = pendingDeletes.filter(x => !ids.includes(x));
           localStorage.setItem('wedding_deleted_gift_ids', JSON.stringify(pendingDeletes));
-          console.log(`[WeddingDB v.1.2.7] ${ids.length} presentes excluídos e sincronizados no Supabase.`);
+          console.log(`[WeddingDB v.1.2.8] ${ids.length} presentes excluídos e sincronizados no Supabase.`);
         }
       } catch (err) {
         console.warn('[WeddingDB] Falha de rede ao excluir em lote no Supabase:', err);
@@ -882,175 +945,6 @@ class WeddingDB {
       whatsappPhone: '5564993409360',
       supabaseUrl: 'https://ttggcvricfkoqlorbmnv.supabase.co',
       supabaseKey: 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN'
-    };
-  }
-
-  // --- DADOS INICIAIS ---
-
-  async _seedInitialData() {
-    const initialGifts = [
-      {
-        id: 'gift_1',
-        title: 'Faqueiro 101 Peças em Aço Inox Nobre',
-        category: 'cozinha',
-        price: 850.00,
-        isCota: false,
-        status: 'available',
-        isFeatured: true,
-        description: 'Conjunto completo de talheres em aço inox com acabamento espelhado e estojo nobre.',
-        imageUrl: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=600&q=80',
-        productUrl: 'https://www.amazon.com.br'
-      },
-      {
-        id: 'gift_2',
-        title: 'Jogo de Panelas Cerâmica Antiaderente Verde Oliva',
-        category: 'cozinha',
-        price: 1200.00,
-        isCota: false,
-        status: 'available',
-        isFeatured: true,
-        description: 'Linha premium em cerâmica atóxica com pegadores em aço escovado e tampas de vidro temperado.',
-        imageUrl: 'https://images.unsplash.com/photo-1556911073-38141963c9e0?auto=format&fit=crop&w=600&q=80',
-        productUrl: 'https://www.magazineluiza.com.br'
-      },
-      {
-        id: 'gift_3',
-        title: 'Cafeteira Espresso para Grãos e Cápsulas',
-        category: 'eletro',
-        price: 1450.00,
-        isCota: false,
-        status: 'available',
-        isFeatured: true,
-        description: 'Bomba italiana de 19 bar com vaporizador integrado para expressos, cappuccinos e lattes cremosos.',
-        imageUrl: 'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?auto=format&fit=crop&w=600&q=80',
-        productUrl: 'https://www.mercadolivre.com.br'
-      },
-      {
-        id: 'gift_4',
-        title: 'Jogo de Cama 400 Fios Cetim de Algodão Egípcio',
-        category: 'quarto',
-        price: 680.00,
-        isCota: false,
-        status: 'available',
-        isFeatured: false,
-        description: 'Toque acetinado ultra macio na tonalidade pérola com detalhes elegantes em ponto ajour.',
-        imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80',
-        productUrl: ''
-      },
-      {
-        id: 'gift_5',
-        title: 'Fritadeira Elétrica Air Fryer Digital 5.5L',
-        category: 'eletro',
-        price: 520.00,
-        isCota: false,
-        status: 'available',
-        isFeatured: false,
-        description: 'Painel digital sensível ao toque, cesto antiaderente e acabamento em inox escovado.',
-        imageUrl: 'https://images.unsplash.com/photo-1585659722983-3a675dabf23d?auto=format&fit=crop&w=600&q=80',
-        productUrl: ''
-      },
-      {
-        id: 'gift_6',
-        title: 'Aparelho de Jantar 30 Peças em Porcelana',
-        category: 'sala',
-        price: 980.00,
-        isCota: false,
-        status: 'available',
-        isFeatured: false,
-        description: 'Porcelana nobre esmaltada com suave filete dourado fosco e pratos de sobremesa refinados.',
-        imageUrl: 'https://images.unsplash.com/photo-1615529182904-14819c35db37?auto=format&fit=crop&w=600&q=80',
-        productUrl: ''
-      },
-      {
-        id: 'gift_7',
-        title: 'Lava e Seca Inteligente 11kg Inverter',
-        category: 'eletro',
-        price: 3600.00,
-        isCota: true,
-        quotaValue: 360.00,
-        quotaTotal: 10,
-        quotaCurrent: 3,
-        amountRaised: 1080.00,
-        status: 'available',
-        isFeatured: true,
-        description: 'Motor inverter silencioso com inteligência artificial para cuidados com roupas e conectividade Wi-Fi.',
-        imageUrl: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=600&q=80',
-        productUrl: ''
-      },
-      {
-        id: 'gift_8',
-        title: 'Jantar Romântico com Degustação na Lua de Mel',
-        category: 'cotas',
-        price: 800.00,
-        isCota: true,
-        quotaValue: 160.00,
-        quotaTotal: 5,
-        quotaCurrent: 2,
-        amountRaised: 320.00,
-        status: 'available',
-        isFeatured: true,
-        description: 'Experiência gastronômica inesquecível em bistrô panorâmico com menu de 5 tempos à luz de velas.',
-        imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80',
-        productUrl: ''
-      },
-      {
-        id: 'gift_9',
-        title: 'Passeio Exclusivo de Veleiro ao Pôr do Sol',
-        category: 'cotas',
-        price: 900.00,
-        isCota: true,
-        quotaValue: 150.00,
-        quotaTotal: 6,
-        quotaCurrent: 1,
-        amountRaised: 150.00,
-        status: 'available',
-        isFeatured: false,
-        description: 'Navegação por enseadas de águas calmas com brinde de espumante e frutas frescas.',
-        imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80',
-        productUrl: ''
-      },
-      {
-        id: 'gift_10',
-        title: 'Cotas para Passagens Aéreas da Lua de Mel',
-        category: 'cotas',
-        price: 4000.00,
-        isCota: true,
-        quotaValue: 200.00,
-        quotaTotal: 20,
-        quotaCurrent: 8,
-        amountRaised: 1600.00,
-        status: 'available',
-        isFeatured: true,
-        description: 'Ajude os noivos a voarem rumo ao destino dos sonhos para celebrar o início dessa nova família.',
-        imageUrl: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80',
-        productUrl: ''
-      }
-    ];
-
-    for (const item of initialGifts) {
-      await this.saveGift(item);
-    }
-
-    const initialMessages = [
-      {
-        id: 'msg_init_1',
-        author: 'Dona Maria e Seu Carlos',
-        text: 'Que este amor seja sempre a luz a iluminar os caminhos de vocês. Estamos muito felizes por celebrar essa união!',
-        giftTitle: 'Aparelho de Jantar',
-        createdAt: '2026-08-15T14:20:00Z'
-      },
-      {
-        id: 'msg_init_2',
-        author: 'Camila e Rodrigo',
-        text: 'Rhebeca e Matheus, que honra testemunhar o início dessa família tão linda! Aproveitem muito a lua de mel!',
-        giftTitle: 'Jantar Romântico na Lua de Mel',
-        createdAt: '2026-08-28T19:45:00Z'
-      }
-    ];
-
-    for (const msg of initialMessages) {
-      await this.addMessage(msg);
-    }
   }
 }
 
