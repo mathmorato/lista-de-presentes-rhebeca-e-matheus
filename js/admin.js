@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.4.5
+   Versão: v.1.4.6
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -355,7 +355,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.4.5] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.4.6] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -368,7 +368,7 @@ const AdminDashboard = {
         this.updateReservationsBadge().catch(() => {});
       });
     } catch (dbErr) {
-      console.error('[Admin v.1.4.5] Erro ao conectar/inicializar banco:', dbErr);
+      console.error('[Admin v.1.4.6] Erro ao conectar/inicializar banco:', dbErr);
     }
 
     // Configuração dos botões de classificação da tabela
