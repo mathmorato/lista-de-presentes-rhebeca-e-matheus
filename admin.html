@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos Oficiais do Projeto -->
-  <link rel="stylesheet" href="css/styles.css?v=1.3.1">
+  <link rel="stylesheet" href="css/styles.css?v=1.3.2">
 
   <!-- Supabase JS Client Oficial -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -113,7 +113,7 @@
               <h1 style="font-family: var(--font-serif); font-size: 1.35rem; color: var(--color-olive-deep); margin: 0;">
                 Painel de Gestão dos Noivos
               </h1>
-              <span class="admin-badge">Versão: v.1.3.1</span>
+              <span class="admin-badge">Versão: v.1.3.2</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.15rem; flex-wrap: wrap;">
               <span id="adminUserGreetingBadge" style="font-size: 0.8rem; color: var(--color-olive-frame); font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -183,7 +183,7 @@
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
-          <span>Configurações & Nuvem</span>
+          <span>Configurações</span>
         </button>
         <button class="admin-tab-btn" data-tab="trash" title="Lixeira de presentes excluídos">
           <svg class="icon-line sm" viewBox="0 0 24 24">
@@ -571,65 +571,6 @@
               <input type="text" id="settingWhatsappPhone" class="form-input" placeholder="5564993409360" value="5564993409360">
               <small style="color: var(--color-olive-muted); font-size: 0.78rem; display: block; margin-top: 0.25rem;">Número com DDI e DDD (padrão: 5564993409360) para onde os convidados enviarão a mensagem de entrega e confirmação.</small>
             </div>
-
-            <!-- Painel de Ativação e Sincronização do Banco Supabase -->
-            <div style="background: var(--color-white); border: 1.5px solid var(--color-olive-border); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
-              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.85rem;">
-                <div style="display: flex; align-items: center; gap: 0.6rem;">
-                  <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--color-olive-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <svg class="icon-line sm" style="color: var(--color-olive-primary);" viewBox="0 0 24 24">
-                      <path d="M4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7"></path>
-                      <path d="M4 12c0 2.21 3.58 4 8 4s8-1.79 8-4"></path>
-                      <ellipse cx="12" cy="7" rx="8" ry="4"></ellipse>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 style="margin: 0; font-size: 1.05rem; color: var(--color-olive-deep);">Ativação do Banco na Nuvem (Supabase)</h4>
-                    <p style="margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--color-olive-muted);">Garante que presentes, mensagens e cotas fiquem 100% salvos e sincronizados na web</p>
-                  </div>
-                </div>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                  <button type="button" id="btnCopySqlScript" class="btn btn-sm btn-gold" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; font-size: 0.82rem;">
-                    <svg class="icon-line xs" viewBox="0 0 24 24">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                    Copiar Script SQL
-                  </button>
-                  <a href="https://supabase.com/dashboard/project/ttggcvricfkoqlorbmnv/sql/new" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; font-size: 0.82rem; text-decoration: none;">
-                    <svg class="icon-line xs" viewBox="0 0 24 24">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                      <polyline points="15 3 21 3 21 9"></polyline>
-                      <line x1="10" y1="14" x2="21" y2="3"></line>
-                    </svg>
-                    Abrir SQL Editor do Supabase
-                  </a>
-                </div>
-              </div>
-
-              <div style="background: var(--color-cream); border-radius: var(--radius-sm); padding: 0.85rem; font-size: 0.83rem; color: var(--color-olive-deep); line-height: 1.5;">
-                <strong>Passo a passo rápido para ativar o banco na nuvem:</strong>
-                <ol style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
-                  <li>Clique no botão dourado <strong>"Copiar Script SQL"</strong> acima.</li>
-                  <li>Clique no botão <strong>"Abrir SQL Editor do Supabase"</strong> (você será direcionado direto para a aba de execução de queries do seu projeto).</li>
-                  <li>Cole o código SQL e clique no botão verde <strong>"Run"</strong> (ou pressione Ctrl + Enter).</li>
-                  <li>Volte aqui e clique em <strong>"Sincronizar Nuvem"</strong> no topo para enviar e alinhar todos os presentes!</li>
-                </ol>
-              </div>
-            </div>
-
-            <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--color-olive-deep);">Parâmetros da Conexão Supabase (Nuvem)</h4>
-            <div class="form-grid grid-2col">
-              <div class="form-group">
-                <label class="form-label" for="settingSupabaseUrl">URL do Projeto Supabase</label>
-                <input type="text" id="settingSupabaseUrl" class="form-input" placeholder="https://seu-id.supabase.co">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="settingSupabaseKey">Chave Pública / Anon Key</label>
-                <input type="password" id="settingSupabaseKey" class="form-input" placeholder="sb_publishable_...">
-              </div>
-            </div>
-
             <button type="submit" class="btn btn-primary" style="margin-top: 1.25rem; display: inline-flex; align-items: center; gap: 0.5rem;">
               <svg class="icon-line sm" viewBox="0 0 24 24">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -900,14 +841,14 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.3.1</span>
+        <span id="app-footer-version">v.1.3.2</span>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/extractor.js?v=1.3.1"></script>
-  <script src="js/db.js?v=1.3.1"></script>
-  <script src="js/admin.js?v=1.3.1"></script>
+  <script src="js/extractor.js?v=1.3.2"></script>
+  <script src="js/db.js?v=1.3.2"></script>
+  <script src="js/admin.js?v=1.3.2"></script>
 </body>
 </html>
