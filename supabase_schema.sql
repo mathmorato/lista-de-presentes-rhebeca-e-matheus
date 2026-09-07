@@ -2,7 +2,7 @@
 -- LISTA DE PRESENTES DE CASAMENTO - RHEBECA & MATHEUS
 -- Data do Casamento: 09/01/2027 • São Luís de Montes Belos - GO
 -- Script de Configuração Completa do Supabase (PostgreSQL)
--- Versão: v.1.2.9
+-- Versão: v.1.3.0
 -- ==============================================================================
 -- INSTRUÇÕES DE EXECUÇÃO:
 -- 1. Acesse o painel do seu projeto Supabase (https://supabase.com/dashboard).
