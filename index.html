@@ -416,7 +416,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-grid grid-2col" style="margin-bottom: 1rem;">
             <div class="form-group">
               <label class="form-label" for="cotaCountInput">Quantidade de Cotas</label>
               <input type="number" id="cotaCountInput" class="form-input" min="1" max="50" value="1">
@@ -452,13 +452,13 @@
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.1) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.2) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content lg">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <h3>Painel de Gestão dos Noivos</h3>
-          <span class="admin-badge">Versão: v.1.1.1</span>
+          <span class="admin-badge">Versão: v.1.1.2</span>
         </div>
         <button class="modal-close" aria-label="Fechar painel">
           <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -506,7 +506,7 @@
             <form id="adminGiftForm">
               <input type="hidden" id="adminGiftId">
 
-              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+              <div class="form-grid grid-2-1">
                 <div class="form-group">
                   <label class="form-label" for="adminGiftTitle">Título do Presente *</label>
                   <input type="text" id="adminGiftTitle" class="form-input" placeholder="Ex.: Jogo de Taças de Cristal" required>
@@ -523,7 +523,7 @@
                 </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-grid grid-2col">
                 <div class="form-group">
                   <label class="form-label" for="adminGiftPrice">Valor Total Estimado (R$) *</label>
                   <input type="number" step="0.01" id="adminGiftPrice" class="form-input" placeholder="0.00" required>
@@ -534,7 +534,7 @@
                 </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+              <div class="form-grid grid-2-1">
                 <div class="form-group">
                   <label class="form-label" for="adminGiftImage">Foto do Produto (Cole o Link ou Anexe a Imagem)</label>
                   <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -577,7 +577,7 @@
               </div>
 
               <div id="adminCotaFields" style="display: none; background: var(--color-white); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); margin-bottom: 1rem;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-grid grid-2col">
                   <div class="form-group">
                     <label class="form-label" for="adminGiftQuotaVal">Valor de Cada Cota (R$)</label>
                     <input type="number" step="0.01" id="adminGiftQuotaVal" class="form-input" placeholder="Ex: 150.00">
@@ -658,7 +658,7 @@
         <div id="adminTabSettings" class="admin-tab-content" style="display: none;">
           <form id="adminSettingsForm">
             <h4 style="margin-bottom: 1rem;">Dados para Pagamento via Pix</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-grid grid-2col">
               <div class="form-group">
                 <label class="form-label" for="settingPixKey">Chave Pix dos Noivos</label>
                 <input type="text" id="settingPixKey" class="form-input" required>
@@ -669,7 +669,7 @@
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-grid grid-2col">
               <div class="form-group">
                 <label class="form-label" for="settingPixCity">Cidade do Titular</label>
                 <input type="text" id="settingPixCity" class="form-input">
@@ -680,7 +680,7 @@
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-grid grid-2col">
               <div class="form-group">
                 <label class="form-label" for="settingCeremonyPlace">Local da Cerimônia</label>
                 <input type="text" id="settingCeremonyPlace" class="form-input" value="Igreja Batista Shalom">
@@ -755,7 +755,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.1.1</span>
+          <span id="app-footer-version">v.1.1.2</span>
         </div>
       </div>
     </div>
