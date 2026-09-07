@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.5
+   Versão: v.1.2.6
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -57,6 +57,30 @@ window.AuthController = AuthController;
 const AdminDashboard = {
   currentTab: 'gifts',
   isInitialized: false,
+  selectedGiftIds: new Set(),
+
+  updateBulkActionsBar(totalGiftsCount) {
+    const bar = document.getElementById('bulkActionsBar');
+    const badge = document.getElementById('bulkSelectedCountBadge');
+    const label = document.getElementById('btnBulkDeleteLabel');
+    const selectAllCb = document.getElementById('selectAllGiftsCheckbox');
+    const count = this.selectedGiftIds.size;
+
+    if (bar && badge && label) {
+      if (count > 0) {
+        bar.style.display = 'flex';
+        badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
+        label.innerText = `Excluir Selecionados (${count})`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    if (selectAllCb) {
+      selectAllCb.checked = totalGiftsCount > 0 && count === totalGiftsCount;
+      selectAllCb.indeterminate = count > 0 && count < totalGiftsCount;
+    }
+  },
 
   async init() {
     if (this.isInitialized) return;
@@ -64,7 +88,7 @@ const AdminDashboard = {
 
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real
     await window.weddingDB.init((changeType) => {
-      console.log('[Admin v.1.2.5] Mudança em tempo real recebida:', changeType);
+      console.log('[Admin v.1.2.6] Mudança em tempo real recebida:', changeType);
       if (this.currentTab === 'gifts') {
         this.renderGiftsTable();
       } else if (this.currentTab === 'reservations') {
@@ -406,12 +430,27 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     const gifts = await window.weddingDB.getAllGifts();
 
     if (gifts.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum item cadastrado ainda. Use o extrator por link acima para começar!</td></tr>`;
+      this.selectedGiftIds.clear();
+      this.updateBulkActionsBar(0);
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum item cadastrado ainda. Use o extrator por link acima para começar!</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = gifts.map(g => `
-      <tr>
+    // Filtrar IDs selecionados para manter apenas os que ainda existem
+    const existingIds = new Set(gifts.map(g => g.id));
+    for (const sId of this.selectedGiftIds) {
+      if (!existingIds.has(sId)) {
+        this.selectedGiftIds.delete(sId);
+      }
+    }
+
+    tbody.innerHTML = gifts.map(g => {
+      const isChecked = this.selectedGiftIds.has(g.id);
+      return `
+      <tr class="${isChecked ? 'selected-row' : ''}" data-gift-id="${g.id}">
+        <td class="col-checkbox" style="text-align: center; padding-left: 0.75rem; padding-right: 0.5rem;">
+          <input type="checkbox" class="gift-select-checkbox" data-id="${g.id}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--color-olive-primary); cursor: pointer; vertical-align: middle;">
+        </td>
         <td>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <button class="btn-icon btn-admin-star" data-id="${g.id}" title="${g.isFeatured ? 'Remover dos Mais Desejados' : 'Marcar como Mais Desejado'}" style="width: 28px; height: 28px; border: none; background: none; color: ${g.isFeatured ? 'var(--color-gold-accent)' : 'var(--color-olive-muted)'}; cursor: pointer;">
@@ -462,7 +501,74 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           </div>
         </td>
       </tr>
-    `).join('');
+      `;
+    }).join('');
+
+    // Atualiza status da barra de ações em massa e do checkbox mestre
+    this.updateBulkActionsBar(gifts.length);
+
+    // Eventos dos checkboxes individuais
+    tbody.querySelectorAll('.gift-select-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.getAttribute('data-id');
+        const tr = cb.closest('tr');
+        if (cb.checked) {
+          this.selectedGiftIds.add(id);
+          if (tr) tr.classList.add('selected-row');
+        } else {
+          this.selectedGiftIds.delete(id);
+          if (tr) tr.classList.remove('selected-row');
+        }
+        this.updateBulkActionsBar(gifts.length);
+      });
+    });
+
+    // Evento do checkbox mestre (Selecionar Todos)
+    const selectAllCb = document.getElementById('selectAllGiftsCheckbox');
+    if (selectAllCb) {
+      selectAllCb.onchange = () => {
+        const checkAll = selectAllCb.checked;
+        tbody.querySelectorAll('.gift-select-checkbox').forEach(cb => {
+          cb.checked = checkAll;
+          const id = cb.getAttribute('data-id');
+          const tr = cb.closest('tr');
+          if (checkAll) {
+            this.selectedGiftIds.add(id);
+            if (tr) tr.classList.add('selected-row');
+          } else {
+            this.selectedGiftIds.delete(id);
+            if (tr) tr.classList.remove('selected-row');
+          }
+        });
+        this.updateBulkActionsBar(gifts.length);
+      };
+    }
+
+    // Evento do botão "Desmarcar Todos"
+    const btnDeselectAll = document.getElementById('btnDeselectAllGifts');
+    if (btnDeselectAll) {
+      btnDeselectAll.onclick = () => {
+        this.selectedGiftIds.clear();
+        tbody.querySelectorAll('.gift-select-checkbox').forEach(cb => {
+          cb.checked = false;
+          const tr = cb.closest('tr');
+          if (tr) tr.classList.remove('selected-row');
+        });
+        this.updateBulkActionsBar(gifts.length);
+      };
+    }
+
+    // Evento do botão "Excluir Selecionados"
+    const btnBulkDelete = document.getElementById('btnBulkDeleteGifts');
+    if (btnBulkDelete) {
+      btnBulkDelete.onclick = async () => {
+        if (this.selectedGiftIds.size === 0) {
+          showToast('Nenhum item selecionado.', 'warning');
+          return;
+        }
+        await this.confirmBulkDeleteGifts(Array.from(this.selectedGiftIds));
+      };
+    }
 
     tbody.querySelectorAll('.btn-admin-star').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -557,7 +663,78 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       await new Promise(r => setTimeout(r, 200));
 
       closeModal();
+      this.selectedGiftIds.delete(id);
       showToast(`Item "${itemTitle}" excluído e sincronizado!`, 'success');
+      await this.renderGiftsTable();
+    };
+  },
+
+  async confirmBulkDeleteGifts(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteItemTitleText = document.getElementById('deleteItemTitleText');
+    const deleteProgressBox = document.getElementById('deleteProgressBox');
+    const deleteProgressBar = document.getElementById('deleteProgressBar');
+    const deleteProgressStatusText = document.getElementById('deleteProgressStatusText');
+    const deleteProgressPercent = document.getElementById('deleteProgressPercent');
+    const deleteModalActions = document.getElementById('deleteModalActions');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+    const btnCancelDelete = document.getElementById('btnCancelDelete');
+
+    if (!deleteModal) return;
+
+    const total = ids.length;
+    deleteItemTitleText.innerHTML = `Tem certeza que deseja excluir permanentemente os <strong style="color: var(--color-error);">${total} presentes selecionados</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Todos os itens marcados serão removidos do catálogo local (IndexedDB) e sincronizados na nuvem Supabase.</span>`;
+
+    deleteProgressBox.style.display = 'none';
+    deleteProgressBar.style.width = '0%';
+    deleteProgressPercent.innerText = '0%';
+    deleteProgressStatusText.innerText = 'Iniciando remoção em lote...';
+    deleteModalActions.style.display = 'flex';
+
+    deleteModal.classList.add('active');
+
+    const closeModal = () => {
+      deleteModal.classList.remove('active');
+      deleteModal.removeEventListener('click', onBackdropClick);
+    };
+
+    const onBackdropClick = (e) => {
+      if (e.target === deleteModal && deleteModalActions.style.display !== 'none') {
+        closeModal();
+      }
+    };
+
+    deleteModal.addEventListener('click', onBackdropClick);
+    btnCancelDelete.onclick = closeModal;
+
+    btnConfirmDelete.onclick = async () => {
+      deleteModalActions.style.display = 'none';
+      deleteProgressBox.style.display = 'block';
+
+      deleteProgressBar.style.width = '30%';
+      deleteProgressPercent.innerText = '30%';
+      deleteProgressStatusText.innerText = `Removendo ${total} itens do IndexedDB...`;
+
+      await new Promise(r => setTimeout(r, 200));
+      await window.weddingDB.deleteMultipleGifts(ids);
+
+      deleteProgressBar.style.width = '75%';
+      deleteProgressPercent.innerText = '75%';
+      deleteProgressStatusText.innerText = 'Sincronizando exclusões com o Supabase...';
+
+      await new Promise(r => setTimeout(r, 250));
+
+      deleteProgressBar.style.width = '100%';
+      deleteProgressPercent.innerText = '100%';
+      deleteProgressStatusText.innerText = `${total} itens excluídos com sucesso!`;
+
+      await new Promise(r => setTimeout(r, 200));
+
+      closeModal();
+      this.selectedGiftIds.clear();
+      showToast(`${total} ${total === 1 ? 'item excluído' : 'itens excluídos'} e sincronizados!`, 'success');
       await this.renderGiftsTable();
     };
   },
