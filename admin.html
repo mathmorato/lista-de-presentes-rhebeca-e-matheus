@@ -113,7 +113,7 @@
               <h1 style="font-family: var(--font-serif); font-size: 1.35rem; color: var(--color-olive-deep); margin: 0;">
                 Painel de Gestão dos Noivos
               </h1>
-              <span class="admin-badge">Versão: v.1.2.2</span>
+              <span class="admin-badge">Versão: v.1.2.3</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.15rem; flex-wrap: wrap;">
               <span id="adminUserGreetingBadge" style="font-size: 0.8rem; color: var(--color-olive-frame); font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -623,6 +623,32 @@
         </div>
       </div>
     </div>
+  <!-- ==================== MODAL DE CONFIRMAÇÃO DE LOGOUT / SAÍDA NA TELA ==================== -->
+  <div id="logoutModal" class="modal-backdrop">
+    <div class="modal-content sm" style="max-width: 440px; text-align: center;">
+      <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(188, 71, 73, 0.12); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto;">
+          <svg class="icon-line lg" style="color: var(--color-error);" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </div>
+      </div>
+      <div class="modal-body" style="padding-top: 0.5rem;">
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-olive-deep);">Deseja realmente sair da área de gestão?</h3>
+        <p style="font-size: 0.9rem; color: var(--color-olive-muted); margin-bottom: 1.5rem; line-height: 1.5;">
+          Para acessar novamente as configurações e a edição de presentes, será necessário informar seu e-mail e senha.
+        </p>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: center;">
+          <button type="button" id="btnCancelLogout" class="btn btn-outline" style="flex: 1;">Cancelar</button>
+          <button type="button" id="btnConfirmLogout" class="btn btn-primary" style="background: var(--color-error); border-color: var(--color-error); flex: 1;">
+            Sim, Sair
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Container de Notificações Toast -->
@@ -637,7 +663,7 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.2.2</span>
+        <span id="app-footer-version">v.1.2.3</span>
       </div>
     </div>
   </footer>

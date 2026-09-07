@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.2
+   Versão: v.1.2.3
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -306,14 +306,34 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       });
     }
 
-    // 9. Botão de Logout
+    // 9. Botão de Logout com Modal Customizado na Tela
     const btnLogout = document.getElementById('btnAdminLogout');
+    const logoutModal = document.getElementById('logoutModal');
+    const btnConfirmLogout = document.getElementById('btnConfirmLogout');
+    const btnCancelLogout = document.getElementById('btnCancelLogout');
+
     if (btnLogout) {
       btnLogout.addEventListener('click', () => {
-        if (confirm('Deseja realmente sair da área de gestão?')) {
+        if (logoutModal) {
+          logoutModal.classList.add('active');
+        } else {
           AuthController.logout();
         }
       });
+    }
+
+    if (logoutModal) {
+      const closeLogoutModal = () => logoutModal.classList.remove('active');
+      if (btnCancelLogout) btnCancelLogout.addEventListener('click', closeLogoutModal);
+      logoutModal.addEventListener('click', (e) => {
+        if (e.target === logoutModal) closeLogoutModal();
+      });
+      if (btnConfirmLogout) {
+        btnConfirmLogout.addEventListener('click', () => {
+          closeLogoutModal();
+          AuthController.logout();
+        });
+      }
     }
 
     await this.render();
