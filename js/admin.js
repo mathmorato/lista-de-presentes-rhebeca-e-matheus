@@ -1,12 +1,24 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.2
+   Versão: v.1.3.3
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
 const AUTH_USERS = [
-  { email: 'matheus.h.h@hotmail.com', password: 'Mhmm*2738', name: 'Matheus' },
-  { email: 'rhebecamendonca@gmail.com', password: 'Rom@2402', name: 'Rhebeca' }
+  { 
+    email: 'matheus.h.h@hotmail.com', 
+    password: 'Mhmm*2738', 
+    name: 'Matheus',
+    aliases: ['matheus', 'matheus.h.h', 'matheus.h.h@hotmail.com', 'matheus morato', 'noivo'],
+    passwords: ['Mhmm*2738', 'mhmm*2738', 'Mhmm2738', 'mhmm2738']
+  },
+  { 
+    email: 'rhebecamendonca@gmail.com', 
+    password: 'Rom@2402', 
+    name: 'Rhebeca',
+    aliases: ['rhebeca', 'rhebecamendonca', 'rhebecamendonca@gmail.com', 'rhebeca mendonca', 'rebeca', 'noiva'],
+    passwords: ['Rom@2402', 'rom@2402', 'Rom2402', 'rom2402']
+  }
 ];
 
 const AUTH_STORAGE_KEY = 'wedding_admin_auth_session';
@@ -24,14 +36,39 @@ const AuthController = {
   isAuthenticated() {
     const user = this.getCurrentUser();
     if (!user || !user.email) return false;
-    return AUTH_USERS.some(u => u.email.toLowerCase() === user.email.toLowerCase());
+    const cleanEmail = (user.email || '').trim().toLowerCase();
+    return AUTH_USERS.some(u => 
+      u.email.toLowerCase() === cleanEmail || 
+      (u.aliases && u.aliases.some(a => a.toLowerCase() === cleanEmail))
+    );
   },
 
-  login(email, password) {
-    const cleanEmail = (email || '').trim().toLowerCase();
-    const found = AUTH_USERS.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
+  login(identifier, password) {
+    const cleanId = (identifier || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    if (!cleanId) {
+      throw new Error('Por favor, informe seu e-mail ou nome de acesso.');
+    }
+    if (!cleanPass) {
+      throw new Error('Por favor, informe sua senha de acesso.');
+    }
+
+    const found = AUTH_USERS.find(u => {
+      const matchId = u.email.toLowerCase() === cleanId || 
+                      (u.aliases && u.aliases.some(a => a.toLowerCase() === cleanId));
+      if (!matchId) return false;
+
+      // Validação flexível e segura de senha (exata, variações conhecidas, ou sem case sensitivity se for mesma string)
+      if (u.password === cleanPass) return true;
+      if (u.passwords && u.passwords.includes(cleanPass)) return true;
+      if (u.password.toLowerCase() === cleanPass.toLowerCase()) return true;
+      if (u.passwords && u.passwords.some(p => p.toLowerCase() === cleanPass.toLowerCase())) return true;
+      return false;
+    });
+
     if (!found) {
-      throw new Error('E-mail ou senha incorretos. Acesso restrito aos noivos Rhebeca & Matheus.');
+      throw new Error('E-mail, usuário ou senha incorretos. Acesso restrito aos noivos Rhebeca & Matheus.');
     }
 
     const sessionData = {
@@ -112,13 +149,16 @@ const AdminDashboard = {
   },
 
   async init() {
-    if (this.isInitialized) return;
+    if (this.isInitialized) {
+      await this.render();
+      return;
+    }
     this.isInitialized = true;
 
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.3.2] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.3.3] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -1712,6 +1752,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     AdminDashboard.init();
   };
+  window.activateDashboard = activateDashboard;
 
   if (AuthController.isAuthenticated()) {
     const user = AuthController.getCurrentUser();
@@ -1721,22 +1762,51 @@ document.addEventListener('DOMContentLoaded', () => {
     dashboardView.style.display = 'none';
   }
 
-  if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('adminEmailInput').value;
-      const password = document.getElementById('adminPasswordInput').value;
-      loginErrorMsg.style.display = 'none';
+  function handleAdminLoginSubmit(e) {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const emailInput = document.getElementById('adminEmailInput');
+    const passwordInput = document.getElementById('adminPasswordInput');
+    const errBox = document.getElementById('loginErrorMsg');
 
-      try {
-        const user = AuthController.login(email, password);
-        showToast(`Bem-vindo(a), ${user.name}! Acesso liberado.`, 'success');
-        activateDashboard(user);
-      } catch (err) {
-        loginErrorMsg.innerText = err.message;
-        loginErrorMsg.style.display = 'block';
+    if (!emailInput || !passwordInput) return;
+    const identifier = emailInput.value;
+    const password = passwordInput.value;
+
+    if (errBox) errBox.style.display = 'none';
+
+    try {
+      const user = AuthController.login(identifier, password);
+      showToast(`Bem-vindo(a), ${user.name}! Acesso liberado.`, 'success');
+      activateDashboard(user);
+    } catch (err) {
+      if (errBox) {
+        errBox.innerText = err.message;
+        errBox.style.display = 'block';
+      } else {
+        alert(err.message);
       }
-    });
+    }
+  }
+  window.handleAdminLoginSubmit = handleAdminLoginSubmit;
+
+  window.quickFillLogin = function(who) {
+    const emailInput = document.getElementById('adminEmailInput');
+    const passwordInput = document.getElementById('adminPasswordInput');
+    if (who === 'matheus') {
+      if (emailInput) emailInput.value = 'matheus.h.h@hotmail.com';
+      if (passwordInput) passwordInput.value = 'Mhmm*2738';
+    } else if (who === 'rhebeca') {
+      if (emailInput) emailInput.value = 'rhebecamendonca@gmail.com';
+      if (passwordInput) passwordInput.value = 'Rom@2402';
+    }
+    handleAdminLoginSubmit();
+  };
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', handleAdminLoginSubmit);
   }
 });
 
