@@ -376,8 +376,14 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Confirmar Reserva</button>
+          <button type="button" class="btn btn-secondary modal-close">
+            <svg class="icon-line sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            Confirmar Reserva
+          </button>
         </div>
       </form>
     </div>
@@ -445,20 +451,41 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary modal-close">Fechar</button>
-          <button type="submit" class="btn btn-primary">Registrar Pagamento</button>
+          <button type="button" class="btn btn-secondary modal-close">
+            <svg class="icon-line sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            Fechar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            Registrar Pagamento
+          </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.2) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.3) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content lg">
       <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <h3>Painel de Gestão dos Noivos</h3>
-          <span class="admin-badge">Versão: v.1.1.2</span>
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <div class="admin-header-icon-circle">
+            <svg class="icon-line" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-family: var(--font-serif); color: var(--color-olive-deep); font-size: 1.35rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+              Painel de Gestão dos Noivos
+              <span class="admin-badge">Versão: v.1.1.3</span>
+            </h3>
+            <p style="margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--color-olive-muted);">
+              Gestão da lista de presentes, cotas financeiras e convidados presenteadores
+            </p>
+          </div>
         </div>
         <button class="modal-close" aria-label="Fechar painel">
           <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -467,9 +494,32 @@
 
       <div class="modal-body">
         <div class="admin-tabs">
-          <button class="admin-tab-btn active" data-tab="gifts">Gerenciar Presentes</button>
-          <button class="admin-tab-btn" data-tab="reservations">Gerenciar Já Presenteados</button>
-          <button class="admin-tab-btn" data-tab="settings">Configurações & Nuvem</button>
+          <button class="admin-tab-btn active" data-tab="gifts">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <polyline points="20 12 20 22 4 22 4 12"></polyline>
+              <rect x="2" y="7" width="20" height="5"></rect>
+              <line x1="12" y1="22" x2="12" y2="7"></line>
+              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+            </svg>
+            <span>Gerenciar Presentes</span>
+          </button>
+          <button class="admin-tab-btn" data-tab="reservations">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span>Gerenciar Já Presenteados</span>
+          </button>
+          <button class="admin-tab-btn" data-tab="settings">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>Configurações & Nuvem</span>
+          </button>
         </div>
 
         <!-- ABA 1: GERENCIAR PRESENTES COM EXTRATOR INTELIGENTE -->
@@ -755,7 +805,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.1.2</span>
+          <span id="app-footer-version">v.1.1.3</span>
         </div>
       </div>
     </div>
