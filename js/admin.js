@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.1
+   Versão: v.1.2.2
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -221,7 +221,12 @@ const AdminDashboard = {
         }
       } catch (err) {
         console.error('[Admin] Erro na sincronização:', err);
-        showToast('Falha na sincronização: ' + (err.message || 'Verifique sua conexão'), 'error');
+        const isTableError = err.message && (err.message.includes('supabase_schema.sql') || err.message.includes('tabelas'));
+        if (isTableError) {
+          showToast('As tabelas do Supabase ainda não foram criadas. Clique no botão "Copiar Script SQL" na aba Configurações & Nuvem para ativar o banco!', 'warning');
+        } else {
+          showToast('Falha na sincronização: ' + (err.message || 'Verifique sua conexão'), 'error');
+        }
       } finally {
         btnEl.disabled = false;
         if (iconEl) iconEl.classList.remove('icon-spin');
@@ -244,6 +249,60 @@ const AdminDashboard = {
         const icon = document.getElementById('iconSyncBtn');
         const label = document.getElementById('labelSyncBtn');
         handleManualSync(btnTriggerSyncNow, icon, label);
+      });
+    }
+
+    // 8.1 Botão de Copiar Script SQL do Supabase
+    const btnCopySql = document.getElementById('btnCopySqlScript');
+    if (btnCopySql) {
+      btnCopySql.addEventListener('click', async () => {
+        let sql = '';
+        try {
+          const res = await fetch('supabase_schema.sql');
+          if (res.ok) sql = await res.text();
+        } catch (_) {}
+
+        if (!sql) {
+          sql = `-- SCRIPT SUPABASE RHEBECA & MATHEUS (Execute no SQL Editor)
+CREATE TABLE IF NOT EXISTS public.gifts (
+    id TEXT PRIMARY KEY, title TEXT NOT NULL, category TEXT DEFAULT 'cozinha',
+    price NUMERIC DEFAULT 0, is_cota BOOLEAN DEFAULT false, quota_value NUMERIC,
+    quota_total INTEGER, quota_current INTEGER DEFAULT 0, amount_raised NUMERIC DEFAULT 0,
+    status TEXT DEFAULT 'available', description TEXT DEFAULT '', image_url TEXT DEFAULT '',
+    product_url TEXT DEFAULT '', is_featured BOOLEAN DEFAULT false, reserved_by TEXT,
+    guest_phone TEXT, guest_message TEXT, reserved_at TIMESTAMPTZ, contributions JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS public.messages (id TEXT PRIMARY KEY, author TEXT NOT NULL, text TEXT NOT NULL, gift_title TEXT, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.rsvps (id TEXT PRIMARY KEY, guest_name TEXT NOT NULL, email TEXT, phone TEXT, companions INTEGER DEFAULT 0, status TEXT DEFAULT 'confirmed', dietary TEXT, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.settings (key TEXT PRIMARY KEY, value JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT now());
+ALTER TABLE public.gifts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.rsvps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public full access on gifts" ON public.gifts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public full access on messages" ON public.messages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public full access on rsvps" ON public.rsvps FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public full access on settings" ON public.settings FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON TABLE public.gifts, public.messages, public.rsvps, public.settings TO anon, authenticated, service_role;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, public.rsvps;`;
+        }
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(sql);
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = sql;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+          }
+          showToast('Script SQL copiado com sucesso! Agora clique em "Abrir SQL Editor", cole o código e clique em Run.', 'success');
+        } catch (err) {
+          showToast('Script disponível no arquivo supabase_schema.sql da pasta do projeto.', 'info');
+        }
       });
     }
 
