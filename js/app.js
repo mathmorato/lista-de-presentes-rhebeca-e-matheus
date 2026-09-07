@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.9
+   Versão: v.1.2.0
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.1.9] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.2.0] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -486,11 +486,33 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
+        const gift = await window.weddingDB.getGiftById(giftId);
+        const itemTitle = gift ? gift.title : 'Presente da Lista';
+        const itemPrice = gift ? formatCurrency(gift.price) : '';
+
+        // 1. Salvar no banco híbrido (IndexedDB e Supabase)
         await window.weddingDB.reserveGift(giftId, { guestName, phone, message });
+
         document.getElementById('reserveModal').classList.remove('active');
-        showToast('Presente reservado com carinho! Os noivos agradecem de coração.', 'success');
+        showToast('Presente registrado! Redirecionando para o WhatsApp dos noivos...', 'success');
         await CatalogController.refresh();
         await MessagesController.refresh();
+
+        // 2. Obter número de WhatsApp oficial dos noivos
+        const settings = await window.weddingDB.getSettings();
+        const rawTargetPhone = settings.whatsappPhone || '5564993409360';
+        const targetPhone = rawTargetPhone.replace(/\D/g, '') || '5564993409360';
+
+        // 3. Montar mensagem formatada solicitando endereço de entrega e atualização de status
+        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️\n\nEstou passando para avisar que escolhi presentear vocês com o seguinte item da lista de casamento:\n🎁 *${itemTitle}*${itemPrice ? ` (${itemPrice})` : ''}\n\nGostaria de solicitar, por gentileza, o melhor *endereço de entrega* para que eu possa providenciar o envio do presente! 📦🏡\n\nPor favor, confirmem o recebimento desta mensagem e atualizem o status do item na lista como *Presenteado* ✅.\n\n---\n👤 *Convidado(a):* ${guestName}${phone ? `\n📱 *Telefone/WhatsApp:* ${phone}` : ''}${message ? `\n💌 *Mensagem de carinho:* "${message}"` : ''}`;
+
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(whatsappMsg)}`;
+
+        // Redirecionamento automático imediato
+        const win = window.open(whatsappUrl, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          window.location.href = whatsappUrl;
+        }
       } catch (err) {
         showToast(err.message || 'Erro ao reservar presente.', 'error');
       }
@@ -518,9 +540,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await window.weddingDB.contributeCota(giftId, amount, count, { guestName, phone, message });
         document.getElementById('cotaModal').classList.remove('active');
-        showToast('Contribuição registrada! Muito obrigado por abençoar a lua de mel!', 'success');
+        showToast('Contribuição registrada! Redirecionando para confirmação no WhatsApp...', 'success');
         await CatalogController.refresh();
         await MessagesController.refresh();
+
+        // Enviar confirmação da cota no WhatsApp dos noivos
+        const settings = await window.weddingDB.getSettings();
+        const rawTargetPhone = settings.whatsappPhone || '5564993409360';
+        const targetPhone = rawTargetPhone.replace(/\D/g, '') || '5564993409360';
+
+        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️\n\nAcabei de realizar uma contribuição de cota para a lua de mel no site de casamento:\n🌴 *${gift.title}*\n💳 *Valor:* ${formatCurrency(amount)} (${count} cota(s))\n\n---\n👤 *Convidado(a):* ${guestName}${phone ? `\n📱 *Contato:* ${phone}` : ''}${message ? `\n💌 *Mensagem:* "${message}"` : ''}`;
+
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(whatsappMsg)}`;
+
+        const win = window.open(whatsappUrl, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          window.location.href = whatsappUrl;
+        }
       } catch (err) {
         showToast(err.message || 'Erro ao registrar cota.', 'error');
       }
@@ -1244,6 +1280,9 @@ const AdminController = {
     document.getElementById('settingCeremonyPlace').value = settings.ceremonyPlace || 'Igreja Batista Shalom';
     document.getElementById('settingCeremonyCity').value = settings.ceremonyCity || 'São Luís de Montes Belos - GO';
 
+    const whatsappInput = document.getElementById('settingWhatsappPhone');
+    if (whatsappInput) whatsappInput.value = settings.whatsappPhone || '5564993409360';
+
     const urlInput = document.getElementById('settingSupabaseUrl');
     if (urlInput) urlInput.value = settings.supabaseUrl || '';
     const keyInput = document.getElementById('settingSupabaseKey');
@@ -1252,6 +1291,7 @@ const AdminController = {
 
   async handleSaveSettings() {
     const currentSettings = await window.weddingDB.getSettings();
+    const whatsappInput = document.getElementById('settingWhatsappPhone');
     const urlInput = document.getElementById('settingSupabaseUrl');
     const keyInput = document.getElementById('settingSupabaseKey');
 
@@ -1264,6 +1304,7 @@ const AdminController = {
       welcomeMessage: document.getElementById('settingWelcomeMsg').value.trim(),
       ceremonyPlace: document.getElementById('settingCeremonyPlace').value.trim(),
       ceremonyCity: document.getElementById('settingCeremonyCity').value.trim(),
+      whatsappPhone: whatsappInput ? whatsappInput.value.trim().replace(/\D/g, '') : (currentSettings.whatsappPhone || '5564993409360'),
       supabaseUrl: urlInput ? urlInput.value.trim() : (currentSettings.supabaseUrl || ''),
       supabaseKey: keyInput ? keyInput.value.trim() : (currentSettings.supabaseKey || '')
     };
