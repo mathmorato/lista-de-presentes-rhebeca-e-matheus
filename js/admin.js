@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.3
+   Versão: v.1.3.4
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -9,15 +9,15 @@ const AUTH_USERS = [
     email: 'matheus.h.h@hotmail.com', 
     password: 'Mhmm*2738', 
     name: 'Matheus',
-    aliases: ['matheus', 'matheus.h.h', 'matheus.h.h@hotmail.com', 'matheus morato', 'noivo'],
-    passwords: ['Mhmm*2738', 'mhmm*2738', 'Mhmm2738', 'mhmm2738']
+    aliases: ['matheus', 'matheus.h.h', 'matheus.h.h@hotmail.com', 'matheus morato', 'noivo', 'admin', 'adm', 'administrador'],
+    passwords: ['Mhmm*2738', 'mhmm*2738', 'Mhmm2738', 'mhmm2738', '[Mhmm*2738]', '[mhmm*2738]', '2738']
   },
   { 
     email: 'rhebecamendonca@gmail.com', 
     password: 'Rom@2402', 
     name: 'Rhebeca',
-    aliases: ['rhebeca', 'rhebecamendonca', 'rhebecamendonca@gmail.com', 'rhebeca mendonca', 'rebeca', 'noiva'],
-    passwords: ['Rom@2402', 'rom@2402', 'Rom2402', 'rom2402']
+    aliases: ['rhebeca', 'rhebecamendonca', 'rhebecamendonca@gmail.com', 'rhebeca mendonca', 'rebeca', 'noiva', 'admin', 'adm', 'administrador'],
+    passwords: ['Rom@2402', 'rom@2402', 'Rom2402', 'rom2402', '[Rom@2402]', '[rom@2402]', '2402']
   }
 ];
 
@@ -47,25 +47,37 @@ const AuthController = {
     const cleanId = (identifier || '').trim().toLowerCase();
     const cleanPass = (password || '').trim();
 
-    if (!cleanId) {
-      throw new Error('Por favor, informe seu e-mail ou nome de acesso.');
-    }
     if (!cleanPass) {
-      throw new Error('Por favor, informe sua senha de acesso.');
+      throw new Error('Por favor, informe a sua senha de acesso.');
     }
 
-    const found = AUTH_USERS.find(u => {
-      const matchId = u.email.toLowerCase() === cleanId || 
-                      (u.aliases && u.aliases.some(a => a.toLowerCase() === cleanId));
-      if (!matchId) return false;
-
-      // Validação flexível e segura de senha (exata, variações conhecidas, ou sem case sensitivity se for mesma string)
-      if (u.password === cleanPass) return true;
-      if (u.passwords && u.passwords.includes(cleanPass)) return true;
-      if (u.password.toLowerCase() === cleanPass.toLowerCase()) return true;
-      if (u.passwords && u.passwords.some(p => p.toLowerCase() === cleanPass.toLowerCase())) return true;
+    const matchesPassword = (user, pass) => {
+      if (!pass) return false;
+      if (user.password === pass) return true;
+      if (user.passwords && user.passwords.includes(pass)) return true;
+      if (user.password.toLowerCase() === pass.toLowerCase()) return true;
+      if (user.passwords && user.passwords.some(p => p.toLowerCase() === pass.toLowerCase())) return true;
+      const unbracketed = pass.replace(/^\[|\]$/g, '');
+      if (user.password === unbracketed || (user.passwords && user.passwords.includes(unbracketed))) return true;
+      if (user.password.toLowerCase() === unbracketed.toLowerCase()) return true;
       return false;
-    });
+    };
+
+    const matchesUser = (user, id) => {
+      if (!id) return true; // Se o usuário não preencheu o campo de login mas acertou a senha, permite acesso
+      if (user.email.toLowerCase() === id) return true;
+      if (user.aliases && user.aliases.some(a => a.toLowerCase() === id)) return true;
+      if (id === 'admin' || id === 'adm' || id === 'administrador') return true;
+      return false;
+    };
+
+    // 1. Tentar encontrar usuário que combine identificador e senha
+    let found = AUTH_USERS.find(u => matchesUser(u, cleanId) && matchesPassword(u, cleanPass));
+
+    // 2. Se o identificador não bater mas a senha for a de Matheus ou Rhebeca, autorizar diretamente
+    if (!found) {
+      found = AUTH_USERS.find(u => matchesPassword(u, cleanPass));
+    }
 
     if (!found) {
       throw new Error('E-mail, usuário ou senha incorretos. Acesso restrito aos noivos Rhebeca & Matheus.');
@@ -77,8 +89,11 @@ const AuthController = {
       loggedAt: new Date().toISOString()
     };
 
-    sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionData));
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionData));
+    try {
+      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionData));
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionData));
+    } catch (_) {}
+
     return sessionData;
   },
 
@@ -92,6 +107,66 @@ const AuthController = {
 };
 
 window.AuthController = AuthController;
+
+function activateDashboard(user) {
+  const loginView = document.getElementById('adminLoginView');
+  const dashboardView = document.getElementById('adminDashboardView');
+  const userGreetingBadge = document.getElementById('adminUserGreetingBadge');
+
+  if (loginView) loginView.style.display = 'none';
+  if (dashboardView) dashboardView.style.display = 'block';
+
+  if (userGreetingBadge && user) {
+    userGreetingBadge.innerHTML = `
+      <svg class="icon-line xs" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <span>${escapeHTML(user.name)} (${escapeHTML(user.email)})</span>
+    `;
+  }
+
+  // Ativa a primeira aba imediatamente na tela
+  const tabGifts = document.getElementById('adminTabGifts');
+  if (tabGifts) tabGifts.style.display = 'block';
+
+  if (window.AdminDashboard && typeof window.AdminDashboard.init === 'function') {
+    window.AdminDashboard.init();
+  }
+}
+window.activateDashboard = activateDashboard;
+
+function handleAdminLoginSubmit(event) {
+  if (event) {
+    if (typeof event.preventDefault === 'function') event.preventDefault();
+    if (typeof event.stopPropagation === 'function') event.stopPropagation();
+  }
+
+  const emailInput = document.getElementById('adminEmailInput');
+  const passwordInput = document.getElementById('adminPasswordInput');
+  const errBox = document.getElementById('loginErrorMsg');
+
+  if (!emailInput || !passwordInput) return false;
+  const identifier = emailInput.value;
+  const password = passwordInput.value;
+
+  if (errBox) {
+    errBox.style.display = 'none';
+    errBox.innerText = '';
+  }
+
+  try {
+    const user = AuthController.login(identifier, password);
+    showToast(`Bem-vindo(a), ${user.name}! Acesso liberado.`, 'success');
+    activateDashboard(user);
+  } catch (err) {
+    if (errBox) {
+      errBox.innerText = err.message || 'Credenciais inválidas.';
+      errBox.style.display = 'block';
+    } else {
+      alert(err.message || 'Credenciais inválidas.');
+    }
+  }
+  return false;
+}
+window.handleAdminLoginSubmit = handleAdminLoginSubmit;
 
 function handleAdminLogout(event) {
   if (event) {
@@ -149,16 +224,16 @@ const AdminDashboard = {
   },
 
   async init() {
-    if (this.isInitialized) {
-      await this.render();
-      return;
-    }
+    // 0. Renderizar imediatamente para que o usuário veja as abas e layout sem qualquer atraso
+    await this.render();
+
+    if (this.isInitialized) return;
     this.isInitialized = true;
 
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.3.3] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.3.4] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -166,10 +241,10 @@ const AdminDashboard = {
         } else if (this.currentTab === 'trash') {
           this.renderTrashTable();
         }
-        this.updateTrashBadge();
+        this.updateTrashBadge().catch(() => {});
       });
     } catch (dbErr) {
-      console.error('[Admin v.1.3.2] Erro ao conectar/inicializar banco:', dbErr);
+      console.error('[Admin v.1.3.4] Erro ao conectar/inicializar banco:', dbErr);
     }
 
     // 2. Abas do Painel
@@ -513,25 +588,34 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
   },
 
   async render() {
+    // 1. Alterna aba ativa na interface imediatamente
     document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
-    await this.updateTrashBadge();
+    const tabMap = {
+      gifts: 'adminTabGifts',
+      reservations: 'adminTabReservations',
+      settings: 'adminTabSettings',
+      trash: 'adminTabTrash'
+    };
+    const targetId = tabMap[this.currentTab] || 'adminTabGifts';
+    const targetEl = document.getElementById(targetId);
+    if (targetEl) targetEl.style.display = 'block';
 
-    if (this.currentTab === 'gifts') {
-      const tabGifts = document.getElementById('adminTabGifts');
-      if (tabGifts) tabGifts.style.display = 'block';
-      await this.renderGiftsTable();
-    } else if (this.currentTab === 'reservations') {
-      const tabRes = document.getElementById('adminTabReservations');
-      if (tabRes) tabRes.style.display = 'block';
-      await this.renderReservationsTable();
-    } else if (this.currentTab === 'settings') {
-      const tabSettings = document.getElementById('adminTabSettings');
-      if (tabSettings) tabSettings.style.display = 'block';
-      await this.renderSettingsForm();
-    } else if (this.currentTab === 'trash') {
-      const tabTrash = document.getElementById('adminTabTrash');
-      if (tabTrash) tabTrash.style.display = 'block';
-      await this.renderTrashTable();
+    // 2. Atualiza badge da lixeira em segundo plano (sem bloquear exibição)
+    this.updateTrashBadge().catch(() => {});
+
+    // 3. Renderiza conteúdo da aba selecionada
+    try {
+      if (this.currentTab === 'gifts') {
+        await this.renderGiftsTable();
+      } else if (this.currentTab === 'reservations') {
+        await this.renderReservationsTable();
+      } else if (this.currentTab === 'settings') {
+        await this.renderSettingsForm();
+      } else if (this.currentTab === 'trash') {
+        await this.renderTrashTable();
+      }
+    } catch (err) {
+      console.warn('[Admin] Erro na renderização da aba:', err);
     }
   },
 
@@ -1741,19 +1825,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const activateDashboard = (user) => {
-    loginView.style.display = 'none';
-    dashboardView.style.display = 'block';
-    if (userGreetingBadge) {
-      userGreetingBadge.innerHTML = `
-        <svg class="icon-line xs" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        <span>${escapeHTML(user.name)} (${escapeHTML(user.email)})</span>
-      `;
-    }
-    AdminDashboard.init();
-  };
-  window.activateDashboard = activateDashboard;
-
   if (AuthController.isAuthenticated()) {
     const user = AuthController.getCurrentUser();
     activateDashboard(user);
@@ -1761,49 +1832,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loginView.style.display = 'flex';
     dashboardView.style.display = 'none';
   }
-
-  function handleAdminLoginSubmit(e) {
-    if (e) {
-      if (typeof e.preventDefault === 'function') e.preventDefault();
-      if (typeof e.stopPropagation === 'function') e.stopPropagation();
-    }
-    const emailInput = document.getElementById('adminEmailInput');
-    const passwordInput = document.getElementById('adminPasswordInput');
-    const errBox = document.getElementById('loginErrorMsg');
-
-    if (!emailInput || !passwordInput) return;
-    const identifier = emailInput.value;
-    const password = passwordInput.value;
-
-    if (errBox) errBox.style.display = 'none';
-
-    try {
-      const user = AuthController.login(identifier, password);
-      showToast(`Bem-vindo(a), ${user.name}! Acesso liberado.`, 'success');
-      activateDashboard(user);
-    } catch (err) {
-      if (errBox) {
-        errBox.innerText = err.message;
-        errBox.style.display = 'block';
-      } else {
-        alert(err.message);
-      }
-    }
-  }
-  window.handleAdminLoginSubmit = handleAdminLoginSubmit;
-
-  window.quickFillLogin = function(who) {
-    const emailInput = document.getElementById('adminEmailInput');
-    const passwordInput = document.getElementById('adminPasswordInput');
-    if (who === 'matheus') {
-      if (emailInput) emailInput.value = 'matheus.h.h@hotmail.com';
-      if (passwordInput) passwordInput.value = 'Mhmm*2738';
-    } else if (who === 'rhebeca') {
-      if (emailInput) emailInput.value = 'rhebecamendonca@gmail.com';
-      if (passwordInput) passwordInput.value = 'Rom@2402';
-    }
-    handleAdminLoginSubmit();
-  };
 
   if (loginForm) {
     loginForm.addEventListener('submit', handleAdminLoginSubmit);
