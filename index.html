@@ -33,7 +33,6 @@
         <ul class="nav-links" id="navLinks">
           <li><a href="#inicio" class="nav-link active">Save the Date</a></li>
           <li><a href="#catalogo" class="nav-link">Lista de Presentes</a></li>
-          <li><a href="#mensagens" class="nav-link">Mural de Carinho</a></li>
         </ul>
 
         <div class="nav-actions">
@@ -398,49 +397,6 @@
     </div>
   </section>
 
-  <!-- ==================== MURAL DE MENSAGENS ==================== -->
-  <section id="mensagens" class="messages-section">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Carinho & Bênçãos</span>
-        <h2 class="section-title">Mural dos Noivos</h2>
-        <p class="section-desc">Deixe uma mensagem especial para Rhebeca e Matheus lerem e guardarem para sempre.</p>
-      </div>
-
-      <div class="messages-layout">
-        <!-- Formulário de Mensagem -->
-        <div class="message-form-card">
-          <h3 style="margin-bottom: 1.25rem; font-size: 1.3rem;">Deixe seu Recado</h3>
-          <form id="guestMessageForm">
-            <div class="form-group">
-              <label class="form-label" for="msgAuthorInput">Seu Nome / Família</label>
-              <input type="text" id="msgAuthorInput" class="form-input" placeholder="Ex.: Tios Roberto e Lúcia" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="msgTextInput">Sua Mensagem de Felicitações</label>
-              <textarea id="msgTextInput" class="form-textarea" rows="4" placeholder="Escreva aqui palavras de amor e votos de felicidade..." required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">
-              <svg class="icon-line sm" viewBox="0 0 24 24">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-              Publicar Mensagem no Mural
-            </button>
-          </form>
-        </div>
-
-        <!-- Mural de Recados Recentes -->
-        <div>
-          <h3 style="margin-bottom: 1.25rem; font-size: 1.3rem;">Mensagens dos Convidados</h3>
-          <div class="messages-wall" id="messagesWall">
-            <!-- Renderizado dinamicamente via JS -->
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
 
 
   <!-- ==================== MODAL DE RESERVA DE PRESENTE FÍSICO ==================== -->
@@ -556,13 +512,13 @@
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.4) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.5) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content lg">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <h3>Painel de Gestão dos Noivos</h3>
-          <span class="admin-badge">Versão: v.1.0.4</span>
+          <span class="admin-badge">Versão: v.1.0.5</span>
         </div>
         <button class="modal-close" aria-label="Fechar painel">
           <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -788,7 +744,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.0.4</span>
+          <span id="app-footer-version">v.1.0.5</span>
         </div>
       </div>
     </div>
