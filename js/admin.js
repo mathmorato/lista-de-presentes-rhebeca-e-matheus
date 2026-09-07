@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.9
+   Versão: v.1.4.0
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -234,6 +234,21 @@ const AdminDashboard = {
     } catch (_) {}
   },
 
+  async updateReservationsBadge() {
+    const badge = document.getElementById('reservationsCountBadge');
+    if (!badge) return;
+    try {
+      const gifts = await window.weddingDB.getAllGifts();
+      const reservedCount = gifts.filter(g => 
+        g.status === 'pending_approval' || 
+        g.status === 'reserved' || 
+        g.status === 'completed' || 
+        (g.reservedBy && g.reservedBy.trim() !== '')
+      ).length;
+      badge.innerText = reservedCount;
+    } catch (_) {}
+  },
+
   switchTab(tabName) {
     if (!tabName) return;
     this.currentTab = tabName;
@@ -273,6 +288,7 @@ const AdminDashboard = {
   async init() {
     updateAdminTopbarHeight();
     this.updateGiftsBadge().catch(() => {});
+    this.updateReservationsBadge().catch(() => {});
     // 0. Renderizar imediatamente para que o usuário veja as abas e layout sem qualquer atraso
     await this.render();
     updateAdminTopbarHeight();
@@ -283,7 +299,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.3.9] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.4.0] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -293,9 +309,10 @@ const AdminDashboard = {
         }
         this.updateTrashBadge().catch(() => {});
         this.updateGiftsBadge().catch(() => {});
+        this.updateReservationsBadge().catch(() => {});
       });
     } catch (dbErr) {
-      console.error('[Admin v.1.3.4] Erro ao conectar/inicializar banco:', dbErr);
+      console.error('[Admin v.1.4.0] Erro ao conectar/inicializar banco:', dbErr);
     }
 
     // Configuração dos botões de classificação da tabela
@@ -420,20 +437,12 @@ const AdminDashboard = {
       });
     }
 
-    // 6. Formulário de Presente/Cota
+    // 6. Formulário de Presente
     const giftForm = document.getElementById('adminGiftForm');
     if (giftForm) {
       giftForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         await this.handleSaveGift();
-      });
-    }
-
-    const isCotaCheck = document.getElementById('adminGiftIsCota');
-    const cotaFields = document.getElementById('adminCotaFields');
-    if (isCotaCheck && cotaFields) {
-      isCotaCheck.addEventListener('change', () => {
-        cotaFields.style.display = isCotaCheck.checked ? 'block' : 'none';
       });
     }
 
@@ -678,8 +687,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     const targetEl = document.getElementById(targetId);
     if (targetEl) targetEl.style.display = 'block';
 
-    // 2. Atualiza badge da lixeira em segundo plano (sem bloquear exibição)
+    // 2. Atualiza badges em segundo plano (sem bloquear exibição)
     this.updateTrashBadge().catch(() => {});
+    this.updateGiftsBadge().catch(() => {});
+    this.updateReservationsBadge().catch(() => {});
 
     // 3. Renderiza conteúdo da aba selecionada
     try {
@@ -703,8 +714,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
     let gifts = await window.weddingDB.getAllGifts();
 
-    // Atualiza contador de presentes inseridos na aba
+    // Atualiza contadores nas abas
     this.updateGiftsBadge();
+    this.updateReservationsBadge();
 
     // Ordenação dinâmica por Título ou Valor
     if (this.sortField === 'title') {
@@ -715,8 +727,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       });
     } else if (this.sortField === 'price') {
       gifts.sort((a, b) => {
-        const vA = a.isCota ? (a.quotaValue || 0) : (a.price || 0);
-        const vB = b.isCota ? (b.quotaValue || 0) : (b.price || 0);
+        const vA = a.price || 0;
+        const vB = b.price || 0;
         return this.sortOrder === 'asc' ? vA - vB : vB - vA;
       });
     }
@@ -776,7 +788,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           </div>
         </td>
         <td><span style="text-transform: capitalize;">${escapeHTML(g.category)}</span></td>
-        <td>${g.isCota ? `${formatCurrency(g.quotaValue)}/cota (${g.quotaCurrent || 0}/${g.quotaTotal})` : formatCurrency(g.price)}</td>
+        <td>${formatCurrency(g.price)}</td>
         <td>
           ${g.status === 'pending_approval' ? `
             <span class="badge" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; padding:0.25rem 0.6rem; border-radius:var(--radius-full); font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center; gap:0.3rem;">
@@ -784,8 +796,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
               Pendente
             </span>
           ` : `
-            <span class="table-status-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}">
-              ${g.status === 'reserved' ? `Reservado (${escapeHTML(g.reservedBy || '')})` : (g.status === 'completed' ? 'Concluído' : 'Disponível')}
+            <span class="table-status-badge ${g.status === 'reserved' || g.status === 'completed' ? 'badge-reserved' : 'badge-available'}">
+              ${g.status === 'reserved' || g.status === 'completed' ? `Reservado (${escapeHTML(g.reservedBy || '')})` : 'Disponível'}
             </span>
           `}
         </td>
@@ -800,7 +812,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
                 <span>Aprovar</span>
               </button>
             ` : ''}
-            <button class="btn-table-action btn-table-edit btn-admin-edit" data-id="${g.id}" title="Editar presente ou cota">
+            <button class="btn-table-action btn-table-edit btn-admin-edit" data-id="${g.id}" title="Editar presente">
               <svg class="icon-line sm" viewBox="0 0 24 24">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -1157,11 +1169,12 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     }
 
     tbody.innerHTML = trashItems.map(g => {
+      const lineIconSvg = '<svg class="icon-line sm" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>';
       const imgHtml = g.imageUrl
-        ? `<img src="${escapeHTML(g.imageUrl)}" alt="${escapeHTML(g.title)}" style="width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border);" onerror="this.src=''; this.parentElement.innerHTML='<div style=\\'width:48px;height:48px;background:var(--color-cream);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--color-olive-muted);\\'>🎁</div>';">`
-        : `<div style="width: 48px; height: 48px; background: var(--color-cream); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--color-olive-muted); font-size: 1.2rem;">🎁</div>`;
+        ? `<img src="${escapeHTML(g.imageUrl)}" alt="${escapeHTML(g.title)}" style="width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border);" onerror="this.src=''; this.parentElement.innerHTML='<div style=\\'width:48px;height:48px;background:var(--color-cream);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--color-olive-muted);\\'>${lineIconSvg}</div>';">`
+        : `<div style="width: 48px; height: 48px; background: var(--color-cream); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--color-olive-muted);">${lineIconSvg}</div>`;
 
-      const priceText = g.isCota ? `${formatCurrency(g.quotaValue || g.price)}/cota` : formatCurrency(g.price);
+      const priceText = formatCurrency(g.price);
       const deletedDateText = g.deletedAt 
         ? new Date(g.deletedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : (g.updatedAt ? new Date(g.updatedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-');
@@ -1177,7 +1190,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           </td>
           <td style="vertical-align: middle;">
             <strong style="color: var(--color-olive-deep); font-size: 0.95rem;">${escapeHTML(g.title)}</strong>
-            ${g.isCota ? '<span style="display:block; font-size:0.75rem; color:var(--color-olive-frame);">Cota de Lua de Mel</span>' : ''}
             ${donorBadge}
           </td>
           <td style="vertical-align: middle; text-transform: capitalize;">${escapeHTML(g.category)}</td>
@@ -1479,14 +1491,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
     this.updateImagePreview(gift.imageUrl || '');
 
-    const isCotaCheck = document.getElementById('adminGiftIsCota');
-    isCotaCheck.checked = !!gift.isCota;
-    document.getElementById('adminCotaFields').style.display = gift.isCota ? 'block' : 'none';
-    if (gift.isCota) {
-      document.getElementById('adminGiftQuotaVal').value = gift.quotaValue || '';
-      document.getElementById('adminGiftQuotaTotal').value = gift.quotaTotal || '';
-    }
-
     const isFeaturedCheck = document.getElementById('adminGiftIsFeatured');
     if (isFeaturedCheck) isFeaturedCheck.checked = !!gift.isFeatured;
 
@@ -1500,10 +1504,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     const form = document.getElementById('adminGiftForm');
     if (form) form.reset();
     document.getElementById('adminGiftId').value = '';
-    document.getElementById('adminCotaFields').style.display = 'none';
     document.getElementById('adminGiftSubmitBtn').innerText = 'Adicionar à Lista';
     document.getElementById('adminGiftCancelBtn').style.display = 'none';
-    document.getElementById('adminGiftFormTitle').innerText = 'Novo Presente ou Cota';
+    document.getElementById('adminGiftFormTitle').innerText = 'Novo Presente';
     this.updateImagePreview('');
   },
 
@@ -1515,7 +1518,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     const description = document.getElementById('adminGiftDesc').value.trim();
     const imageUrl = document.getElementById('adminGiftImage').value.trim();
     const productUrl = document.getElementById('adminGiftProductUrl').value.trim();
-    const isCota = document.getElementById('adminGiftIsCota').checked;
     const isFeatured = document.getElementById('adminGiftIsFeatured').checked;
 
     if (!title) {
@@ -1537,13 +1539,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     giftData.description = description;
     giftData.imageUrl = imageUrl;
     giftData.productUrl = productUrl;
-    giftData.isCota = isCota;
+    giftData.isCota = false;
     giftData.isFeatured = isFeatured;
-
-    if (isCota) {
-      giftData.quotaValue = parseFloat(document.getElementById('adminGiftQuotaVal').value) || (price / 5);
-      giftData.quotaTotal = parseInt(document.getElementById('adminGiftQuotaTotal').value) || Math.round(price / giftData.quotaValue);
-    }
 
     await window.weddingDB.saveGift(giftData);
     showToast('Item salvo com sucesso e sincronizado!', 'success');
@@ -1569,10 +1566,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     // Preencher dropdown de presentes com indicador claro
     select.innerHTML = '<option value="">-- Escolha um presente da lista --</option>' + 
       gifts.map(g => {
-        const typeLabel = g.isCota ? 'Cota' : 'Físico';
-        const priceLabel = g.isCota ? `${formatCurrency(g.quotaValue || 0)}/cota` : formatCurrency(g.price);
-        const statusLabel = g.status === 'pending_approval' ? ' [⏳ Pendente]' : (g.status === 'reserved' ? ' [✅ Reservado]' : '');
-        return `<option value="${g.id}">${escapeHTML(g.title)} (${typeLabel} - ${priceLabel})${statusLabel}</option>`;
+        const priceLabel = formatCurrency(g.price);
+        const statusLabel = g.status === 'pending_approval' ? ' [Pendente]' : (g.status === 'reserved' || g.status === 'completed' ? ' [Confirmado]' : '');
+        return `<option value="${g.id}">${escapeHTML(g.title)} (${priceLabel})${statusLabel}</option>`;
       }).join('');
 
     const targetId = preselectedGiftId || '';
@@ -1683,9 +1679,12 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (!tbody) return;
 
     const gifts = await window.weddingDB.getAllGifts();
-    const reservedItems = gifts.filter(g => g.status === 'pending_approval' || g.status === 'reserved' || g.status === 'completed' || (g.isCota && g.quotaCurrent > 0) || (g.reservedBy && g.reservedBy.trim() !== ''));
+    const reservedItems = gifts.filter(g => g.status === 'pending_approval' || g.status === 'reserved' || g.status === 'completed' || (g.reservedBy && g.reservedBy.trim() !== ''));
 
-    // Atualizar contadores de resumo dos cards rápidos
+    // Atualizar contadores de resumo dos cards rápidos e abas
+    this.updateReservationsBadge().catch(() => {});
+    this.updateGiftsBadge().catch(() => {});
+
     const statTotalChosen = document.getElementById('statTotalChosen');
     const statPendingApprovals = document.getElementById('statPendingApprovals');
     const statApprovedGifts = document.getElementById('statApprovedGifts');
@@ -1699,51 +1698,22 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     }
 
     tbody.innerHTML = reservedItems.map(g => {
-      let guestListStr = '';
-      let contactStr = '';
-      let messageStr = '';
-
-      if (g.isCota) {
-        const contributions = g.contributions || [];
-        if (contributions.length > 0) {
-          guestListStr = contributions.map(c => `• <strong>${escapeHTML(c.guestName)}</strong> (${formatCurrency(c.amount)})`).join('<br>');
-          contactStr = contributions.map(c => {
-            if (!c.guestPhone) return '-';
-            const clean = c.guestPhone.replace(/\D/g, '');
-            const wa = clean.length <= 11 ? '55' + clean : clean;
-            return `<a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="display:inline-flex; align-items:center; gap:0.25rem;">📱 ${escapeHTML(c.guestPhone)}</a>`;
-          }).filter(x => x !== '-').join('<br>') || '-';
-          messageStr = contributions.map(c => c.guestMessage ? `"${escapeHTML(c.guestMessage)}"` : '').filter(Boolean).join('<br>') || '-';
-        } else {
-          guestListStr = g.reservedBy ? `<strong>${escapeHTML(g.reservedBy)}</strong>` : 'Cotas avulsas';
-          if (g.guestPhone) {
-            const clean = g.guestPhone.replace(/\D/g, '');
-            const wa = clean.length <= 11 ? '55' + clean : clean;
-            contactStr = `<a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="display:inline-flex; align-items:center; gap:0.25rem;">📱 ${escapeHTML(g.guestPhone)}</a>`;
-          } else {
-            contactStr = '-';
-          }
-          messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '-';
-        }
-      } else {
-        guestListStr = `<strong>${escapeHTML(g.reservedBy || 'Convidado')}</strong>`;
-        if (g.guestPhone) {
-          const clean = g.guestPhone.replace(/\D/g, '');
-          const wa = clean.length <= 11 ? '55' + clean : clean;
-          contactStr = `<div>${escapeHTML(g.guestPhone)}</div><a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="margin-top:0.25rem; display:inline-flex; align-items:center; gap:0.25rem;"><svg class="icon-line xs" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Conversar WhatsApp</a>`;
-        } else {
-          contactStr = '<span style="color:var(--color-olive-muted);">-</span>';
-        }
-        messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '<span style="color:var(--color-olive-muted);">-</span>';
+      const guestListStr = `<strong>${escapeHTML(g.reservedBy || 'Convidado')}</strong>`;
+      let contactStr = '<span style="color:var(--color-olive-muted);">-</span>';
+      if (g.guestPhone) {
+        const clean = g.guestPhone.replace(/\D/g, '');
+        const wa = clean.length <= 11 ? '55' + clean : clean;
+        contactStr = `<div>${escapeHTML(g.guestPhone)}</div><a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="margin-top:0.25rem; display:inline-flex; align-items:center; gap:0.25rem;"><svg class="icon-line xs" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Conversar WhatsApp</a>`;
       }
+      const messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '<span style="color:var(--color-olive-muted);">-</span>';
 
       let approvalStatusHtml = '';
       if (g.status === 'pending_approval') {
         approvalStatusHtml = `
           <div style="display:inline-flex; flex-direction:column; gap:0.25rem;">
             <span class="badge" style="background:#fff3cd; color:#856404; border:1.5px solid #ffeeba; padding:0.35rem 0.75rem; border-radius:var(--radius-full); font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
-              <span class="pulse-dot" style="background:#ffc107; width:6px; height:6px;"></span>
-              ⏳ Pendente de Aprovação
+              <svg class="icon-line xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Pendente de Aprovação
             </span>
             <span style="font-size:0.75rem; color:var(--color-olive-muted);">Aguardando liberação dos noivos</span>
           </div>
@@ -1766,18 +1736,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <div>
                 <strong>${escapeHTML(g.title)}</strong>
-                <div style="font-size:0.78rem; color:var(--color-olive-muted); margin-top:0.15rem;">
-                  ${g.isCota ? `${formatCurrency(g.quotaValue)}/cota (${g.quotaCurrent || 0}/${g.quotaTotal} cotas)` : formatCurrency(g.price)}
-                  ${g.isFeatured ? ' • <span style="color:var(--color-gold-accent);">★ Destaque</span>' : ''}
-                </div>
+                ${g.isFeatured ? '<div style="margin-top:0.2rem;"><span class="badge-featured" style="display:inline-flex; align-items:center; gap:0.3rem; font-size:0.72rem; padding:0.15rem 0.5rem;"><svg class="icon-line xs" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Mais Desejado</span></div>' : ''}
               </div>
             </div>
           </td>
-          <td>
-            <span class="table-status-badge ${g.isCota ? 'badge-cota' : 'badge-reserved'}">
-              ${g.isCota ? 'Cota Lua de Mel' : 'Presente Físico'}
-            </span>
-          </td>
+          <td style="font-weight: 600; color: var(--color-olive-primary);">${formatCurrency(g.price)}</td>
           <td>${guestListStr}</td>
           <td style="max-width: 240px; font-size: 0.85rem;">
             <div>${contactStr}</div>

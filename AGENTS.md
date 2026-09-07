@@ -37,8 +37,7 @@ A interface deve transmitir sofisticação, elegância e leveza, apropriada para
 
 ### 2.3 Tipografia, componentes e ícones
 - **Tipografia:** Combinação de títulos em serifa editorial/romântica (ex.: Playfair Display, Cormorant Garamond) com textos de apoio e formulários em sem serifa legível (ex.: Inter, Montserrat).
-- **Cards e Molduras:** Cantos suavemente arredondados, bordas sutis em tom oliva claro e sombras difusas para dar acabamento sofisticado aos cartões de presentes.
-- **Padrão de Ícones:** Obrigatoriamente ícones de linha (*line icons*) com traço uniforme (`stroke-width="1.5"` ou `"2"`), `fill="none"` e terminações suaves (`stroke-linecap="round"`). Proibido o uso de ícones pesados ou com preenchimento sólido.
+- **Padrão de Ícones (Regra Estrita Obrigatória):** Todos os ícones do projeto DEVEM ser estritamente ícones de linha (*line icons* / *outline icons*) em SVG inline puro, com traço suave e uniforme (`stroke-width="1.5"` ou `"2"`), `fill="none"`, `stroke="currentColor"` e terminações arredondadas suaves (`stroke-linecap="round"` e `stroke-linejoin="round"`). É terminantemente proibido o uso de ícones sólidos/preenchidos (`fill="..."`), emojis como ícones de interface e bibliotecas externas de ícones que não sigam esse padrão. Ao adicionar ou editar qualquer novo ícone ou componente visual, garanta sempre que seja um ícone in line em SVG.
 
 ---
 

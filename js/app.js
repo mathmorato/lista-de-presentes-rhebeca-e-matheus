@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.9
+   Versão: v.1.4.0
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.3.9] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.4.0] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -196,16 +196,16 @@ const CatalogController = {
 
   updateSummaryStrip() {
     const totalCount = this.allGifts.length;
-    const reservedCount = this.allGifts.filter(g => g.status === 'reserved' || g.status === 'completed').length;
-    const totalRaised = this.allGifts.reduce((sum, g) => sum + (g.amountRaised || 0), 0);
+    const reservedCount = this.allGifts.filter(g => g.status === 'reserved' || g.status === 'completed' || (g.reservedBy && g.reservedBy.trim() !== '')).length;
+    const availableCount = Math.max(0, totalCount - reservedCount);
 
     const totalEl = document.getElementById('statTotalGifts');
     const reservedEl = document.getElementById('statReservedGifts');
-    const raisedEl = document.getElementById('statTotalRaised');
+    const availableEl = document.getElementById('statAvailableGifts') || document.getElementById('statTotalRaised');
 
     if (totalEl) totalEl.innerText = totalCount;
     if (reservedEl) reservedEl.innerText = reservedCount;
-    if (raisedEl) raisedEl.innerText = formatCurrency(totalRaised);
+    if (availableEl) availableEl.innerText = availableCount;
   },
 
   render() {
@@ -220,7 +220,7 @@ const CatalogController = {
         (gift.description && gift.description.toLowerCase().includes(this.searchQuery));
 
       let matchPrice = true;
-      const effectivePrice = gift.isCota ? (gift.quotaValue || gift.price) : gift.price;
+      const effectivePrice = gift.price || 0;
       if (this.currentPriceRange === 'under100') {
         matchPrice = effectivePrice <= 100;
       } else if (this.currentPriceRange === '100to300') {
@@ -243,8 +243,8 @@ const CatalogController = {
     });
 
     filtered.sort((a, b) => {
-      const priceA = a.isCota ? (a.quotaValue || a.price) : a.price;
-      const priceB = b.isCota ? (b.quotaValue || b.price) : b.price;
+      const priceA = a.price || 0;
+      const priceB = b.price || 0;
 
       if (this.currentSort === 'featured') {
         if (a.isFeatured && !b.isFeatured) return -1;
@@ -292,16 +292,8 @@ const CatalogController = {
     const isPending = gift.status === 'pending_approval';
 
     let statusBadgeHTML = '';
-    if (gift.isCota) {
-      if ((gift.quotaCurrent >= gift.quotaTotal) || isCompleted) {
-        statusBadgeHTML = `<span class="gift-badge badge-reserved">Já Presenteado</span>`;
-      } else {
-        statusBadgeHTML = `<span class="gift-badge badge-cota">Cota Lua de Mel</span>`;
-      }
-    } else if (isReserved || isCompleted || isPending) {
+    if (isReserved || isCompleted || isPending) {
       statusBadgeHTML = `<span class="gift-badge badge-reserved">Já Presenteado</span>`;
-    } else {
-      statusBadgeHTML = '';
     }
 
     const featuredBadgeHTML = gift.isFeatured 
@@ -313,70 +305,27 @@ const CatalogController = {
          </span>`
       : '';
 
-    let pricingHTML = '';
+    const pricingHTML = `
+      <div class="gift-pricing">
+        <span class="price-main">${formatCurrency(gift.price)}</span>
+      </div>
+    `;
+
     let actionBtnHTML = '';
-
-    if (gift.isCota) {
-      const current = gift.quotaCurrent || 0;
-      const total = gift.quotaTotal || 1;
-      const pct = Math.min(100, Math.round((current / total) * 100));
-
-      pricingHTML = `
-        <div class="gift-pricing">
-          <div style="display: flex; justify-content: space-between; align-items: baseline;">
-            <span class="price-main">${formatCurrency(gift.quotaValue || gift.price)}</span>
-            <span class="price-sub">por cota</span>
-          </div>
-          <div class="cota-progress-box">
-            <div class="progress-track">
-              <div class="progress-fill" style="width: ${pct}%"></div>
-            </div>
-            <div class="progress-meta">
-              <span>${current} de ${total} cotas</span>
-              <span>${pct}% atingido</span>
-            </div>
-          </div>
-        </div>
+    if (isReserved || isCompleted || isPending) {
+      actionBtnHTML = `
+        <button class="btn btn-secondary btn-block" disabled>
+          <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+          Já Presenteado
+        </button>
       `;
-
-      if (current >= total || isCompleted) {
-        actionBtnHTML = `
-          <button class="btn btn-secondary btn-block" disabled>
-            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
-            Já Presenteado
-          </button>
-        `;
-      } else {
-        actionBtnHTML = `
-          <button class="btn btn-primary btn-block btn-presentear" data-id="${gift.id}">
-            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-            Presentear com Cota Pix
-          </button>
-        `;
-      }
     } else {
-      pricingHTML = `
-        <div class="gift-pricing">
-          <span class="price-main">${formatCurrency(gift.price)}</span>
-          <span class="price-sub" style="display:block;">valor de referência</span>
-        </div>
+      actionBtnHTML = `
+        <button class="btn btn-primary btn-block btn-presentear" data-id="${gift.id}">
+          <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 12V22H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zm0 0h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+          Presentear este Item
+        </button>
       `;
-
-      if (isReserved || isCompleted || isPending) {
-        actionBtnHTML = `
-          <button class="btn btn-secondary btn-block" disabled>
-            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
-            Já Presenteado
-          </button>
-        `;
-      } else {
-        actionBtnHTML = `
-          <button class="btn btn-primary btn-block btn-presentear" data-id="${gift.id}">
-            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 12V22H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zm0 0h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
-            Presentear este Item
-          </button>
-        `;
-      }
     }
 
     const fallbackImg = `
@@ -413,12 +362,7 @@ const CatalogController = {
   async openActionModal(giftId) {
     const gift = await window.weddingDB.getGiftById(giftId);
     if (!gift) return;
-
-    if (gift.isCota) {
-      this.openCotaModal(gift);
-    } else {
-      this.openReserveModal(gift);
-    }
+    this.openReserveModal(gift);
   },
 
   async openReserveModal(gift) {
@@ -453,41 +397,6 @@ const CatalogController = {
     modal.classList.add('active');
   },
 
-  async openCotaModal(gift) {
-    const modal = document.getElementById('cotaModal');
-    if (!modal) return;
-
-    const settings = await window.weddingDB.getSettings();
-
-    document.getElementById('cotaGiftTitle').innerText = gift.title;
-    document.getElementById('cotaUnitValue').innerText = formatCurrency(gift.quotaValue);
-    document.getElementById('cotaGiftId').value = gift.id;
-
-    const countInput = document.getElementById('cotaCountInput');
-    countInput.value = 1;
-
-    const updateCalculatedTotal = () => {
-      const count = parseInt(countInput.value) || 1;
-      const total = count * (gift.quotaValue || gift.price);
-      document.getElementById('cotaCalculatedTotal').innerText = formatCurrency(total);
-    };
-    countInput.oninput = updateCalculatedTotal;
-    updateCalculatedTotal();
-
-    document.getElementById('pixKeyDisplay').innerText = settings.pixKey;
-    document.getElementById('pixHolderDisplay').innerText = settings.pixName;
-
-    const qrImg = document.getElementById('pixQrCodeImg');
-    const qrPayload = `PIX-${settings.pixKey}-${gift.title}`;
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrPayload)}`;
-
-    document.getElementById('cotaGuestName').value = '';
-    document.getElementById('cotaGuestPhone').value = '';
-    document.getElementById('cotaGuestMessage').value = '';
-
-    modal.classList.add('active');
-  },
-
   openStoreRedirectModal(gift, guestName) {
     const modal = document.getElementById('storeRedirectModal');
     if (!modal) return;
@@ -503,7 +412,7 @@ const CatalogController = {
     const openBtn = document.getElementById('btnOpenStoreNewTab');
     const copyBtnText = document.getElementById('btnCopyStoreUrlText');
 
-    if (titleEl) titleEl.innerText = 'Presente Confirmado! 🎉';
+    if (titleEl) titleEl.innerText = 'Presente Confirmado!';
     if (descEl) {
       descEl.innerHTML = `Muito obrigado, <strong style="color: var(--color-olive-deep);">${escapeHTML(guestName)}</strong>!<br>Sua escolha de presentear <strong>"${escapeHTML(gift.title)}"</strong> para Rhebeca & Matheus foi registrada com sucesso.<br><br>Você pode acessar a loja virtual do produto em uma nova aba ou copiar o link oficial abaixo:`;
     }
@@ -574,67 +483,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const cotaForm = document.getElementById('cotaForm');
-  if (cotaForm) {
-    cotaForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const giftId = document.getElementById('cotaGiftId').value;
-      const guestName = document.getElementById('cotaGuestName').value.trim();
-      const phone = document.getElementById('cotaGuestPhone').value.trim();
-      const message = document.getElementById('cotaGuestMessage').value.trim();
-      const count = parseInt(document.getElementById('cotaCountInput').value) || 1;
-
-      if (!guestName) {
-        showToast('Por favor, informe seu nome.', 'error');
-        return;
-      }
-
-      try {
-        const gift = await window.weddingDB.getGiftById(giftId);
-        const amount = count * (gift.quotaValue || gift.price);
-
-        await window.weddingDB.contributeCota(giftId, amount, count, { guestName, phone, message });
-        document.getElementById('cotaModal').classList.remove('active');
-        await CatalogController.refresh();
-        await MessagesController.refresh();
-
-        // Enviar confirmação da cota no WhatsApp dos noivos
-        const settings = await window.weddingDB.getSettings();
-        const rawTargetPhone = settings.whatsappPhone || '5564993409360';
-        const targetPhone = rawTargetPhone.replace(/\D/g, '') || '5564993409360';
-
-        const defaultLoveCota = message || "Desejo momentos inesquecíveis na lua de mel e uma vida inteira de felicidade, amor e cumplicidade! Parabéns ao casal lindo!";
-        const whatsappMsg = `Olá, Rhebeca & Matheus! ❤️✨\n\nAcabei de presentear vocês com uma cota para a lua de mel:\n🌴 *${gift.title}*\n💳 *Valor:* ${formatCurrency(amount)} (${count} cota(s))\n\n💌 *Mensagem de Carinho:*\n"${defaultLoveCota}"\n\n---\nCom todo carinho,\n👤 *${guestName}*${phone ? `\n📱 *Telefone/WhatsApp:* ${phone}` : ''}`;
-
-        const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(whatsappMsg)}`;
-
-        const modal = document.getElementById('whatsappConfirmationModal');
-        const titleEl = document.getElementById('waConfirmModalTitle');
-        const descEl = document.getElementById('waConfirmModalDesc');
-        const btnLink = document.getElementById('waDirectBtnLink');
-
-        if (titleEl) titleEl.innerText = 'Cota Registrada com Sucesso!';
-        if (descEl) {
-          descEl.innerHTML = `Sua contribuição de <strong style="color: var(--color-olive-deep);">${count} cota(s) em "${escapeHTML(gift.title)}" (${formatCurrency(amount)})</strong> foi registrada com sucesso!<br><br>Você está sendo redirecionado para o WhatsApp oficial dos noivos:`;
-        }
-        if (btnLink) {
-          btnLink.href = whatsappUrl;
-        }
-        if (modal) {
-          modal.classList.add('active');
-        }
-
-        showToast('Contribuição registrada! Redirecionando para o WhatsApp...', 'success');
-
-        // Redirecionamento automático e imediato para o WhatsApp
-        setTimeout(() => {
-          window.location.href = whatsappUrl;
-        }, 300);
-      } catch (err) {
-        showToast(err.message || 'Erro ao registrar cota.', 'error');
-      }
-    });
-  }
 
   const btnCopyPix = document.getElementById('btnCopyPix');
   if (btnCopyPix) {

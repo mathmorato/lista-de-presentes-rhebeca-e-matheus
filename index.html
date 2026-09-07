@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lista de Presentes de Casamento | Rhebeca & Matheus</title>
-  <meta name="description" content="Lista de presentes de casamento e cotas de lua de mel de Rhebeca & Matheus. Compartilhe esse momento especial conosco. 09/01/2027 em São Luís de Montes Belos - GO.">
+  <meta name="description" content="Lista de presentes de casamento de Rhebeca & Matheus. Compartilhe esse momento especial conosco. 09/01/2027 em São Luís de Montes Belos - GO.">
 
   <!-- Fontes Tipográficas: Great Vibes (Script Oficial), Playfair Display (Serifa Editorial) e Inter (Sem serifa moderna) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos da Aplicação -->
-  <link rel="stylesheet" href="css/styles.css?v=1.3.9">
+  <link rel="stylesheet" href="css/styles.css?v=1.4.0">
 
   <!-- Supabase JS Client (Carregamento para persistência em nuvem) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -91,7 +91,7 @@
         <!-- Divisor Ornamental Superior com Coração -->
         <div class="heart-divider">
           <span class="line"></span>
-          <span class="heart-icon">♥</span>
+          <span class="heart-icon"><svg class="icon-line xs" style="color: var(--color-gold-accent);" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></span>
           <span class="line"></span>
         </div>
 
@@ -166,7 +166,7 @@
         <!-- Divisor Ornamental Intermediário com Coração -->
         <div class="heart-divider">
           <span class="line"></span>
-          <span class="heart-icon">♥</span>
+          <span class="heart-icon"><svg class="icon-line xs" style="color: var(--color-gold-accent);" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></span>
           <span class="line"></span>
         </div>
 
@@ -175,7 +175,7 @@
           RESERVE ESTA DATA<br>PARA O NOSSO CASAMENTO!
         </div>
         
-        <div class="std-small-heart">♥</div>
+        <div class="std-small-heart"><svg class="icon-line xs" style="color: var(--color-gold-accent);" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
 
         <div class="std-official-invite-soon">
           Convite oficial em breve
@@ -184,7 +184,7 @@
         <!-- Borda Inferior Final com Coraçãozinho -->
         <div class="heart-divider" style="margin-top: 1.5rem; margin-bottom: 0;">
           <span class="line"></span>
-          <span class="heart-icon">♥</span>
+          <span class="heart-icon"><svg class="icon-line xs" style="color: var(--color-gold-accent);" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></span>
           <span class="line"></span>
         </div>
 
@@ -247,12 +247,13 @@
         <div class="summary-card">
           <div class="summary-card-icon">
             <svg class="icon-line" viewBox="0 0 24 24">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 14 14"></polyline>
             </svg>
           </div>
           <div class="summary-card-info">
-            <h4>Arrecadado em Cotas</h4>
-            <div class="summary-card-val" id="statTotalRaised">R$ 0,00</div>
+            <h4>Itens Disponíveis</h4>
+            <div class="summary-card-val" id="statAvailableGifts">0</div>
           </div>
         </div>
       </div>
@@ -266,7 +267,7 @@
         <span class="section-tag">Vitrine Pública</span>
         <h2 class="section-title">Nossa Lista de Presentes</h2>
         <p class="section-desc">
-          Você pode nos abençoar reservando itens para nosso lar ou presenteando com cotas da nossa lua de mel via Pix.
+          Você pode nos abençoar presenteando itens especiais para o nosso futuro lar.
         </p>
       </div>
 
@@ -280,7 +281,7 @@
             <button class="chip-btn" data-category="quarto">Quarto</button>
             <button class="chip-btn" data-category="sala">Sala & Decoração</button>
             <button class="chip-btn" data-category="eletro">Eletrodomésticos</button>
-            <button class="chip-btn" data-category="cotas">Cotas Lua de Mel</button>
+            <button class="chip-btn" data-category="mesa">Mesa & Jantar</button>
           </div>
 
           <!-- Busca Textual Dinâmica -->
@@ -390,80 +391,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL DE COTA VIA PIX ==================== -->
-  <div id="cotaModal" class="modal-backdrop">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="cotaGiftTitle">Presentear com Cota Pix</h3>
-        <button class="modal-close" aria-label="Fechar modal">
-          <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-      <form id="cotaForm">
-        <div class="modal-body">
-          <input type="hidden" id="cotaGiftId">
-          
-          <div class="pix-details-card">
-            <p style="font-size: 0.85rem; margin-bottom: 0.75rem; color: var(--color-olive-muted);">Escaneie o QR Code abaixo pelo aplicativo do seu banco:</p>
-            <div class="qr-wrapper">
-              <img id="pixQrCodeImg" src="" alt="QR Code Pix" width="180" height="180">
-            </div>
 
-            <div style="font-size: 0.85rem; text-align: left; margin-bottom: 0.5rem;">
-              <strong>Favorecido:</strong> <span id="pixHolderDisplay">Rhebeca e Matheus</span>
-            </div>
-
-            <div class="pix-copy-box">
-              <div id="pixKeyDisplay" style="flex: 1; padding: 0.5rem 0.75rem; background: var(--color-white); border: 1px solid var(--color-olive-border); border-radius: var(--radius-sm); font-size: 0.82rem; word-break: break-all; text-align: left;">
-                rhebecaematheuscasamento@gmail.com
-              </div>
-              <button type="button" id="btnCopyPix" class="btn btn-outline" style="padding: 0.5rem 0.85rem; font-size: 0.82rem;" title="Copiar chave Pix">
-                Copiar Chave
-              </button>
-            </div>
-          </div>
-
-          <div class="form-grid grid-2col" style="margin-bottom: 1rem;">
-            <div class="form-group">
-              <label class="form-label" for="cotaCountInput">Quantidade de Cotas</label>
-              <input type="number" id="cotaCountInput" class="form-input" min="1" max="50" value="1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Total a Pagar</label>
-              <div style="padding: 0.75rem; background: var(--color-cream); border-radius: var(--radius-sm); font-weight: 700; color: var(--color-olive-primary);" id="cotaCalculatedTotal">
-                R$ 0,00
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="cotaGuestName">Seu Nome *</label>
-            <input type="text" id="cotaGuestName" class="form-input" required placeholder="Quem está presenteando">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="cotaGuestPhone">Telefone / WhatsApp / E-mail</label>
-            <input type="text" id="cotaGuestPhone" class="form-input" placeholder="(00) 00000-0000">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="cotaGuestMessage">Mensagem de felicitações</label>
-            <textarea id="cotaGuestMessage" class="form-textarea" rows="2" placeholder="Deixe seus votos carinhosos para os noivos..."></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary modal-close">
-            <svg class="icon-line sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            Fechar
-          </button>
-          <button type="submit" class="btn btn-primary">
-            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-            Registrar Pagamento
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- ==================== MODAL DE CONFIRMAÇÃO & ENVIO DIRETO WHATSAPP ==================== -->
   <div id="whatsappConfirmationModal" class="modal-backdrop">
@@ -566,15 +494,15 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.3.9</span>
+          <span id="app-footer-version">v.1.4.0</span>
         </div>
       </div>
     </div>
   </footer>
 
   <!-- Scripts da Aplicação -->
-  <script src="js/extractor.js?v=1.3.9"></script>
-  <script src="js/db.js?v=1.3.9"></script>
-  <script src="js/app.js?v=1.3.9"></script>
+  <script src="js/extractor.js?v=1.4.0"></script>
+  <script src="js/db.js?v=1.4.0"></script>
+  <script src="js/app.js?v=1.4.0"></script>
 </body>
 </html>
