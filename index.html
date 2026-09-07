@@ -464,13 +464,13 @@
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.7) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.8) ==================== -->
   <div id="adminModal" class="modal-backdrop">
-    <div class="modal-content lg">
+    <div class="modal-content xl">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.85rem;">
-          <div class="admin-header-icon-circle">
-            <svg class="icon-line" viewBox="0 0 24 24">
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--color-olive-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg class="icon-line" viewBox="0 0 24 24" style="color: var(--color-olive-primary);">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -480,16 +480,26 @@
           <div>
             <h3 style="margin: 0; font-family: var(--font-serif); color: var(--color-olive-deep); font-size: 1.35rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
               Painel de Gestão dos Noivos
-              <span class="admin-badge">Versão: v.1.1.7</span>
+              <span class="admin-badge">Versão: v.1.1.8</span>
             </h3>
             <p style="margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--color-olive-muted);">
-              Gestão da lista de presentes, cotas financeiras e convidados presenteadores
+              Gestão da lista de presentes, cotas financeiras e sincronização com a nuvem
             </p>
           </div>
         </div>
-        <button class="modal-close" aria-label="Fechar painel">
-          <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <button type="button" id="btnAdminSyncHeader" class="btn btn-sm btn-outline" title="Sincronizar dados locais com a nuvem Supabase" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-full);">
+            <svg id="iconSyncHeader" class="icon-line xs" viewBox="0 0 24 24">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span id="labelSyncHeader">Sincronizar</span>
+          </button>
+          <button class="modal-close" aria-label="Fechar painel">
+            <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
       </div>
 
       <div class="modal-body">
@@ -726,6 +736,45 @@
 
         <!-- ABA 2: CONFIGURAÇÕES & SUPABASE -->
         <div id="adminTabSettings" class="admin-tab-content" style="display: none;">
+          <!-- Painel de Sincronização em Nuvem -->
+          <div class="sync-card-panel">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.85rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--color-olive-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg class="icon-line" viewBox="0 0 24 24" style="color: var(--color-olive-primary);">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 style="margin: 0; font-size: 1.1rem; color: var(--color-olive-deep);">Sincronização Nuvem (Supabase & Local)</h4>
+                  <p style="margin: 0.15rem 0 0; font-size: 0.82rem; color: var(--color-olive-muted);">
+                    Sincroniza presentes, cotas, reservas e mensagens entre o armazenamento local (IndexedDB) e a nuvem PostgreSQL
+                  </p>
+                </div>
+              </div>
+              <div id="syncStatusBadge" class="badge" style="background: var(--color-olive-light); color: var(--color-olive-deep); font-size: 0.8rem; padding: 0.35rem 0.8rem; border-radius: var(--radius-full); font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--color-success);"></span>
+                Conexão Supabase Ativa
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-top: 1px solid var(--color-cream); padding-top: 0.85rem; margin-top: 0.5rem;">
+              <div style="font-size: 0.82rem; color: var(--color-olive-muted);">
+                Status: <span id="syncLastTimeVal" style="font-weight: 600; color: var(--color-olive-deep);">Pronto para sincronizar</span>
+              </div>
+              <button type="button" id="btnTriggerSyncNow" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; padding: 0.5rem 1.15rem;">
+                <svg id="iconSyncBtn" class="icon-line sm" viewBox="0 0 24 24">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                <span id="labelSyncBtn">Sincronizar com a Nuvem Agora</span>
+              </button>
+            </div>
+          </div>
+
           <form id="adminSettingsForm">
             <h4 style="margin-bottom: 1rem;">Dados para Pagamento via Pix</h4>
             <div class="form-grid grid-2col">
@@ -766,7 +815,26 @@
               <textarea id="settingWelcomeMsg" class="form-textarea" rows="2"></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Salvar Configurações</button>
+            <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Parâmetros da Conexão Supabase (Nuvem)</h4>
+            <div class="form-grid grid-2col">
+              <div class="form-group">
+                <label class="form-label" for="settingSupabaseUrl">URL do Projeto Supabase</label>
+                <input type="text" id="settingSupabaseUrl" class="form-input" placeholder="https://seu-id.supabase.co">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settingSupabaseKey">Chave Pública / Anon Key</label>
+                <input type="password" id="settingSupabaseKey" class="form-input" placeholder="sb_publishable_...">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+              <svg class="icon-line sm" viewBox="0 0 24 24">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              Salvar Configurações
+            </button>
           </form>
         </div>
       </div>
@@ -865,7 +933,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.1.7</span>
+          <span id="app-footer-version">v.1.1.8</span>
         </div>
       </div>
     </div>

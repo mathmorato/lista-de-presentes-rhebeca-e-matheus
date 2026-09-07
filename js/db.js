@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.7
+   Versão: v.1.1.8
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -33,17 +33,17 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.1.0] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.1.8] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
-        // Sincronizar em background da nuvem para o IndexedDB
-        this.syncFromSupabase().catch(err => {
-          console.warn('[WeddingDB v.1.1.0] Sincronização em background inicial (IndexedDB ativo):', err);
+        // Sincronizar em background bidirecionalmente entre IndexedDB e Supabase
+        this.syncWithSupabase().catch(err => {
+          console.warn('[WeddingDB v.1.1.8] Sincronização inicial em background (IndexedDB ativo):', err);
         });
       } catch (err) {
-        console.warn('[WeddingDB v.1.1.0] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.1.8] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -132,32 +132,177 @@ class WeddingDB {
     }
   }
 
-  async syncFromSupabase() {
-    if (!this.supabaseClient) return;
+  async syncWithSupabase() {
+    if (!this.supabaseClient) {
+      const settings = await this.getSettings();
+      const supabaseUrl = settings.supabaseUrl || 'https://ttggcvricfkoqlorbmnv.supabase.co';
+      const supabaseKey = settings.supabaseKey || 'sb_publishable_vBEg1W6vNGeP2Ia2Fv9DuA_2YxFXirN';
+      if (window.supabase && supabaseUrl && supabaseKey) {
+        this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        this._setupRealtimeListeners();
+      } else {
+        return { success: false, message: 'Supabase não inicializado ou desconectado.' };
+      }
+    }
+
     try {
-      const { data: remoteGifts, error } = await this.supabaseClient.from('gifts').select('*');
-      if (error) throw error;
-      if (remoteGifts && Array.isArray(remoteGifts)) {
-        const remoteIds = new Set(remoteGifts.map(rg => rg.id));
-        const localGifts = await this.getAllGifts();
-        
-        // Expurgar do IndexedDB local quaisquer itens que foram excluídos no Supabase
-        for (const localG of localGifts) {
-          if (!remoteIds.has(localG.id)) {
-            await this._deleteGiftLocalOnly(localG.id);
+      console.log('[WeddingDB v.1.1.8] Iniciando sincronização bidirecional completa com Supabase...');
+
+      // 0. Processar exclusões pendentes feitas em modo offline
+      let pendingDeletes = [];
+      try {
+        pendingDeletes = JSON.parse(localStorage.getItem('wedding_deleted_gift_ids') || '[]');
+      } catch (_) {}
+
+      if (Array.isArray(pendingDeletes) && pendingDeletes.length > 0) {
+        for (const delId of pendingDeletes) {
+          try {
+            await this.supabaseClient.from('gifts').delete().eq('id', delId);
+          } catch (e) {
+            console.warn('[WeddingDB] Falha ao expurgar item deletado offline no Supabase:', delId, e);
           }
         }
-
-        // Salvar/atualizar presentes remotos do Supabase no IndexedDB
-        for (const rg of remoteGifts) {
-          await this._saveGiftLocalOnly(this._mapFromSupabaseGift(rg));
-        }
-
-        if (this.onDataChangeCallback) this.onDataChangeCallback('gifts');
+        localStorage.removeItem('wedding_deleted_gift_ids');
       }
+
+      // 1. Sincronização de PRESENTES (gifts)
+      const { data: remoteGifts, error: giftsError } = await this.supabaseClient.from('gifts').select('*');
+      if (giftsError) throw giftsError;
+
+      const localGifts = await this.getAllGifts();
+      const remoteMap = new Map((remoteGifts || []).map(rg => [rg.id, rg]));
+      const localMap = new Map((localGifts || []).map(lg => [lg.id, lg]));
+
+      // 1a. Upload: Presentes locais que ainda não estão no Supabase (ex.: novos itens cadastrados offline)
+      for (const localG of localGifts) {
+        if (!remoteMap.has(localG.id)) {
+          const payload = this._mapToSupabaseGift(localG);
+          const { error: upErr } = await this.supabaseClient.from('gifts').upsert(payload);
+          if (!upErr) {
+            remoteMap.set(localG.id, payload);
+          } else {
+            console.warn('[WeddingDB] Falha ao enviar presente local para Supabase:', localG.id, upErr);
+          }
+        }
+      }
+
+      // 1b. Download: Presentes remotos para o IndexedDB local (ex.: reservas feitas por convidados em outros dispositivos)
+      for (const [rId, remoteG] of remoteMap.entries()) {
+        const mappedRemote = this._mapFromSupabaseGift(remoteG);
+        await this._saveGiftLocalOnly(mappedRemote);
+      }
+
+      // 2. Sincronização de MENSAGENS (messages)
+      let messagesSyncedCount = 0;
+      try {
+        const { data: remoteMsgs, error: msgErr } = await this.supabaseClient.from('messages').select('*');
+        if (!msgErr && Array.isArray(remoteMsgs)) {
+          messagesSyncedCount = remoteMsgs.length;
+          const localMsgs = await this.getAllMessages();
+          const remoteMsgIds = new Set(remoteMsgs.map(m => m.id));
+          const localMsgIds = new Set(localMsgs.map(m => m.id));
+
+          // Enviar mensagens locais ausentes na nuvem
+          for (const lm of localMsgs) {
+            if (!remoteMsgIds.has(lm.id)) {
+              await this.supabaseClient.from('messages').upsert({
+                id: lm.id,
+                author: lm.author,
+                text: lm.text,
+                gift_title: lm.giftTitle || null,
+                created_at: lm.createdAt
+              });
+            }
+          }
+
+          // Baixar mensagens remotas ausentes no IndexedDB
+          for (const rm of remoteMsgs) {
+            if (!localMsgIds.has(rm.id)) {
+              await this._saveMessageLocalOnly({
+                id: rm.id,
+                author: rm.author,
+                text: rm.text,
+                giftTitle: rm.gift_title,
+                createdAt: rm.created_at
+              });
+            }
+          }
+        }
+      } catch (errMsg) {
+        console.warn('[WeddingDB] Aviso ao sincronizar mensagens:', errMsg);
+      }
+
+      // 3. Sincronização de CONFIRMAÇÃO DE PRESENÇA (rsvps)
+      let rsvpsSyncedCount = 0;
+      try {
+        const { data: remoteRsvps, error: rsvpErr } = await this.supabaseClient.from('rsvps').select('*');
+        if (!rsvpErr && Array.isArray(remoteRsvps)) {
+          rsvpsSyncedCount = remoteRsvps.length;
+          const localRsvps = await this.getAllRsvps();
+          const remoteRsvpIds = new Set(remoteRsvps.map(r => r.id));
+          const localRsvpIds = new Set(localRsvps.map(r => r.id));
+
+          // Enviar RSVPs locais para a nuvem
+          for (const lr of localRsvps) {
+            if (!remoteRsvpIds.has(lr.id)) {
+              await this.supabaseClient.from('rsvps').upsert({
+                id: lr.id,
+                guest_name: lr.guestName,
+                email: lr.email || null,
+                phone: lr.phone || null,
+                companions: lr.companions || 0,
+                status: lr.status || 'confirmed',
+                dietary: lr.dietary || null,
+                created_at: lr.createdAt
+              });
+            }
+          }
+
+          // Baixar RSVPs remotos para o IndexedDB
+          for (const rr of remoteRsvps) {
+            if (!localRsvpIds.has(rr.id)) {
+              await this._saveRsvpLocalOnly({
+                id: rr.id,
+                guestName: rr.guest_name,
+                email: rr.email,
+                phone: rr.phone,
+                companions: rr.companions,
+                status: rr.status,
+                dietary: rr.dietary,
+                createdAt: rr.created_at
+              });
+            }
+          }
+        }
+      } catch (errRsvp) {
+        console.warn('[WeddingDB] Aviso ao sincronizar RSVPs:', errRsvp);
+      }
+
+      // Notificar ouvintes que dados foram atualizados
+      if (this.onDataChangeCallback) {
+        this.onDataChangeCallback('all');
+      }
+
+      const totalLocalGifts = (await this.getAllGifts()).length;
+
+      console.log(`[WeddingDB v.1.1.8] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
+
+      return {
+        success: true,
+        giftsSynced: Math.max(totalLocalGifts, remoteMap.size),
+        messagesSynced: messagesSyncedCount,
+        rsvpsSynced: rsvpsSyncedCount,
+        timestamp: new Date().toISOString()
+      };
     } catch (e) {
-      console.warn('[WeddingDB] Erro ao sincronizar presentes remotos do Supabase:', e.message);
+      console.error('[WeddingDB] Falha no processo de sincronização:', e);
+      throw e;
     }
+  }
+
+  // Compatibilidade com chamadas anteriores
+  async syncFromSupabase() {
+    return this.syncWithSupabase();
   }
 
   _mapFromSupabaseGift(remote) {
@@ -180,7 +325,8 @@ class WeddingDB {
       guestPhone: remote.guest_phone,
       guestMessage: remote.guest_message,
       reservedAt: remote.reserved_at,
-      contributions: remote.contributions || []
+      contributions: remote.contributions || [],
+      updatedAt: remote.updated_at || null
     };
   }
 
@@ -205,7 +351,7 @@ class WeddingDB {
       guest_message: local.guestMessage || null,
       reserved_at: local.reservedAt || null,
       contributions: local.contributions || [],
-      updated_at: new Date().toISOString()
+      updated_at: local.updatedAt || new Date().toISOString()
     };
   }
 
@@ -254,6 +400,9 @@ class WeddingDB {
   }
 
   async saveGift(gift) {
+    if (!gift.updatedAt) {
+      gift.updatedAt = new Date().toISOString();
+    }
     await this._saveGiftLocalOnly(gift);
 
     if (this.supabaseClient) {
@@ -272,9 +421,22 @@ class WeddingDB {
   async deleteGift(id) {
     await this._deleteGiftLocalOnly(id);
 
+    // Salvar ID para garantia de exclusão em caso de offline
+    let pendingDeletes = [];
+    try {
+      pendingDeletes = JSON.parse(localStorage.getItem('wedding_deleted_gift_ids') || '[]');
+    } catch (_) {}
+    if (!pendingDeletes.includes(id)) {
+      pendingDeletes.push(id);
+      localStorage.setItem('wedding_deleted_gift_ids', JSON.stringify(pendingDeletes));
+    }
+
     if (this.supabaseClient) {
       try {
         await this.supabaseClient.from('gifts').delete().eq('id', id);
+        // Exclusão confirmada na nuvem: remove da lista pendente
+        pendingDeletes = pendingDeletes.filter(x => x !== id);
+        localStorage.setItem('wedding_deleted_gift_ids', JSON.stringify(pendingDeletes));
       } catch (err) {
         console.warn('[WeddingDB] Erro de exclusão no Supabase (deleteGift):', err);
       }
@@ -433,17 +595,21 @@ class WeddingDB {
     });
   }
 
-  async saveRsvp(rsvp) {
-    if (!rsvp.id) rsvp.id = 'rsvp_' + Date.now();
-    if (!rsvp.createdAt) rsvp.createdAt = new Date().toISOString();
-
-    await new Promise((resolve, reject) => {
+  async _saveRsvpLocalOnly(rsvp) {
+    return new Promise((resolve, reject) => {
       const tx = this.db.transaction('rsvps', 'readwrite');
       const store = tx.objectStore('rsvps');
       const request = store.put(rsvp);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
+  }
+
+  async saveRsvp(rsvp) {
+    if (!rsvp.id) rsvp.id = 'rsvp_' + Date.now();
+    if (!rsvp.createdAt) rsvp.createdAt = new Date().toISOString();
+
+    await this._saveRsvpLocalOnly(rsvp);
 
     if (this.supabaseClient) {
       try {

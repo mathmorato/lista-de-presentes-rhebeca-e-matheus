@@ -1,14 +1,14 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.7
+   Versão: v.1.1.8
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.1.7] Mudança em tempo real recebida:', changeType);
-    if (changeType === 'gifts') {
+    console.log('[App v.1.1.8] Mudança em tempo real recebida:', changeType);
+    if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
     }
@@ -676,6 +676,59 @@ const AdminController = {
         await this.handleSaveSettings();
       });
     }
+
+    // Processo de Sincronização Manual com Supabase
+    const handleManualSync = async (btnEl, iconEl, labelEl) => {
+      if (!btnEl) return;
+      btnEl.disabled = true;
+      if (iconEl) iconEl.classList.add('icon-spin');
+      const originalText = labelEl ? labelEl.innerText : '';
+      if (labelEl) labelEl.innerText = 'Sincronizando...';
+
+      showToast('Sincronizando dados com a nuvem Supabase...', 'info');
+
+      try {
+        const res = await window.weddingDB.syncWithSupabase();
+        if (res && res.success) {
+          const count = res.giftsSynced || 0;
+          showToast(`Sincronização concluída! (${count} presentes alinhados)`, 'success');
+          const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const syncLastTimeVal = document.getElementById('syncLastTimeVal');
+          if (syncLastTimeVal) {
+            syncLastTimeVal.innerText = `Sincronizado às ${timeString}`;
+          }
+          await this.render();
+          await CatalogController.refresh();
+        } else {
+          showToast(res?.message || 'Aviso durante sincronização.', 'warning');
+        }
+      } catch (err) {
+        console.error('[Admin] Erro na sincronização manual:', err);
+        showToast('Falha na sincronização: ' + (err.message || 'Verifique sua conexão'), 'error');
+      } finally {
+        btnEl.disabled = false;
+        if (iconEl) iconEl.classList.remove('icon-spin');
+        if (labelEl) labelEl.innerText = originalText;
+      }
+    };
+
+    const btnHeaderSync = document.getElementById('btnAdminSyncHeader');
+    if (btnHeaderSync) {
+      btnHeaderSync.addEventListener('click', () => {
+        const icon = document.getElementById('iconSyncHeader');
+        const label = document.getElementById('labelSyncHeader');
+        handleManualSync(btnHeaderSync, icon, label);
+      });
+    }
+
+    const btnTriggerSyncNow = document.getElementById('btnTriggerSyncNow');
+    if (btnTriggerSyncNow) {
+      btnTriggerSyncNow.addEventListener('click', () => {
+        const icon = document.getElementById('iconSyncBtn');
+        const label = document.getElementById('labelSyncBtn');
+        handleManualSync(btnTriggerSyncNow, icon, label);
+      });
+    }
   },
 
   updateImagePreview(url) {
@@ -1190,10 +1243,18 @@ const AdminController = {
     document.getElementById('settingWelcomeMsg').value = settings.welcomeMessage || '';
     document.getElementById('settingCeremonyPlace').value = settings.ceremonyPlace || 'Igreja Batista Shalom';
     document.getElementById('settingCeremonyCity').value = settings.ceremonyCity || 'São Luís de Montes Belos - GO';
+
+    const urlInput = document.getElementById('settingSupabaseUrl');
+    if (urlInput) urlInput.value = settings.supabaseUrl || '';
+    const keyInput = document.getElementById('settingSupabaseKey');
+    if (keyInput) keyInput.value = settings.supabaseKey || '';
   },
 
   async handleSaveSettings() {
     const currentSettings = await window.weddingDB.getSettings();
+    const urlInput = document.getElementById('settingSupabaseUrl');
+    const keyInput = document.getElementById('settingSupabaseKey');
+
     const newSettings = {
       ...currentSettings,
       pixKey: document.getElementById('settingPixKey').value.trim(),
@@ -1202,10 +1263,22 @@ const AdminController = {
       weddingDate: document.getElementById('settingWeddingDate').value,
       welcomeMessage: document.getElementById('settingWelcomeMsg').value.trim(),
       ceremonyPlace: document.getElementById('settingCeremonyPlace').value.trim(),
-      ceremonyCity: document.getElementById('settingCeremonyCity').value.trim()
+      ceremonyCity: document.getElementById('settingCeremonyCity').value.trim(),
+      supabaseUrl: urlInput ? urlInput.value.trim() : (currentSettings.supabaseUrl || ''),
+      supabaseKey: keyInput ? keyInput.value.trim() : (currentSettings.supabaseKey || '')
     };
 
     await window.weddingDB.saveSettings(newSettings);
+
+    // Reconectar Supabase caso as credenciais tenham sido alteradas
+    if (window.supabase && newSettings.supabaseUrl && newSettings.supabaseKey) {
+      try {
+        window.weddingDB.supabaseClient = window.supabase.createClient(newSettings.supabaseUrl, newSettings.supabaseKey);
+        window.weddingDB._setupRealtimeListeners();
+      } catch (e) {
+        console.warn('Falha ao reconectar Supabase com novos parâmetros:', e);
+      }
+    }
     
     const heroSubtitle = document.querySelector('.hero-subtitle');
     if (heroSubtitle && newSettings.welcomeMessage) {
