@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.3.8
+   Versão: v.1.3.9
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -222,6 +222,17 @@ const AdminDashboard = {
   currentTab: 'gifts',
   isInitialized: false,
   selectedGiftIds: new Set(),
+  sortField: null,
+  sortOrder: 'asc',
+
+  async updateGiftsBadge() {
+    const badge = document.getElementById('giftsCountBadge');
+    if (!badge) return;
+    try {
+      const gifts = await window.weddingDB.getAllGifts();
+      badge.innerText = gifts.length;
+    } catch (_) {}
+  },
 
   switchTab(tabName) {
     if (!tabName) return;
@@ -261,6 +272,7 @@ const AdminDashboard = {
 
   async init() {
     updateAdminTopbarHeight();
+    this.updateGiftsBadge().catch(() => {});
     // 0. Renderizar imediatamente para que o usuário veja as abas e layout sem qualquer atraso
     await this.render();
     updateAdminTopbarHeight();
@@ -271,7 +283,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.3.8] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.3.9] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -280,9 +292,37 @@ const AdminDashboard = {
           this.renderTrashTable();
         }
         this.updateTrashBadge().catch(() => {});
+        this.updateGiftsBadge().catch(() => {});
       });
     } catch (dbErr) {
       console.error('[Admin v.1.3.4] Erro ao conectar/inicializar banco:', dbErr);
+    }
+
+    // Configuração dos botões de classificação da tabela
+    const btnSortTitle = document.getElementById('btnSortTitle');
+    if (btnSortTitle) {
+      btnSortTitle.onclick = () => {
+        if (this.sortField === 'title') {
+          this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+          this.sortField = 'title';
+          this.sortOrder = 'asc';
+        }
+        this.renderGiftsTable();
+      };
+    }
+
+    const btnSortPrice = document.getElementById('btnSortPrice');
+    if (btnSortPrice) {
+      btnSortPrice.onclick = () => {
+        if (this.sortField === 'price') {
+          this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+          this.sortField = 'price';
+          this.sortOrder = 'asc';
+        }
+        this.renderGiftsTable();
+      };
     }
 
     // 2. Abas do Painel
@@ -661,7 +701,47 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     const tbody = document.getElementById('adminGiftsTableBody');
     if (!tbody) return;
 
-    const gifts = await window.weddingDB.getAllGifts();
+    let gifts = await window.weddingDB.getAllGifts();
+
+    // Atualiza contador de presentes inseridos na aba
+    this.updateGiftsBadge();
+
+    // Ordenação dinâmica por Título ou Valor
+    if (this.sortField === 'title') {
+      gifts.sort((a, b) => {
+        const tA = (a.title || '').toLowerCase();
+        const tB = (b.title || '').toLowerCase();
+        return this.sortOrder === 'asc' ? tA.localeCompare(tB, 'pt-BR') : tB.localeCompare(tA, 'pt-BR');
+      });
+    } else if (this.sortField === 'price') {
+      gifts.sort((a, b) => {
+        const vA = a.isCota ? (a.quotaValue || 0) : (a.price || 0);
+        const vB = b.isCota ? (b.quotaValue || 0) : (b.price || 0);
+        return this.sortOrder === 'asc' ? vA - vB : vB - vA;
+      });
+    }
+
+    // Atualiza estado visual dos botões de classificação no cabeçalho
+    const sortTitleBtn = document.getElementById('btnSortTitle');
+    const sortPriceBtn = document.getElementById('btnSortPrice');
+    if (sortTitleBtn) {
+      sortTitleBtn.classList.toggle('active', this.sortField === 'title');
+      const icon = sortTitleBtn.querySelector('.sort-icon');
+      if (icon) {
+        icon.innerHTML = this.sortField === 'title'
+          ? (this.sortOrder === 'asc' ? '<polyline points="18 15 12 9 6 15"></polyline>' : '<polyline points="6 9 12 15 18 9"></polyline>')
+          : '<path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>';
+      }
+    }
+    if (sortPriceBtn) {
+      sortPriceBtn.classList.toggle('active', this.sortField === 'price');
+      const icon = sortPriceBtn.querySelector('.sort-icon');
+      if (icon) {
+        icon.innerHTML = this.sortField === 'price'
+          ? (this.sortOrder === 'asc' ? '<polyline points="18 15 12 9 6 15"></polyline>' : '<polyline points="6 9 12 15 18 9"></polyline>')
+          : '<path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>';
+      }
+    }
 
     if (gifts.length === 0) {
       this.selectedGiftIds.clear();
@@ -701,7 +781,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           ${g.status === 'pending_approval' ? `
             <span class="badge" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; padding:0.25rem 0.6rem; border-radius:var(--radius-full); font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center; gap:0.3rem;">
               <span class="pulse-dot" style="background:#ffc107; width:6px; height:6px;"></span>
-              Pendente (${escapeHTML(g.reservedBy || 'Aguardando')})
+              Pendente
             </span>
           ` : `
             <span class="table-status-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}">
@@ -720,10 +800,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
                 <span>Aprovar</span>
               </button>
             ` : ''}
-            <button class="btn-table-action btn-table-donor btn-admin-manage-donor" data-id="${g.id}" title="Gerenciar quem deu este presente">
-              <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-              <span>Quem Deu</span>
-            </button>
             <button class="btn-table-action btn-table-edit btn-admin-edit" data-id="${g.id}" title="Editar presente ou cota">
               <svg class="icon-line sm" viewBox="0 0 24 24">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -731,15 +807,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
               </svg>
               <span>Editar</span>
             </button>
-            ${(g.status === 'pending_approval' || g.status === 'reserved' || g.status === 'completed' || (g.quotaCurrent && g.quotaCurrent > 0)) ? `
-              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Liberar item para ficar disponível novamente">
-                <svg class="icon-line sm" viewBox="0 0 24 24">
-                  <polyline points="1 4 1 10 7 10"></polyline>
-                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                </svg>
-                <span>Liberar</span>
-              </button>
-            ` : ''}
             <button class="btn-table-action btn-table-del btn-admin-del" data-id="${g.id}" title="Excluir item permanentemente">
               <svg class="icon-line sm" viewBox="0 0 24 24">
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -1603,8 +1670,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
   async approveGiftReservation(id) {
     try {
       await window.weddingDB.approveGift(id);
-      showToast('Presente aprovado e confirmado pelos noivos!', 'success');
-      await this.render();
+      showToast('Presente aprovado com sucesso! Abrindo edição de quem presenteou...', 'success');
+      this.switchTab('reservations');
+      await this.openManualDonorModal(id);
     } catch (err) {
       showToast('Erro ao aprovar presente: ' + (err.message || err), 'error');
     }
