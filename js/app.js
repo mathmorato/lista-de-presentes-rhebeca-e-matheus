@@ -1,18 +1,16 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.4
+   Versão: v.1.0.5
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.0.4] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.0.5] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
-    } else if (changeType === 'messages') {
-      MessagesController.refresh();
     }
   });
 
@@ -20,7 +18,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   ThemeController.init();
   CountdownController.init();
   CatalogController.init();
-  MessagesController.init();
   AdminController.init();
 
   // 3. Menu Mobile
@@ -551,62 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   MURAL DE MENSAGENS DE CARINHO
-   ========================================================================== */
-const MessagesController = {
-  async init() {
-    const form = document.getElementById('guestMessageForm');
-    if (form) {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const author = document.getElementById('msgAuthorInput').value.trim();
-        const text = document.getElementById('msgTextInput').value.trim();
-
-        if (!author || !text) {
-          showToast('Preencha seu nome e sua mensagem.', 'error');
-          return;
-        }
-
-        await window.weddingDB.addMessage({ author, text });
-        form.reset();
-        showToast('Sua mensagem de carinho foi enviada aos noivos!', 'success');
-        await this.refresh();
-      });
-    }
-
-    await this.refresh();
-  },
-
-  async refresh() {
-    const wall = document.getElementById('messagesWall');
-    if (!wall) return;
-
-    const messages = await window.weddingDB.getAllMessages();
-
-    if (messages.length === 0) {
-      wall.innerHTML = `
-        <div style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">
-          <p>Seja o primeiro a deixar uma mensagem de carinho para Rhebeca e Matheus!</p>
-        </div>
-      `;
-      return;
-    }
-
-    wall.innerHTML = messages.map(msg => `
-      <div class="message-bubble">
-        <div class="message-bubble-header">
-          <span class="message-author">${escapeHTML(msg.author)}</span>
-          <span class="message-time">${formatDate(msg.createdAt)}</span>
-        </div>
-        <p class="message-text">"${escapeHTML(msg.text)}"</p>
-        ${msg.giftTitle ? `<div style="margin-top: 0.5rem; font-size: 0.78rem; color: var(--color-olive-primary); font-weight: 600;">Presente: ${escapeHTML(msg.giftTitle)}</div>` : ''}
-      </div>
-    `).join('');
-  }
-};
-
-/* ==========================================================================
-   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.4) COM EXTRATOR APRIMORADO
+   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.5) COM EXTRATOR APRIMORADO
    ========================================================================== */
 const AdminController = {
   currentTab: 'gifts',
