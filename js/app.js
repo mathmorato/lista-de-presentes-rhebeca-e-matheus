@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.2
+   Versão: v.1.4.3
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.4.2] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.4.3] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -802,7 +802,9 @@ const AdminController = {
         <td>${g.isCota ? `${formatCurrency(g.quotaValue)}/cota (${g.quotaCurrent || 0}/${g.quotaTotal})` : formatCurrency(g.price)}</td>
         <td>
           <span class="table-status-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}">
-            ${g.status === 'reserved' ? `Reservado (${escapeHTML(g.reservedBy || '')})` : (g.status === 'completed' ? 'Concluído' : 'Disponível')}
+            ${g.status === 'reserved' 
+              ? (g.reservedBy && g.reservedBy.trim() ? `Presenteado (${escapeHTML(g.reservedBy.trim())})` : 'Presenteado') 
+              : (g.status === 'completed' ? 'Concluído' : 'Disponível')}
           </span>
         </td>
         <td>
@@ -1077,19 +1079,19 @@ const AdminController = {
           guestListStr = names.join('<br>');
 
           const contacts = g.contributions.map(c => c.phone || c.email).filter(Boolean);
-          contactStr = contacts.length > 0 ? escapeHTML(contacts.join(', ')) : '-';
+          contactStr = contacts.length > 0 ? escapeHTML(contacts.join(', ')) : '';
 
           const msgs = g.contributions.map(c => c.message).filter(Boolean);
-          messageStr = msgs.length > 0 ? `"${escapeHTML(msgs[msgs.length - 1])}"` : '-';
+          messageStr = msgs.length > 0 ? `"${escapeHTML(msgs[msgs.length - 1])}"` : '';
         } else if (g.reservedBy) {
           guestListStr = escapeHTML(g.reservedBy);
-          contactStr = escapeHTML(g.guestPhone || '-');
-          messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '-';
+          contactStr = escapeHTML(g.guestPhone || '');
+          messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '';
         }
       } else {
         guestListStr = `<strong>${escapeHTML(g.reservedBy || 'Convidado')}</strong>`;
-        contactStr = escapeHTML(g.guestPhone || '-');
-        messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '-';
+        contactStr = escapeHTML(g.guestPhone || '');
+        messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '';
       }
 
       const progressDisplay = g.isCota 
@@ -1114,8 +1116,8 @@ const AdminController = {
           </td>
           <td>${guestListStr}</td>
           <td style="max-width: 220px; font-size: 0.85rem;">
-            <div><strong>Contato:</strong> ${contactStr}</div>
-            <div style="color: var(--color-olive-muted); font-style: italic; margin-top: 0.2rem;">${messageStr}</div>
+            ${contactStr ? `<div><strong>Contato:</strong> ${contactStr}</div>` : ''}
+            ${messageStr ? `<div style="color: var(--color-olive-muted); font-style: italic; margin-top: 0.2rem;">${messageStr}</div>` : ''}
           </td>
           <td>${progressDisplay}</td>
           <td>
