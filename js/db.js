@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.6
+   Versão: v.1.0.7
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -33,17 +33,17 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.0.6] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.0.7] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background da nuvem para o IndexedDB
         this.syncFromSupabase().catch(err => {
-          console.warn('[WeddingDB v.1.0.6] Sincronização em background inicial (IndexedDB ativo):', err);
+          console.warn('[WeddingDB v.1.0.7] Sincronização em background inicial (IndexedDB ativo):', err);
         });
       } catch (err) {
-        console.warn('[WeddingDB v.1.0.6] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.0.7] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -137,10 +137,22 @@ class WeddingDB {
     try {
       const { data: remoteGifts, error } = await this.supabaseClient.from('gifts').select('*');
       if (error) throw error;
-      if (remoteGifts && remoteGifts.length > 0) {
+      if (remoteGifts && Array.isArray(remoteGifts)) {
+        const remoteIds = new Set(remoteGifts.map(rg => rg.id));
+        const localGifts = await this.getAllGifts();
+        
+        // Expurgar do IndexedDB local quaisquer itens que foram excluídos no Supabase
+        for (const localG of localGifts) {
+          if (!remoteIds.has(localG.id)) {
+            await this._deleteGiftLocalOnly(localG.id);
+          }
+        }
+
+        // Salvar/atualizar presentes remotos do Supabase no IndexedDB
         for (const rg of remoteGifts) {
           await this._saveGiftLocalOnly(this._mapFromSupabaseGift(rg));
         }
+
         if (this.onDataChangeCallback) this.onDataChangeCallback('gifts');
       }
     } catch (e) {

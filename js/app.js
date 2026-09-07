@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.6
+   Versão: v.1.0.7
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.0.6] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.0.7] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.6) COM EXTRATOR APRIMORADO
+   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.7) COM EXTRATOR APRIMORADO
    ========================================================================== */
 const AdminController = {
   currentTab: 'gifts',
@@ -741,14 +741,78 @@ const AdminController = {
     tbody.querySelectorAll('.btn-admin-del').forEach(b => {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-id');
-        if (confirm('Tem certeza que deseja excluir permanentemente este item? A exclusão removerá os dados no cache local e no Supabase.')) {
-          await window.weddingDB.deleteGift(id);
-          showToast('Item excluído da lista e sincronizado.', 'success');
-          await this.renderGiftsTable();
-          await CatalogController.refresh();
-        }
+        await this.confirmDeleteGift(id);
       });
     });
+  },
+
+  async confirmDeleteGift(id) {
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteItemTitleText = document.getElementById('deleteItemTitleText');
+    const deleteProgressBox = document.getElementById('deleteProgressBox');
+    const deleteProgressBar = document.getElementById('deleteProgressBar');
+    const deleteProgressStatusText = document.getElementById('deleteProgressStatusText');
+    const deleteProgressPercent = document.getElementById('deleteProgressPercent');
+    const deleteModalActions = document.getElementById('deleteModalActions');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+    const btnCancelDelete = document.getElementById('btnCancelDelete');
+
+    if (!deleteModal) return;
+
+    const gift = await window.weddingDB.getGiftById(id);
+    const itemTitle = gift ? gift.title : 'este item';
+
+    deleteItemTitleText.innerHTML = `Tem certeza que deseja excluir <strong>"${escapeHTML(itemTitle)}"</strong>?<br><span style="font-size:0.83rem; color:var(--color-olive-muted);">A exclusão removerá os dados permanentemente no cache local e no Supabase.</span>`;
+
+    // Resetar estado do modal
+    deleteProgressBox.style.display = 'none';
+    deleteProgressBar.style.width = '0%';
+    deleteProgressPercent.innerText = '0%';
+    deleteProgressStatusText.innerText = 'Excluindo do cache e sincronizando...';
+    deleteModalActions.style.display = 'flex';
+
+    deleteModal.classList.add('active');
+
+    const closeModal = () => {
+      deleteModal.classList.remove('active');
+    };
+
+    btnCancelDelete.onclick = closeModal;
+
+    btnConfirmDelete.onclick = async () => {
+      // Ocultar botões e mostrar a barra de carregamento na própria tela
+      deleteModalActions.style.display = 'none';
+      deleteProgressBox.style.display = 'block';
+
+      // Etapa 1: Início da remoção (30%)
+      deleteProgressBar.style.width = '30%';
+      deleteProgressPercent.innerText = '30%';
+      deleteProgressStatusText.innerText = 'Removendo do cache local IndexedDB...';
+
+      await new Promise(r => setTimeout(r, 200));
+
+      // Executar exclusão local + nuvem (Supabase)
+      await window.weddingDB.deleteGift(id);
+
+      // Etapa 2: Sincronização em andamento (75%)
+      deleteProgressBar.style.width = '75%';
+      deleteProgressPercent.innerText = '75%';
+      deleteProgressStatusText.innerText = 'Sincronizando exclusão com o Supabase...';
+
+      await new Promise(r => setTimeout(r, 250));
+
+      // Etapa 3: Conclusão (100%)
+      deleteProgressBar.style.width = '100%';
+      deleteProgressPercent.innerText = '100%';
+      deleteProgressStatusText.innerText = 'Exclusão concluída com sucesso!';
+
+      await new Promise(r => setTimeout(r, 200));
+
+      closeModal();
+      showToast(`Item "${itemTitle}" excluído e sincronizado!`, 'success');
+      await this.renderGiftsTable();
+      await CatalogController.refresh();
+    };
   },
 
   async editGift(id) {
