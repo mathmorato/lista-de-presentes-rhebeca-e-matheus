@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.1
+   Versão: v.1.1.2
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -1404,6 +1404,21 @@ a {
   }
 }
 
+/* Form Grids Responsivos */
+.form-grid {
+  display: grid;
+  gap: 1rem;
+}
+.form-grid.grid-2col {
+  grid-template-columns: 1fr 1fr;
+}
+.form-grid.grid-2-1 {
+  grid-template-columns: 2fr 1fr;
+}
+.form-grid.grid-3col {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
 /* Responsividade */
 @media (max-width: 900px) {
   .messages-layout {
@@ -1418,6 +1433,71 @@ a {
 }
 
 @media (max-width: 768px) {
+  /* Forms & Grids */
+  .form-grid.grid-2col,
+  .form-grid.grid-2-1,
+  .form-grid.grid-3col {
+    grid-template-columns: 1fr;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    font-size: 16px; /* Previne auto-zoom indesejado no iOS Safari */
+  }
+
+  /* Modais em Dispositivos Móveis */
+  .modal-backdrop {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-height: 92vh;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    margin-bottom: 0;
+  }
+
+  .modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1.25rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.25rem;
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  .pix-copy-box {
+    flex-direction: column;
+  }
+
+  .pix-copy-box .btn {
+    width: 100%;
+  }
+
+  /* Admin Tabs em Celulares */
+  .admin-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .admin-tab-btn {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  /* Navegação Header */
   .nav-links {
     display: none;
     position: absolute;
@@ -1441,7 +1521,7 @@ a {
   }
 
   .save-the-date-frame {
-    padding: 3rem 1.5rem;
+    padding: 2.5rem 1.25rem;
     border-width: 1.5px;
   }
 
@@ -1455,7 +1535,7 @@ a {
 
   .std-triad-container {
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .std-triad-divider {
@@ -1464,16 +1544,16 @@ a {
   }
 
   .countdown-box {
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .countdown-item {
-    min-width: 65px;
-    padding: 0.5rem;
+    min-width: 60px;
+    padding: 0.45rem;
   }
 
   .countdown-number {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
 
   .advanced-filters-panel {
@@ -1491,5 +1571,48 @@ a {
 
   .extractor-input-group {
     flex-direction: column;
+  }
+
+  .extractor-input-group .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .gifts-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .gift-card-media {
+    height: 190px;
+  }
+
+  .gift-card-body {
+    padding: 1.1rem;
+  }
+
+  .brand-names .title {
+    font-size: 1.1rem;
+  }
+
+  .brand-names .subtitle {
+    font-size: 0.72rem;
+  }
+
+  #btnOpenAdmin {
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.78rem !important;
+  }
+
+  .toast-container {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .toast {
+    max-width: 100%;
+    font-size: 0.85rem;
   }
 }
