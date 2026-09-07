@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.8
+   Versão: v.1.1.9
    Módulo: Extrator Inteligente Resiliente com Heurística de URLs e Metadados
    ========================================================================== */
 
