@@ -1,7 +1,9 @@
 /* ==========================================================================
-   LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.2
-   Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
+   Painel Administrativo de Gerenciamento - Rhebeca & Matheus
+   Versão: v.1.4.3
+   Identidade visual: Branco e Verde Oliva
+   Ícones: Linha/Outline SVG Inline Puro
+   Página Exclusiva dos Noivos
    ========================================================================== */
 
 function updateAdminTopbarHeight() {
@@ -349,7 +351,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.4.2] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.4.3] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -362,7 +364,7 @@ const AdminDashboard = {
         this.updateReservationsBadge().catch(() => {});
       });
     } catch (dbErr) {
-      console.error('[Admin v.1.4.2] Erro ao conectar/inicializar banco:', dbErr);
+      console.error('[Admin v.1.4.3] Erro ao conectar/inicializar banco:', dbErr);
     }
 
     // Configuração dos botões de classificação da tabela
@@ -871,7 +873,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
             </span>
           ` : `
             <span class="table-status-badge ${g.status === 'reserved' || g.status === 'completed' ? 'badge-reserved' : 'badge-available'}">
-              ${g.status === 'reserved' || g.status === 'completed' ? `Reservado (${escapeHTML(g.reservedBy || '')})` : 'Disponível'}
+              ${g.status === 'reserved' || g.status === 'completed' 
+                ? (g.reservedBy && g.reservedBy.trim() ? `Presenteado (${escapeHTML(g.reservedBy.trim())})` : 'Presenteado') 
+                : 'Disponível'}
             </span>
           `}
         </td>
@@ -1952,20 +1956,22 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     tbody.innerHTML = reservedItems.map(g => {
       const isChecked = this.selectedReservationIds.has(g.id);
       const guestListStr = `<strong>${escapeHTML(g.reservedBy || 'Convidado')}</strong>`;
-      let contactStr = '<span style="color:var(--color-olive-muted);">-</span>';
-      if (g.guestPhone) {
+      let contactHtml = '';
+      if (g.guestPhone && g.guestPhone.trim()) {
         const clean = g.guestPhone.replace(/\D/g, '');
         const wa = clean.length <= 11 ? '55' + clean : clean;
-        contactStr = `
+        contactHtml = `
           <div style="display: inline-flex; align-items: center; gap: 0.45rem;">
-            <span style="font-weight: 500; font-size: 0.88rem;">${escapeHTML(g.guestPhone)}</span>
+            <span style="font-weight: 500; font-size: 0.88rem;">${escapeHTML(g.guestPhone.trim())}</span>
             <a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); color: var(--color-olive-primary); padding: 0;" title="Conversar no WhatsApp" aria-label="WhatsApp">
               <svg class="icon-line xs" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
             </a>
           </div>
         `;
       }
-      const messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '<span style="color:var(--color-olive-muted);">-</span>';
+      const messageHtml = (g.guestMessage && g.guestMessage.trim()) 
+        ? `<div style="color: var(--color-olive-muted); font-style: italic; ${contactHtml ? 'margin-top: 0.35rem;' : ''}">"${escapeHTML(g.guestMessage.trim())}"</div>` 
+        : '';
 
       let approvalStatusHtml = '';
       if (g.status === 'pending_approval') {
@@ -2009,8 +2015,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           <td style="font-weight: 600; color: var(--color-olive-primary); vertical-align: middle;">${formatCurrency(g.price)}</td>
           <td style="vertical-align: middle;">${guestListStr}</td>
           <td style="max-width: 240px; font-size: 0.85rem; vertical-align: middle;">
-            <div>${contactStr}</div>
-            <div style="color: var(--color-olive-muted); font-style: italic; margin-top: 0.35rem;">${messageStr}</div>
+            ${contactHtml ? `<div>${contactHtml}</div>` : ''}
+            ${messageHtml}
           </td>
           <td style="vertical-align: middle;">${approvalStatusHtml}</td>
           <td style="vertical-align: middle; text-align: right;">
