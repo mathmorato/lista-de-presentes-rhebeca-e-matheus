@@ -635,6 +635,24 @@ const AdminController = {
       });
     }
 
+    const imageFileInput = document.getElementById('adminGiftImageFile');
+    if (imageFileInput) {
+      imageFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          try {
+            showToast('Processando foto anexada...', 'info');
+            const dataUrl = await compressImageFile(file);
+            document.getElementById('adminGiftImage').value = dataUrl;
+            this.updateImagePreview(dataUrl);
+            showToast('Foto anexada e otimizada com sucesso!', 'success');
+          } catch (err) {
+            showToast(err.message || 'Falha ao processar arquivo de imagem.', 'error');
+          }
+        }
+      });
+    }
+
     const giftForm = document.getElementById('adminGiftForm');
     if (giftForm) {
       giftForm.addEventListener('submit', async (e) => {
@@ -1058,6 +1076,8 @@ const AdminController = {
     const form = document.getElementById('adminGiftForm');
     if (form) form.reset();
     document.getElementById('adminGiftId').value = '';
+    const fileInput = document.getElementById('adminGiftImageFile');
+    if (fileInput) fileInput.value = '';
     document.getElementById('adminCotaFields').style.display = 'none';
     document.getElementById('adminGiftSubmitBtn').innerText = 'Adicionar à Lista';
     document.getElementById('adminGiftCancelBtn').style.display = 'none';
@@ -1149,6 +1169,44 @@ const AdminController = {
 /* ==========================================================================
    UTILITÁRIOS
    ========================================================================== */
+function compressImageFile(file, maxDimension = 800, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      return reject(new Error('Por favor, selecione um arquivo de imagem válido.'));
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error('Erro ao processar imagem.'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Erro ao ler arquivo.'));
+    reader.readAsDataURL(file);
+  });
+}
 function formatCurrency(val) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 }
