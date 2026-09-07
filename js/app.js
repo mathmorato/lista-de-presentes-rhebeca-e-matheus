@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.0.8
+   Versão: v.1.0.9
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.0.8] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.0.9] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.8) COM EXTRATOR APRIMORADO
+   PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.9) COM EXTRATOR APRIMORADO
    ========================================================================== */
 const AdminController = {
   currentTab: 'gifts',
@@ -791,8 +791,16 @@ const AdminController = {
 
     const closeModal = () => {
       deleteModal.classList.remove('active');
+      deleteModal.removeEventListener('click', onBackdropClick);
     };
 
+    const onBackdropClick = (e) => {
+      if (e.target === deleteModal && deleteModalActions.style.display !== 'none') {
+        closeModal();
+      }
+    };
+
+    deleteModal.addEventListener('click', onBackdropClick);
     btnCancelDelete.onclick = closeModal;
 
     btnConfirmDelete.onclick = async () => {

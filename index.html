@@ -452,53 +452,13 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL CUSTOMIZADO DE CONFIRMAÇÃO DE EXCLUSÃO ==================== -->
-  <div id="deleteModal" class="modal-backdrop">
-    <div class="modal-content sm" style="max-width: 440px; text-align: center;">
-      <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
-        <div class="delete-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; background: rgba(188, 108, 37, 0.12); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto;">
-          <svg class="icon-line lg" style="color: var(--color-error);" viewBox="0 0 24 24">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            <line x1="10" y1="11" x2="10" y2="17"></line>
-            <line x1="14" y1="11" x2="14" y2="17"></line>
-          </svg>
-        </div>
-      </div>
-      <div class="modal-body" style="padding-top: 0.5rem;">
-        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-olive-deep);">Excluir Item Permanentemente?</h3>
-        <p id="deleteItemTitleText" style="font-size: 0.92rem; color: var(--color-olive-muted); margin-bottom: 1.25rem; line-height: 1.5;">
-          Tem certeza que deseja excluir este item da lista? Essa ação removerá os dados no cache local e no Supabase.
-        </p>
-
-        <!-- Barra de Carregamento da Exclusão -->
-        <div id="deleteProgressBox" style="display: none; margin-bottom: 1.25rem;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--color-olive-muted); margin-bottom: 0.4rem; font-weight: 500;">
-            <span id="deleteProgressStatusText">Excluindo do cache e sincronizando...</span>
-            <span id="deleteProgressPercent">0%</span>
-          </div>
-          <div class="progress-bar-container" style="width: 100%; height: 10px; background: var(--color-cream); border-radius: 999px; overflow: hidden; border: 1px solid var(--color-olive-border);">
-            <div id="deleteProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--color-error) 0%, var(--color-gold-accent) 100%); border-radius: 999px; transition: width 0.25s ease;"></div>
-          </div>
-        </div>
-
-        <div id="deleteModalActions" style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
-          <button type="button" id="btnCancelDelete" class="btn btn-outline" style="flex: 1;">Cancelar</button>
-          <button type="button" id="btnConfirmDelete" class="btn btn-primary" style="flex: 1; background-color: var(--color-error); border-color: var(--color-error);">
-            Sim, Excluir
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.8) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.0.9) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content lg">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <h3>Painel de Gestão dos Noivos</h3>
-          <span class="admin-badge">Versão: v.1.0.8</span>
+          <span class="admin-badge">Versão: v.1.0.9</span>
         </div>
         <button class="modal-close" aria-label="Fechar painel">
           <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -749,6 +709,46 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL CUSTOMIZADO DE CONFIRMAÇÃO DE EXCLUSÃO ==================== -->
+  <div id="deleteModal" class="modal-backdrop">
+    <div class="modal-content sm" style="max-width: 440px; text-align: center;">
+      <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+        <div class="delete-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; background: rgba(188, 108, 37, 0.12); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto;">
+          <svg class="icon-line lg" style="color: var(--color-error);" viewBox="0 0 24 24">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+        </div>
+      </div>
+      <div class="modal-body" style="padding-top: 0.5rem;">
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-olive-deep);">Excluir Item Permanentemente?</h3>
+        <p id="deleteItemTitleText" style="font-size: 0.92rem; color: var(--color-olive-muted); margin-bottom: 1.25rem; line-height: 1.5;">
+          Tem certeza que deseja excluir este item da lista? Essa ação removerá os dados no cache local e no Supabase.
+        </p>
+
+        <!-- Barra de Carregamento da Exclusão -->
+        <div id="deleteProgressBox" style="display: none; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--color-olive-muted); margin-bottom: 0.4rem; font-weight: 500;">
+            <span id="deleteProgressStatusText">Excluindo do cache e sincronizando...</span>
+            <span id="deleteProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar-container" style="width: 100%; height: 10px; background: var(--color-cream); border-radius: 999px; overflow: hidden; border: 1px solid var(--color-olive-border);">
+            <div id="deleteProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--color-error) 0%, var(--color-gold-accent) 100%); border-radius: 999px; transition: width 0.25s ease;"></div>
+          </div>
+        </div>
+
+        <div id="deleteModalActions" style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
+          <button type="button" id="btnCancelDelete" class="btn btn-outline" style="flex: 1;">Cancelar</button>
+          <button type="button" id="btnConfirmDelete" class="btn btn-primary" style="flex: 1; background-color: var(--color-error); border-color: var(--color-error);">
+            Sim, Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== CONTAINER DE TOASTS ==================== -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -763,7 +763,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.0.8</span>
+          <span id="app-footer-version">v.1.0.9</span>
         </div>
       </div>
     </div>
