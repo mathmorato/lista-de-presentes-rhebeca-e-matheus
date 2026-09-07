@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos Oficiais do Projeto -->
-  <link rel="stylesheet" href="css/styles.css?v=1.3.9">
+  <link rel="stylesheet" href="css/styles.css?v=1.4.0">
 
   <!-- Supabase JS Client Oficial -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -113,7 +113,7 @@
               <h1 style="font-family: var(--font-serif); font-size: 1.35rem; color: var(--color-olive-deep); margin: 0;">
                 Painel de Gestão dos Noivos
               </h1>
-              <span class="admin-badge">Versão: v.1.3.9</span>
+              <span class="admin-badge">Versão: v.1.4.0</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.15rem; flex-wrap: wrap;">
               <span id="adminUserGreetingBadge" style="font-size: 0.8rem; color: var(--color-olive-frame); font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -179,13 +179,7 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
             <span>Gerenciar Já Presenteados</span>
-          </button>
-          <button class="admin-tab-btn" data-tab="settings">
-            <svg class="icon-line sm" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-            <span>Configurações</span>
+            <span id="reservationsCountBadge" class="badge" style="font-size:0.75rem; padding:0.12rem 0.55rem; background:rgba(96, 108, 56, 0.15); color:var(--color-olive-deep); border-radius:999px; font-weight:700;">0</span>
           </button>
           <button class="admin-tab-btn" data-tab="trash" title="Lixeira de presentes excluídos">
             <svg class="icon-line sm" viewBox="0 0 24 24">
@@ -194,6 +188,13 @@
             </svg>
             <span>Lixeira</span>
             <span id="trashCountBadge" class="badge" style="display:none; font-size:0.75rem; padding:0.12rem 0.55rem; background:rgba(188, 71, 73, 0.15); color:var(--color-error); border-radius:999px; font-weight:600;">0</span>
+          </button>
+          <button class="admin-tab-btn" data-tab="settings">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>Configurações</span>
           </button>
         </div>
       </div>
@@ -251,7 +252,7 @@
 
             <div class="form-grid grid-2col">
               <div class="form-group">
-                <label class="form-label" for="adminGiftPrice">Valor Total Estimado (R$) *</label>
+                <label class="form-label" for="adminGiftPrice">Valor (R$) *</label>
                 <input type="number" id="adminGiftPrice" class="form-input" required min="1" step="0.01" placeholder="0.00">
               </div>
               <div class="form-group">
@@ -304,8 +305,8 @@
             </div>
 
             <!-- Checkboxes de Configuração -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.25rem 0;">
-              <label class="admin-checkbox-card" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; background: var(--color-card-bg); border: 1px solid var(--color-olive-border); border-radius: var(--radius-md); cursor: pointer;">
+            <div style="margin: 1.25rem 0;">
+              <label class="admin-checkbox-card" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1.25rem; background: var(--color-card-bg); border: 1px solid var(--color-olive-border); border-radius: var(--radius-md); cursor: pointer;">
                 <input type="checkbox" id="adminGiftIsFeatured" style="width: 18px; height: 18px; accent-color: var(--color-gold-accent);">
                 <div style="display: flex; align-items: center; gap: 0.4rem;">
                   <svg class="icon-line sm" style="color: var(--color-gold-accent);" viewBox="0 0 24 24">
@@ -314,33 +315,6 @@
                   <span style="font-size: 0.9rem; font-weight: 600; color: var(--color-olive-deep);">Destacar como "Mais Desejado"</span>
                 </div>
               </label>
-
-              <label class="admin-checkbox-card" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; background: var(--color-card-bg); border: 1px solid var(--color-olive-border); border-radius: var(--radius-md); cursor: pointer;">
-                <input type="checkbox" id="adminGiftIsCota" style="width: 18px; height: 18px; accent-color: var(--color-olive-primary);">
-                <div style="display: flex; align-items: center; gap: 0.4rem;">
-                  <svg class="icon-line sm" style="color: var(--color-olive-primary);" viewBox="0 0 24 24">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                  </svg>
-                  <span style="font-size: 0.9rem; font-weight: 600; color: var(--color-olive-deep);">Arrecadar em Cotas (Lua de Mel / Coletivo)</span>
-                </div>
-              </label>
-            </div>
-
-            <!-- Campos Condicionais de Cotas -->
-            <div id="adminCotaFields" style="display: none; background: var(--color-cream); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
-              <div class="form-grid grid-2col">
-                <div class="form-group">
-                  <label class="form-label" for="adminGiftQuotaVal">Valor de Cada Cota (R$)</label>
-                  <input type="number" id="adminGiftQuotaVal" class="form-input" min="1" step="0.01" placeholder="Ex.: 150.00">
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="adminGiftQuotaTotal">Quantidade Total de Cotas</label>
-                  <input type="number" id="adminGiftQuotaTotal" class="form-input" min="1" placeholder="Ex.: 10">
-                </div>
-              </div>
             </div>
 
             <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
@@ -408,7 +382,7 @@
                 <th>Categoria</th>
                 <th>
                   <button type="button" id="btnSortPrice" class="btn-sort-header" title="Classificar por Valor (Menor / Maior)">
-                    <span>Valor / Cota</span>
+                    <span>Valor</span>
                     <svg class="icon-line xs sort-icon" viewBox="0 0 24 24"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path></svg>
                   </button>
                 </th>
@@ -480,7 +454,7 @@
             <thead>
               <tr>
                 <th>Presente / Item</th>
-                <th>Tipo</th>
+                <th>Valor</th>
                 <th>Quem Presenteou</th>
                 <th>Contato & Mensagem</th>
                 <th>Status de Aprovação</th>
@@ -494,7 +468,66 @@
         </div>
       </div>
 
-      <!-- ABA 3: CONFIGURAÇÕES & SUPABASE -->
+      <!-- ABA 3: LIXEIRA DE PRESENTES -->
+      <div id="adminTabTrash" class="admin-tab-content" style="display: none;">
+        <div style="background: var(--color-white); border: 1px solid var(--color-olive-border); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--color-olive-border); padding-bottom: 1rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <h3 style="font-size: 1.2rem; color: var(--color-olive-deep); margin: 0;">Lixeira de Presentes</h3>
+                <span id="trashTotalCountBadge" style="font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 999px; background: rgba(188, 71, 73, 0.12); color: var(--color-error);">0 itens</span>
+              </div>
+              <p style="font-size: 0.85rem; color: var(--color-olive-muted); margin: 0.25rem 0 0 0;">
+                Itens excluídos da lista ficam salvos aqui. Você pode restaurá-los de volta à vitrine a qualquer momento ou excluí-los permanentemente.
+              </p>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+              <button type="button" id="btnSyncTrashNow" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; font-size: 0.82rem; border-radius: var(--radius-md);" title="Sincronizar dados da lixeira com a nuvem Supabase">
+                <svg id="iconSyncTrash" class="icon-line xs" viewBox="0 0 24 24">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                <span id="labelSyncTrash">Sincronizar Lixeira</span>
+              </button>
+
+              <button type="button" id="btnEmptyTrash" class="btn btn-sm" style="background: rgba(188, 71, 73, 0.1); color: var(--color-error); border: 1px solid rgba(188, 71, 73, 0.3); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: var(--radius-md); font-weight: 600;" title="Excluir todos os itens da lixeira definitivamente">
+                <svg class="icon-line sm" viewBox="0 0 24 24">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                <span>Esvaziar Lixeira</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container" style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Item</th>
+                  <th>Título do Presente</th>
+                  <th>Categoria</th>
+                  <th>Valor</th>
+                  <th>Integração Supabase (Nuvem)</th>
+                  <th>Data de Exclusão</th>
+                  <th style="text-align: right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="adminTrashTableBody">
+                <!-- Preenchido dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ABA 4: CONFIGURAÇÕES & SUPABASE -->
       <div id="adminTabSettings" class="admin-tab-content" style="display: none;">
         
         <!-- Card de Sincronização em Nuvem -->
@@ -511,7 +544,7 @@
               <div>
                 <h4 style="margin: 0; font-size: 1.1rem; color: var(--color-olive-deep);">Sincronização Nuvem (Supabase & Local)</h4>
                 <p style="margin: 0.15rem 0 0; font-size: 0.82rem; color: var(--color-olive-muted);">
-                  Sincroniza presentes, cotas, reservas e mensagens entre o armazenamento local (IndexedDB) e a nuvem PostgreSQL
+                  Sincroniza presentes, reservas e mensagens entre o armazenamento local (IndexedDB) e a nuvem PostgreSQL
                 </p>
               </div>
             </div>
@@ -593,65 +626,6 @@
               Salvar Configurações
             </button>
           </form>
-        </div>
-      </div>
-
-      <!-- ABA 4: LIXEIRA DE PRESENTES -->
-      <div id="adminTabTrash" class="admin-tab-content" style="display: none;">
-        <div style="background: var(--color-white); border: 1px solid var(--color-olive-border); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
-          
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--color-olive-border); padding-bottom: 1rem;">
-            <div>
-              <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <h3 style="font-size: 1.2rem; color: var(--color-olive-deep); margin: 0;">Lixeira de Presentes</h3>
-                <span id="trashTotalCountBadge" style="font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 999px; background: rgba(188, 71, 73, 0.12); color: var(--color-error);">0 itens</span>
-              </div>
-              <p style="font-size: 0.85rem; color: var(--color-olive-muted); margin: 0.25rem 0 0 0;">
-                Itens excluídos da lista ficam salvos aqui. Você pode restaurá-los de volta à vitrine a qualquer momento ou excluí-los permanentemente.
-              </p>
-            </div>
-            
-            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-              <button type="button" id="btnSyncTrashNow" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; font-size: 0.82rem; border-radius: var(--radius-md);" title="Sincronizar dados da lixeira com a nuvem Supabase">
-                <svg id="iconSyncTrash" class="icon-line xs" viewBox="0 0 24 24">
-                  <polyline points="23 4 23 10 17 10"></polyline>
-                  <polyline points="1 20 1 14 7 14"></polyline>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                </svg>
-                <span id="labelSyncTrash">Sincronizar Lixeira</span>
-              </button>
-
-              <button type="button" id="btnEmptyTrash" class="btn btn-sm" style="background: rgba(188, 71, 73, 0.1); color: var(--color-error); border: 1px solid rgba(188, 71, 73, 0.3); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: var(--radius-md); font-weight: 600;" title="Excluir todos os itens da lixeira definitivamente">
-                <svg class="icon-line sm" viewBox="0 0 24 24">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-                <span>Esvaziar Lixeira</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="table-container" style="overflow-x: auto;">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th style="width: 70px;">Item</th>
-                  <th>Título do Presente</th>
-                  <th>Categoria</th>
-                  <th>Valor</th>
-                  <th>Integração Supabase (Nuvem)</th>
-                  <th>Data de Exclusão</th>
-                  <th style="text-align: right;">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="adminTrashTableBody">
-                <!-- Preenchido dinamicamente via JS -->
-              </tbody>
-            </table>
-          </div>
-
         </div>
       </div>
 
@@ -782,9 +756,9 @@
             <div class="form-group">
               <label class="form-label" for="manualDonorStatus">Status do Presente *</label>
               <select id="manualDonorStatus" class="form-select" required>
-                <option value="reserved">✅ Confirmado pelos Noivos</option>
-                <option value="pending_approval">⏳ Pendente de Aprovação (Aguardando)</option>
-                <option value="available">🔄 Liberar Item (Tornar Disponível na Lista)</option>
+                <option value="reserved">Confirmado pelos Noivos</option>
+                <option value="pending_approval">Pendente de Aprovação (Aguardando)</option>
+                <option value="available">Liberar Item (Tornar Disponível na Lista)</option>
               </select>
             </div>
             <div class="form-group">
@@ -854,14 +828,14 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.3.9</span>
+        <span id="app-footer-version">v.1.4.0</span>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/extractor.js?v=1.3.9"></script>
-  <script src="js/db.js?v=1.3.9"></script>
-  <script src="js/admin.js?v=1.3.9"></script>
+  <script src="js/extractor.js?v=1.4.0"></script>
+  <script src="js/db.js?v=1.4.0"></script>
+  <script src="js/admin.js?v=1.4.0"></script>
 </body>
 </html>
