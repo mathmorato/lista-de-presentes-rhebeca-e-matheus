@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.3
+   Versão: v.1.4.4
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.4.3] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.4.4] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -695,7 +695,20 @@ const AdminController = {
         }
       } catch (err) {
         console.error('[Admin] Erro na sincronização manual:', err);
-        showToast('Falha na sincronização: ' + (err.message || 'Verifique sua conexão'), 'error');
+        if (err.message && (err.message.includes('Data lost due to missing file') || err.message.includes('irrecoverable'))) {
+          showToast('Reparando dados corrompidos do navegador e sincronizando com a nuvem...', 'info');
+          try {
+            await window.weddingDB._resetAndRebuildDatabase();
+            await window.weddingDB.syncWithSupabase();
+            await this.render();
+            await CatalogController.refresh();
+            showToast('Banco recuperado com sucesso!', 'success');
+          } catch (healErr) {
+            showToast('Falha na recuperação: ' + healErr.message, 'error');
+          }
+        } else {
+          showToast('Falha na sincronização: ' + (err.message || 'Verifique sua conexão'), 'error');
+        }
       } finally {
         btnEl.disabled = false;
         if (iconEl) iconEl.classList.remove('icon-spin');

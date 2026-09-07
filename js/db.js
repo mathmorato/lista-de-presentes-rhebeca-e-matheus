@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.3
+   Versão: v.1.4.4
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -278,7 +278,13 @@ class WeddingDB {
         }
       }
 
-      const localGifts = await this.getAllGifts({ includeTrash: true });
+      let localGifts = [];
+      try {
+        localGifts = await this.getAllGifts({ includeTrash: true });
+      } catch (localErr) {
+        console.warn('[WeddingDB] Erro ao carregar presentes locais durante sincronização, recuperando:', localErr);
+        localGifts = await this._recoverGiftsStore();
+      }
       const remoteMap = new Map(sanitizedRemoteGifts.map(rg => [rg.id, rg]));
 
       // 1a. Upload e Conciliação Bidirecional com base em timestamp (updatedAt)
@@ -467,6 +473,28 @@ class WeddingDB {
       return syncResult;
     } catch (e) {
       console.error('[WeddingDB] Falha no processo de sincronização:', e);
+      if (e && e.message && e.message.includes('Data lost due to missing file')) {
+        console.warn('[WeddingDB] Erro de arquivo ausente capturado no sync, reconstruindo cache local a partir da nuvem...');
+        try {
+          await this._resetAndRebuildDatabase();
+          if (this.supabaseClient) {
+            const { data: remGifts } = await this.supabaseClient.from('gifts').select('*');
+            if (Array.isArray(remGifts)) {
+              for (const rg of remGifts) {
+                await this._saveGiftLocalOnly(this._mapFromSupabaseGift(rg));
+              }
+              if (this.onDataChangeCallback) this.onDataChangeCallback('all');
+              return {
+                success: true,
+                giftsSynced: remGifts.length,
+                message: 'Cache local reparado e dados sincronizados com sucesso!'
+              };
+            }
+          }
+        } catch (healErr) {
+          console.error('[WeddingDB] Falha ao auto-reparar banco no sync:', healErr);
+        }
+      }
       throw e;
     } finally {
       this.isSyncing = false;
@@ -529,55 +557,185 @@ class WeddingDB {
     };
   }
 
+  // --- MÉTODOS DE RECUPERAÇÃO E RESILIÊNCIA DO BANCO LOCAL ---
+
+  async _resetAndRebuildDatabase() {
+    console.warn('[WeddingDB] Resetando e reconstruindo banco local IndexedDB para sanar corrupções...');
+    try {
+      if (this.db) {
+        try { this.db.close(); } catch (_) {}
+        this.db = null;
+      }
+      await new Promise((resolve) => {
+        const req = indexedDB.deleteDatabase(DB_NAME);
+        req.onsuccess = () => resolve();
+        req.onerror = () => resolve();
+        req.onblocked = () => resolve();
+      });
+      await this._initIndexedDB();
+    } catch (err) {
+      console.error('[WeddingDB] Erro ao reconstruir IndexedDB:', err);
+    }
+  }
+
+  async _recoverGiftsStore() {
+    console.warn('[WeddingDB] Executando rotina de auto-reparo e expurgo de arquivos ausentes no IndexedDB...');
+    const validGifts = [];
+    const corruptedKeys = [];
+
+    if (this.db) {
+      try {
+        const allKeys = await new Promise((resolve) => {
+          try {
+            const tx = this.db.transaction('gifts', 'readonly');
+            const store = tx.objectStore('gifts');
+            const req = store.getAllKeys ? store.getAllKeys() : null;
+            if (req) {
+              req.onsuccess = () => resolve(req.result || []);
+              req.onerror = () => resolve([]);
+            } else {
+              resolve([]);
+            }
+          } catch (_) {
+            resolve([]);
+          }
+        });
+
+        for (const key of allKeys) {
+          try {
+            const item = await new Promise((resolve, reject) => {
+              const tx = this.db.transaction('gifts', 'readonly');
+              const store = tx.objectStore('gifts');
+              const req = store.get(key);
+              req.onsuccess = () => resolve(req.result);
+              req.onerror = () => reject(req.error);
+            });
+            if (item) validGifts.push(item);
+          } catch (keyErr) {
+            console.warn('[WeddingDB] Registro com arquivo ausente/corrompido detectado:', key, keyErr);
+            corruptedKeys.push(key);
+          }
+        }
+
+        // Expurgar as chaves corrompidas do banco local
+        for (const badKey of corruptedKeys) {
+          await this._deleteGiftLocalOnly(badKey);
+        }
+      } catch (scanErr) {
+        console.warn('[WeddingDB] Falha durante varredura por chaves:', scanErr);
+      }
+    }
+
+    // Se temos Supabase ativo, restaurar a integridade a partir da nuvem
+    if (this.supabaseClient) {
+      try {
+        console.log('[WeddingDB] Reconstruindo catálogo saudável a partir do Supabase...');
+        const { data: remoteGifts, error: remErr } = await this.supabaseClient.from('gifts').select('*');
+        if (!remErr && Array.isArray(remoteGifts) && remoteGifts.length > 0) {
+          const mappedRemote = remoteGifts.map(rg => this._mapFromSupabaseGift(rg));
+          for (const item of mappedRemote) {
+            await this._saveGiftLocalOnly(item);
+          }
+          return mappedRemote;
+        }
+      } catch (supaErr) {
+        console.warn('[WeddingDB] Falha ao consultar Supabase na recuperação:', supaErr);
+      }
+    }
+
+    return validGifts;
+  }
+
   // --- MÉTODOS DE PRESENTES (GIFTS) ---
 
   async getAllGifts(options = {}) {
     const includeTrash = options && options.includeTrash === true;
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction('gifts', 'readonly');
-      const store = tx.objectStore('gifts');
-      const request = store.getAll();
 
-      request.onsuccess = () => {
-        const results = request.result || [];
-        if (includeTrash) {
-          resolve(results);
-        } else {
-          resolve(results.filter(g => g.status !== 'trash'));
-        }
-      };
-      request.onerror = () => reject(request.error);
-    });
+    if (!this.db) {
+      try {
+        await this._initIndexedDB();
+      } catch (_) {}
+    }
+
+    try {
+      const results = await new Promise((resolve, reject) => {
+        if (!this.db) return reject(new Error('IndexedDB não disponível'));
+        const tx = this.db.transaction('gifts', 'readonly');
+        const store = tx.objectStore('gifts');
+        const request = store.getAll();
+
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+
+      if (includeTrash) {
+        return results;
+      } else {
+        return results.filter(g => g.status !== 'trash');
+      }
+    } catch (err) {
+      console.warn('[WeddingDB] Falha em getAllGifts (detectado possível arquivo ausente ou corrupção):', err);
+      const recovered = await this._recoverGiftsStore();
+      if (includeTrash) {
+        return recovered;
+      } else {
+        return recovered.filter(g => g.status !== 'trash');
+      }
+    }
   }
 
   async getGiftById(id) {
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction('gifts', 'readonly');
-      const store = tx.objectStore('gifts');
-      const request = store.get(id);
+    return new Promise((resolve) => {
+      try {
+        if (!this.db) return resolve(null);
+        const tx = this.db.transaction('gifts', 'readonly');
+        const store = tx.objectStore('gifts');
+        const request = store.get(id);
 
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => {
+          console.warn('[WeddingDB] Registro com arquivo ausente em getGiftById:', id, request.error);
+          this._deleteGiftLocalOnly(id).catch(() => {});
+          resolve(null);
+        };
+      } catch (err) {
+        console.warn('[WeddingDB] Erro de transação em getGiftById:', id, err);
+        resolve(null);
+      }
     });
   }
 
   async _saveGiftLocalOnly(gift) {
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction('gifts', 'readwrite');
-      const store = tx.objectStore('gifts');
-      const request = store.put(gift);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+    return new Promise((resolve) => {
+      try {
+        if (!this.db) return resolve(null);
+        const tx = this.db.transaction('gifts', 'readwrite');
+        const store = tx.objectStore('gifts');
+        const request = store.put(gift);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => {
+          console.warn('[WeddingDB] Falha ao salvar presente no IndexedDB:', gift?.id, request.error);
+          resolve(null);
+        };
+      } catch (err) {
+        console.warn('[WeddingDB] Erro de transação ao salvar presente localmente:', err);
+        resolve(null);
+      }
     });
   }
 
   async _deleteGiftLocalOnly(id) {
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction('gifts', 'readwrite');
-      const store = tx.objectStore('gifts');
-      const request = store.delete(id);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+    return new Promise((resolve) => {
+      try {
+        if (!this.db) return resolve();
+        const tx = this.db.transaction('gifts', 'readwrite');
+        const store = tx.objectStore('gifts');
+        const request = store.delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => resolve();
+      } catch (_) {
+        resolve();
+      }
     });
   }
 
@@ -1003,17 +1161,26 @@ class WeddingDB {
   // --- MURAL DE MENSAGENS ---
 
   async getAllMessages() {
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction('messages', 'readonly');
-      const store = tx.objectStore('messages');
-      const request = store.getAll();
+    return new Promise((resolve) => {
+      try {
+        if (!this.db) return resolve([]);
+        const tx = this.db.transaction('messages', 'readonly');
+        const store = tx.objectStore('messages');
+        const request = store.getAll();
 
-      request.onsuccess = () => {
-        const msgs = request.result || [];
-        msgs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        resolve(msgs);
-      };
-      request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const msgs = request.result || [];
+          msgs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          resolve(msgs);
+        };
+        request.onerror = () => {
+          console.warn('[WeddingDB] Falha ao ler mensagens locais:', request.error);
+          resolve([]);
+        };
+      } catch (err) {
+        console.warn('[WeddingDB] Erro de transação em getAllMessages:', err);
+        resolve([]);
+      }
     });
   }
 
@@ -1052,13 +1219,22 @@ class WeddingDB {
   // --- RSVP (CONFIRMAÇÃO DE PRESENÇA) ---
 
   async getAllRsvps() {
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction('rsvps', 'readonly');
-      const store = tx.objectStore('rsvps');
-      const request = store.getAll();
+    return new Promise((resolve) => {
+      try {
+        if (!this.db) return resolve([]);
+        const tx = this.db.transaction('rsvps', 'readonly');
+        const store = tx.objectStore('rsvps');
+        const request = store.getAll();
 
-      request.onsuccess = () => resolve(request.result || []);
-      request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => {
+          console.warn('[WeddingDB] Falha ao ler RSVPs locais:', request.error);
+          resolve([]);
+        };
+      } catch (err) {
+        console.warn('[WeddingDB] Erro de transação em getAllRsvps:', err);
+        resolve([]);
+      }
     });
   }
 

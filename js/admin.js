@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.4.3
+   Versão: v.1.4.4
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -351,7 +351,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.4.3] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.4.4] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -364,7 +364,7 @@ const AdminDashboard = {
         this.updateReservationsBadge().catch(() => {});
       });
     } catch (dbErr) {
-      console.error('[Admin v.1.4.3] Erro ao conectar/inicializar banco:', dbErr);
+      console.error('[Admin v.1.4.4] Erro ao conectar/inicializar banco:', dbErr);
     }
 
     // Configuração dos botões de classificação da tabela
@@ -536,6 +536,16 @@ const AdminDashboard = {
         const isTableError = err.message && (err.message.includes('supabase_schema.sql') || err.message.includes('tabelas'));
         if (isTableError) {
           showToast('As tabelas do Supabase ainda não foram criadas. Clique no botão "Copiar Script SQL" na aba Configurações & Nuvem para ativar o banco!', 'warning');
+        } else if (err.message && (err.message.includes('Data lost due to missing file') || err.message.includes('irrecoverable'))) {
+          showToast('Detectado cache local corrompido do navegador. Reparando e restaurando da nuvem...', 'info');
+          try {
+            await window.weddingDB._resetAndRebuildDatabase();
+            await window.weddingDB.syncWithSupabase();
+            await this.render();
+            showToast('Banco local reparado e dados sincronizados com sucesso!', 'success');
+          } catch (healErr) {
+            showToast('Falha na recuperação: ' + healErr.message, 'error');
+          }
         } else {
           showToast('Falha na sincronização: ' + (err.message || 'Verifique sua conexão'), 'error');
         }
