@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.6
+   Versão: v.1.2.7
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -37,20 +37,20 @@ class WeddingDB {
     if (window.supabase && supabaseUrl && supabaseKey) {
       try {
         this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('[WeddingDB v.1.2.6] Supabase client inicializado:', supabaseUrl);
+        console.log('[WeddingDB v.1.2.7] Supabase client inicializado:', supabaseUrl);
 
         // Ativar Supabase Realtime para sincronização instantânea
         this._setupRealtimeListeners();
 
         // Sincronizar em background bidirecionalmente entre IndexedDB e Supabase
         this.syncWithSupabase({ silent: true }).catch(err => {
-          console.warn('[WeddingDB v.1.2.6] Sincronização inicial em background (IndexedDB ativo):', err);
+          console.warn('[WeddingDB v.1.2.7] Sincronização inicial em background (IndexedDB ativo):', err);
         });
 
         // Iniciar sincronização automática periódica a cada 15 segundos
         this.startAutoSync(15);
       } catch (err) {
-        console.warn('[WeddingDB v.1.2.6] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
+        console.warn('[WeddingDB v.1.2.7] Falha ao inicializar Supabase. Operando modo IndexedDB offline:', err);
       }
     }
 
@@ -146,7 +146,7 @@ class WeddingDB {
     this.stopAutoSync();
     this.autoSyncIntervalSeconds = intervalSeconds || 15;
     const intervalMs = this.autoSyncIntervalSeconds * 1000;
-    console.log(`[WeddingDB v.1.2.6] AutoSync ativado: sincronizando a cada ${this.autoSyncIntervalSeconds} segundos.`);
+    console.log(`[WeddingDB v.1.2.7] AutoSync ativado: sincronizando a cada ${this.autoSyncIntervalSeconds} segundos.`);
 
     this.autoSyncTimer = setInterval(async () => {
       // Executa apenas se o dispositivo estiver online e não houver sincronização em curso
@@ -157,7 +157,7 @@ class WeddingDB {
         try {
           await this.syncWithSupabase({ silent: true });
         } catch (err) {
-          console.warn('[WeddingDB v.1.2.6 AutoSync] Erro na sincronização periódica (silenciosa):', err.message || err);
+          console.warn('[WeddingDB v.1.2.7 AutoSync] Erro na sincronização periódica (silenciosa):', err.message || err);
         }
       }
     }, intervalMs);
@@ -170,7 +170,7 @@ class WeddingDB {
     if (this.autoSyncTimer) {
       clearInterval(this.autoSyncTimer);
       this.autoSyncTimer = null;
-      console.log('[WeddingDB v.1.2.6] AutoSync pausado.');
+      console.log('[WeddingDB v.1.2.7] AutoSync pausado.');
     }
   }
 
@@ -199,7 +199,7 @@ class WeddingDB {
 
     try {
       if (!isSilent) {
-        console.log('[WeddingDB v.1.2.6] Iniciando sincronização bidirecional completa com Supabase...');
+        console.log('[WeddingDB v.1.2.7] Iniciando sincronização bidirecional completa com Supabase...');
       }
 
       // 0. Processar exclusões pendentes feitas em modo offline
@@ -383,7 +383,7 @@ class WeddingDB {
       const timeString = this.lastSyncTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
       if (!isSilent) {
-        console.log(`[WeddingDB v.1.2.6] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
+        console.log(`[WeddingDB v.1.2.7] Sincronização finalizada: ${totalLocalGifts} presentes, ${messagesSyncedCount} mensagens, ${rsvpsSyncedCount} RSVPs.`);
       }
 
       const syncResult = {
@@ -596,7 +596,7 @@ class WeddingDB {
           // Exclusão confirmada no Supabase: limpar pendências
           pendingDeletes = pendingDeletes.filter(x => !ids.includes(x));
           localStorage.setItem('wedding_deleted_gift_ids', JSON.stringify(pendingDeletes));
-          console.log(`[WeddingDB v.1.2.6] ${ids.length} presentes excluídos e sincronizados no Supabase.`);
+          console.log(`[WeddingDB v.1.2.7] ${ids.length} presentes excluídos e sincronizados no Supabase.`);
         }
       } catch (err) {
         console.warn('[WeddingDB] Falha de rede ao excluir em lote no Supabase:', err);
@@ -637,11 +637,12 @@ class WeddingDB {
     const gift = await this.getGiftById(id);
     if (!gift) throw new Error('Presente não encontrado.');
 
-    if (gift.status === 'reserved') {
-      throw new Error('Este presente já foi reservado por outro convidado.');
+    if (gift.status === 'reserved' || gift.status === 'completed') {
+      throw new Error('Este presente já foi reservado ou presenteado por outro convidado.');
     }
 
-    gift.status = 'reserved';
+    // Marca como pendente de aprovação pelos noivos
+    gift.status = 'pending_approval';
     gift.reservedBy = reservationData.guestName;
     gift.guestMessage = reservationData.message || '';
     gift.guestPhone = reservationData.phone || '';
@@ -654,6 +655,51 @@ class WeddingDB {
         id: 'msg_' + Date.now(),
         author: reservationData.guestName,
         text: reservationData.message,
+        giftTitle: gift.title,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    return gift;
+  }
+
+  /**
+   * Aprova uma solicitação de presente enviada por convidado
+   */
+  async approveGift(id) {
+    const gift = await this.getGiftById(id);
+    if (!gift) throw new Error('Presente não encontrado.');
+
+    gift.status = 'reserved'; // Status oficial de presente aprovado/confirmado
+    await this.saveGift(gift);
+    return gift;
+  }
+
+  /**
+   * Permite aos noivos lançar ou editar manualmente quem deu o presente
+   */
+  async setGiftDonor(id, donorData) {
+    const gift = await this.getGiftById(id);
+    if (!gift) throw new Error('Presente não encontrado.');
+
+    if (donorData.status === 'available') {
+      return await this.unreserveGift(id);
+    }
+
+    gift.status = donorData.status || 'reserved'; // 'reserved' (Aprovado) ou 'pending_approval'
+    gift.reservedBy = donorData.reservedBy || donorData.guestName || 'Convidado';
+    gift.guestPhone = donorData.guestPhone || donorData.phone || '';
+    gift.guestMessage = donorData.guestMessage || donorData.message || '';
+    gift.reservedAt = donorData.reservedAt || (donorData.date ? new Date(donorData.date + 'T12:00:00').toISOString() : (gift.reservedAt || new Date().toISOString()));
+
+    await this.saveGift(gift);
+
+    const msgText = donorData.guestMessage || donorData.message || '';
+    if (msgText && msgText.trim() !== '') {
+      await this.addMessage({
+        id: 'msg_' + Date.now(),
+        author: gift.reservedBy,
+        text: msgText,
         giftTitle: gift.title,
         createdAt: new Date().toISOString()
       });

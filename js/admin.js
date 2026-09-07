@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.6
+   Versão: v.1.2.7
    Módulo: Painel Administrativo Autenticado (Página Exclusiva dos Noivos)
    ========================================================================== */
 
@@ -88,7 +88,7 @@ const AdminDashboard = {
 
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real
     await window.weddingDB.init((changeType) => {
-      console.log('[Admin v.1.2.6] Mudança em tempo real recebida:', changeType);
+      console.log('[Admin v.1.2.7] Mudança em tempo real recebida:', changeType);
       if (this.currentTab === 'gifts') {
         this.renderGiftsTable();
       } else if (this.currentTab === 'reservations') {
@@ -376,6 +376,39 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       }
     }
 
+    // 10. Modal de Gestão Manual de Quem Presenteou
+    const btnOpenManualDonor = document.getElementById('btnOpenManualDonorModal');
+    if (btnOpenManualDonor) {
+      btnOpenManualDonor.addEventListener('click', () => {
+        this.openManualDonorModal();
+      });
+    }
+
+    const donorModal = document.getElementById('manualDonorModal');
+    const closeDonorModal = () => {
+      if (donorModal) donorModal.classList.remove('active');
+    };
+
+    const btnCloseDonor = document.getElementById('btnCloseManualDonorModal');
+    if (btnCloseDonor) btnCloseDonor.addEventListener('click', closeDonorModal);
+
+    const btnCancelDonor = document.getElementById('btnCancelManualDonor');
+    if (btnCancelDonor) btnCancelDonor.addEventListener('click', closeDonorModal);
+
+    if (donorModal) {
+      donorModal.addEventListener('click', (e) => {
+        if (e.target === donorModal) closeDonorModal();
+      });
+    }
+
+    const donorForm = document.getElementById('manualDonorForm');
+    if (donorForm) {
+      donorForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.handleSaveManualDonor();
+      });
+    }
+
     await this.render();
   },
 
@@ -464,15 +497,32 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
         <td><span style="text-transform: capitalize;">${escapeHTML(g.category)}</span></td>
         <td>${g.isCota ? `${formatCurrency(g.quotaValue)}/cota (${g.quotaCurrent || 0}/${g.quotaTotal})` : formatCurrency(g.price)}</td>
         <td>
-          <span class="table-status-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}">
-            ${g.status === 'reserved' ? `Reservado (${escapeHTML(g.reservedBy || '')})` : (g.status === 'completed' ? 'Concluído' : 'Disponível')}
-          </span>
+          ${g.status === 'pending_approval' ? `
+            <span class="badge" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; padding:0.25rem 0.6rem; border-radius:var(--radius-full); font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center; gap:0.3rem;">
+              <span class="pulse-dot" style="background:#ffc107; width:6px; height:6px;"></span>
+              Pendente (${escapeHTML(g.reservedBy || 'Aguardando')})
+            </span>
+          ` : `
+            <span class="table-status-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}">
+              ${g.status === 'reserved' ? `Reservado (${escapeHTML(g.reservedBy || '')})` : (g.status === 'completed' ? 'Concluído' : 'Disponível')}
+            </span>
+          `}
         </td>
         <td>
           ${g.productUrl ? `<a href="${escapeHTML(g.productUrl)}" target="_blank" title="Abrir loja original" class="btn-table-link"><svg class="icon-line sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Loja</a>` : '<span style="color: var(--color-olive-muted); font-size: 0.85rem;">-</span>'}
         </td>
         <td>
           <div class="table-actions-wrapper">
+            ${g.status === 'pending_approval' ? `
+              <button class="btn-table-action btn-table-approve btn-admin-approve" data-id="${g.id}" title="Aprovar escolha deste presente">
+                <svg class="icon-line sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Aprovar</span>
+              </button>
+            ` : ''}
+            <button class="btn-table-action btn-table-donor btn-admin-manage-donor" data-id="${g.id}" title="Gerenciar quem deu este presente">
+              <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+              <span>Quem Deu</span>
+            </button>
             <button class="btn-table-action btn-table-edit btn-admin-edit" data-id="${g.id}" title="Editar presente ou cota">
               <svg class="icon-line sm" viewBox="0 0 24 24">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -480,7 +530,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
               </svg>
               <span>Editar</span>
             </button>
-            ${(g.status === 'reserved' || g.status === 'completed' || (g.quotaCurrent && g.quotaCurrent > 0)) ? `
+            ${(g.status === 'pending_approval' || g.status === 'reserved' || g.status === 'completed' || (g.quotaCurrent && g.quotaCurrent > 0)) ? `
               <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Liberar item para ficar disponível novamente">
                 <svg class="icon-line sm" viewBox="0 0 24 24">
                   <polyline points="1 4 1 10 7 10"></polyline>
@@ -574,6 +624,20 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         await this.toggleFeatured(id);
+      });
+    });
+
+    tbody.querySelectorAll('.btn-admin-approve').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        await this.approveGiftReservation(id);
+      });
+    });
+
+    tbody.querySelectorAll('.btn-admin-manage-donor').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        await this.openManualDonorModal(id);
       });
     });
 
@@ -904,15 +968,149 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     await this.renderGiftsTable();
   },
 
+  async openManualDonorModal(preselectedGiftId = null) {
+    const modal = document.getElementById('manualDonorModal');
+    const select = document.getElementById('manualDonorGiftSelect');
+    const titleEl = document.getElementById('manualDonorModalTitle');
+    const origIdInput = document.getElementById('manualDonorOriginalGiftId');
+    const nameInput = document.getElementById('manualDonorName');
+    const phoneInput = document.getElementById('manualDonorPhone');
+    const statusSelect = document.getElementById('manualDonorStatus');
+    const dateInput = document.getElementById('manualDonorDate');
+    const msgInput = document.getElementById('manualDonorMessage');
+
+    if (!modal || !select) return;
+
+    const gifts = await window.weddingDB.getAllGifts();
+    
+    // Preencher dropdown de presentes com indicador claro
+    select.innerHTML = '<option value="">-- Escolha um presente da lista --</option>' + 
+      gifts.map(g => {
+        const typeLabel = g.isCota ? 'Cota' : 'Físico';
+        const priceLabel = g.isCota ? `${formatCurrency(g.quotaValue || 0)}/cota` : formatCurrency(g.price);
+        const statusLabel = g.status === 'pending_approval' ? ' [⏳ Pendente]' : (g.status === 'reserved' ? ' [✅ Reservado]' : '');
+        return `<option value="${g.id}">${escapeHTML(g.title)} (${typeLabel} - ${priceLabel})${statusLabel}</option>`;
+      }).join('');
+
+    const targetId = preselectedGiftId || '';
+    origIdInput.value = targetId;
+
+    if (targetId) {
+      select.value = targetId;
+      const targetGift = gifts.find(g => g.id === targetId);
+      if (targetGift) {
+        titleEl.innerText = `Gerenciar Quem Deu: ${targetGift.title}`;
+        nameInput.value = targetGift.reservedBy || '';
+        phoneInput.value = targetGift.guestPhone || '';
+        statusSelect.value = targetGift.status === 'available' ? 'reserved' : targetGift.status;
+        if (targetGift.reservedAt) {
+          try {
+            dateInput.value = new Date(targetGift.reservedAt).toISOString().substring(0, 16);
+          } catch (_) {
+            dateInput.value = new Date().toISOString().substring(0, 16);
+          }
+        } else {
+          dateInput.value = new Date().toISOString().substring(0, 16);
+        }
+        msgInput.value = targetGift.guestMessage || '';
+      }
+    } else {
+      titleEl.innerText = 'Lançar Quem Presenteou Manualmente';
+      nameInput.value = '';
+      phoneInput.value = '';
+      statusSelect.value = 'reserved';
+      dateInput.value = new Date().toISOString().substring(0, 16);
+      msgInput.value = '';
+    }
+
+    // Se o usuário selecionar outro presente no select, carregar os dados correspondentes
+    select.onchange = () => {
+      const gId = select.value;
+      const g = gifts.find(item => item.id === gId);
+      if (g && (g.reservedBy || g.status !== 'available')) {
+        nameInput.value = g.reservedBy || '';
+        phoneInput.value = g.guestPhone || '';
+        statusSelect.value = g.status === 'available' ? 'reserved' : g.status;
+        if (g.reservedAt) {
+          try {
+            dateInput.value = new Date(g.reservedAt).toISOString().substring(0, 16);
+          } catch (_) {
+            dateInput.value = new Date().toISOString().substring(0, 16);
+          }
+        }
+        msgInput.value = g.guestMessage || '';
+      }
+    };
+
+    modal.classList.add('active');
+  },
+
+  async handleSaveManualDonor() {
+    const modal = document.getElementById('manualDonorModal');
+    const select = document.getElementById('manualDonorGiftSelect');
+    const nameInput = document.getElementById('manualDonorName');
+    const phoneInput = document.getElementById('manualDonorPhone');
+    const statusSelect = document.getElementById('manualDonorStatus');
+    const dateInput = document.getElementById('manualDonorDate');
+    const msgInput = document.getElementById('manualDonorMessage');
+
+    const giftId = select ? select.value : '';
+    if (!giftId) {
+      showToast('Por favor, selecione um presente da lista.', 'error');
+      return;
+    }
+
+    const donorName = nameInput.value.trim();
+    if (!donorName && statusSelect.value !== 'available') {
+      showToast('Informe o nome de quem presenteou.', 'error');
+      return;
+    }
+
+    const donorData = {
+      reservedBy: donorName,
+      guestPhone: phoneInput.value.trim(),
+      guestMessage: msgInput.value.trim(),
+      reservedAt: dateInput.value ? new Date(dateInput.value).toISOString() : new Date().toISOString(),
+      status: statusSelect.value || 'reserved'
+    };
+
+    try {
+      await window.weddingDB.setGiftDonor(giftId, donorData);
+      if (modal) modal.classList.remove('active');
+      showToast('Dados de quem presenteou salvos e sincronizados com sucesso!', 'success');
+      await this.render();
+    } catch (err) {
+      showToast('Erro ao salvar dados: ' + (err.message || err), 'error');
+    }
+  },
+
+  async approveGiftReservation(id) {
+    try {
+      await window.weddingDB.approveGift(id);
+      showToast('Presente aprovado e confirmado pelos noivos!', 'success');
+      await this.render();
+    } catch (err) {
+      showToast('Erro ao aprovar presente: ' + (err.message || err), 'error');
+    }
+  },
+
   async renderReservationsTable() {
     const tbody = document.getElementById('adminReservationsTableBody');
     if (!tbody) return;
 
     const gifts = await window.weddingDB.getAllGifts();
-    const reservedItems = gifts.filter(g => g.status === 'reserved' || g.status === 'completed' || (g.isCota && g.quotaCurrent > 0));
+    const reservedItems = gifts.filter(g => g.status === 'pending_approval' || g.status === 'reserved' || g.status === 'completed' || (g.isCota && g.quotaCurrent > 0) || (g.reservedBy && g.reservedBy.trim() !== ''));
+
+    // Atualizar contadores de resumo dos cards rápidos
+    const statTotalChosen = document.getElementById('statTotalChosen');
+    const statPendingApprovals = document.getElementById('statPendingApprovals');
+    const statApprovedGifts = document.getElementById('statApprovedGifts');
+    if (statTotalChosen) statTotalChosen.innerText = reservedItems.length;
+    if (statPendingApprovals) statPendingApprovals.innerText = reservedItems.filter(g => g.status === 'pending_approval').length;
+    if (statApprovedGifts) statApprovedGifts.innerText = reservedItems.filter(g => g.status === 'reserved' || g.status === 'completed').length;
 
     if (reservedItems.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum presente reservado ou cota recebida até o momento.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum presente reservado ou aguardando aprovação no momento. Clique em "+ Lançar Quem Deu Manualmente" acima para adicionar!</td></tr>`;
       return;
     }
 
@@ -920,26 +1118,62 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       let guestListStr = '';
       let contactStr = '';
       let messageStr = '';
-      let progressDisplay = '';
 
       if (g.isCota) {
         const contributions = g.contributions || [];
-        progressDisplay = `<strong>${g.quotaCurrent || 0} de ${g.quotaTotal || 1} cotas</strong> (${formatCurrency(g.amountRaised || 0)})`;
-
         if (contributions.length > 0) {
-          guestListStr = contributions.map(c => `• ${escapeHTML(c.guestName)} (${formatCurrency(c.amount)})`).join('<br>');
-          contactStr = contributions.map(c => c.guestPhone ? escapeHTML(c.guestPhone) : '-').filter(x => x !== '-').join(', ') || '-';
+          guestListStr = contributions.map(c => `• <strong>${escapeHTML(c.guestName)}</strong> (${formatCurrency(c.amount)})`).join('<br>');
+          contactStr = contributions.map(c => {
+            if (!c.guestPhone) return '-';
+            const clean = c.guestPhone.replace(/\D/g, '');
+            const wa = clean.length <= 11 ? '55' + clean : clean;
+            return `<a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="display:inline-flex; align-items:center; gap:0.25rem;">📱 ${escapeHTML(c.guestPhone)}</a>`;
+          }).filter(x => x !== '-').join('<br>') || '-';
           messageStr = contributions.map(c => c.guestMessage ? `"${escapeHTML(c.guestMessage)}"` : '').filter(Boolean).join('<br>') || '-';
         } else {
-          guestListStr = g.reservedBy ? escapeHTML(g.reservedBy) : 'Cotas avulsas';
-          contactStr = g.guestPhone ? escapeHTML(g.guestPhone) : '-';
+          guestListStr = g.reservedBy ? `<strong>${escapeHTML(g.reservedBy)}</strong>` : 'Cotas avulsas';
+          if (g.guestPhone) {
+            const clean = g.guestPhone.replace(/\D/g, '');
+            const wa = clean.length <= 11 ? '55' + clean : clean;
+            contactStr = `<a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="display:inline-flex; align-items:center; gap:0.25rem;">📱 ${escapeHTML(g.guestPhone)}</a>`;
+          } else {
+            contactStr = '-';
+          }
           messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '-';
         }
       } else {
         guestListStr = `<strong>${escapeHTML(g.reservedBy || 'Convidado')}</strong>`;
-        contactStr = g.guestPhone ? escapeHTML(g.guestPhone) : '-';
-        messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '-';
-        progressDisplay = `<span class="table-status-badge badge-reserved">Item 100% Reservado</span>`;
+        if (g.guestPhone) {
+          const clean = g.guestPhone.replace(/\D/g, '');
+          const wa = clean.length <= 11 ? '55' + clean : clean;
+          contactStr = `<div>${escapeHTML(g.guestPhone)}</div><a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="margin-top:0.25rem; display:inline-flex; align-items:center; gap:0.25rem;"><svg class="icon-line xs" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Conversar WhatsApp</a>`;
+        } else {
+          contactStr = '<span style="color:var(--color-olive-muted);">-</span>';
+        }
+        messageStr = g.guestMessage ? `"${escapeHTML(g.guestMessage)}"` : '<span style="color:var(--color-olive-muted);">-</span>';
+      }
+
+      let approvalStatusHtml = '';
+      if (g.status === 'pending_approval') {
+        approvalStatusHtml = `
+          <div style="display:inline-flex; flex-direction:column; gap:0.25rem;">
+            <span class="badge" style="background:#fff3cd; color:#856404; border:1.5px solid #ffeeba; padding:0.35rem 0.75rem; border-radius:var(--radius-full); font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+              <span class="pulse-dot" style="background:#ffc107; width:6px; height:6px;"></span>
+              ⏳ Pendente de Aprovação
+            </span>
+            <span style="font-size:0.75rem; color:var(--color-olive-muted);">Aguardando liberação dos noivos</span>
+          </div>
+        `;
+      } else {
+        approvalStatusHtml = `
+          <div style="display:inline-flex; flex-direction:column; gap:0.25rem;">
+            <span class="badge" style="background:#d4edda; color:#155724; border:1.5px solid #c3e6cb; padding:0.35rem 0.75rem; border-radius:var(--radius-full); font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+              <svg class="icon-line xs" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              ✅ Aprovado / Confirmado
+            </span>
+            ${g.reservedAt ? `<span style="font-size:0.75rem; color:var(--color-olive-muted);">Confirmado em ${new Date(g.reservedAt).toLocaleDateString('pt-BR')}</span>` : ''}
+          </div>
+        `;
       }
 
       return `
@@ -948,7 +1182,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <div>
                 <strong>${escapeHTML(g.title)}</strong>
-                ${g.isFeatured ? '<span style="font-size:0.72rem; background: var(--color-warning-light); color: var(--color-gold-accent); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.35rem;">Destaque</span>' : ''}
+                <div style="font-size:0.78rem; color:var(--color-olive-muted); margin-top:0.15rem;">
+                  ${g.isCota ? `${formatCurrency(g.quotaValue)}/cota (${g.quotaCurrent || 0}/${g.quotaTotal} cotas)` : formatCurrency(g.price)}
+                  ${g.isFeatured ? ' • <span style="color:var(--color-gold-accent);">★ Destaque</span>' : ''}
+                </div>
               </div>
             </div>
           </td>
@@ -958,25 +1195,52 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
             </span>
           </td>
           <td>${guestListStr}</td>
-          <td style="max-width: 220px; font-size: 0.85rem;">
-            <div><strong>Contato:</strong> ${contactStr}</div>
-            <div style="color: var(--color-olive-muted); font-style: italic; margin-top: 0.2rem;">${messageStr}</div>
+          <td style="max-width: 240px; font-size: 0.85rem;">
+            <div>${contactStr}</div>
+            <div style="color: var(--color-olive-muted); font-style: italic; margin-top: 0.35rem;">${messageStr}</div>
           </td>
-          <td>${progressDisplay}</td>
+          <td>${approvalStatusHtml}</td>
           <td>
             <div class="table-actions-wrapper">
+              ${g.status === 'pending_approval' ? `
+                <button class="btn-table-action btn-table-approve btn-admin-approve" data-id="${g.id}" title="Aprovar solicitação do convidado">
+                  <svg class="icon-line sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Aprovar</span>
+                </button>
+              ` : ''}
+              <button class="btn-table-action btn-table-donor btn-admin-manage-donor" data-id="${g.id}" title="Editar dados de quem presenteou">
+                <svg class="icon-line sm" viewBox="0 0 24 24">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span>Quem Deu</span>
+              </button>
               <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Liberar este item para ficar disponível novamente na vitrine pública">
                 <svg class="icon-line sm" viewBox="0 0 24 24">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                 </svg>
-                <span>Liberar Item</span>
+                <span>Liberar</span>
               </button>
             </div>
           </td>
         </tr>
       `;
     }).join('');
+
+    tbody.querySelectorAll('.btn-admin-approve').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        await this.approveGiftReservation(id);
+      });
+    });
+
+    tbody.querySelectorAll('.btn-admin-manage-donor').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        await this.openManualDonorModal(id);
+      });
+    });
 
     tbody.querySelectorAll('.btn-admin-unreserve').forEach(btn => {
       btn.addEventListener('click', async () => {

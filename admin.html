@@ -113,7 +113,7 @@
               <h1 style="font-family: var(--font-serif); font-size: 1.35rem; color: var(--color-olive-deep); margin: 0;">
                 Painel de Gestão dos Noivos
               </h1>
-              <span class="admin-badge">Versão: v.1.2.6</span>
+              <span class="admin-badge">Versão: v.1.2.7</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.15rem; flex-wrap: wrap;">
               <span id="adminUserGreetingBadge" style="font-size: 0.8rem; color: var(--color-olive-frame); font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -403,14 +403,54 @@
         </div>
       </div>
 
-      <!-- ABA 2: GERENCIAR JÁ PRESENTEADOS -->
+      <!-- ABA 2: GERENCIAR APROVAÇÕES E QUEM DEU CADA PRESENTE -->
       <div id="adminTabReservations" class="admin-tab-content" style="display: none;">
-        <div style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
           <div>
-            <h3 style="font-size: 1.15rem; color: var(--color-olive-deep); margin: 0;">Gestão de Presentes Já Escolhidos e Cotas Recebidas</h3>
+            <h3 style="font-size: 1.15rem; color: var(--color-olive-deep); margin: 0;">Gestão de Aprovações & Quem Presenteou</h3>
             <p style="font-size: 0.85rem; color: var(--color-olive-muted); margin: 0.2rem 0 0;">
-              Visualize quem presenteou, mensagens de carinho e libere itens de volta ao catálogo se necessário:
+              Gerencie quem deu cada presente, aprove ou libere solicitações de convidados e lance presentes recebidos manualmente:
             </p>
+          </div>
+          <button type="button" id="btnOpenManualDonorModal" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; padding: 0.55rem 1.15rem;">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>+ Lançar Quem Deu Manualmente</span>
+          </button>
+        </div>
+
+        <!-- Cards Rápidos de Resumo das Reservas & Aprovações -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+          <div style="background: var(--color-white); border: 1px solid var(--color-olive-border); border-radius: var(--radius-md); padding: 0.85rem 1.15rem; display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--color-olive-light); display: flex; align-items: center; justify-content: center; color: var(--color-olive-deep);">
+              <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 12V22H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zm0 0h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--color-olive-muted); text-transform: uppercase;">Total com Escolha</div>
+              <div id="statTotalChosen" style="font-size: 1.2rem; font-weight: 700; color: var(--color-olive-deep);">0</div>
+            </div>
+          </div>
+
+          <div style="background: var(--color-white); border: 1.5px solid rgba(221, 161, 94, 0.5); border-radius: var(--radius-md); padding: 0.85rem 1.15rem; display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #fff3cd; display: flex; align-items: center; justify-content: center; color: #856404;">
+              <svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: #856404; font-weight: 600; text-transform: uppercase;">Pendentes de Aprovação</div>
+              <div id="statPendingApprovals" style="font-size: 1.2rem; font-weight: 700; color: #856404;">0</div>
+            </div>
+          </div>
+
+          <div style="background: var(--color-white); border: 1.5px solid rgba(43, 122, 75, 0.35); border-radius: var(--radius-md); padding: 0.85rem 1.15rem; display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #d4edda; display: flex; align-items: center; justify-content: center; color: #155724;">
+              <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: #155724; font-weight: 600; text-transform: uppercase;">Aprovados / Confirmados</div>
+              <div id="statApprovedGifts" style="font-size: 1.2rem; font-weight: 700; color: #155724;">0</div>
+            </div>
           </div>
         </div>
 
@@ -420,10 +460,10 @@
               <tr>
                 <th>Presente / Item</th>
                 <th>Tipo</th>
-                <th>Convidado(s)</th>
+                <th>Quem Presenteou</th>
                 <th>Contato & Mensagem</th>
-                <th>Progresso</th>
-                <th style="text-align: right;">Ação</th>
+                <th>Status de Aprovação</th>
+                <th style="text-align: right;">Ações dos Noivos</th>
               </tr>
             </thead>
             <tbody id="adminReservationsTableBody">
@@ -673,6 +713,86 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- ==================== MODAL DE GESTÃO MANUAL DE QUEM PRESENTEOU ==================== -->
+  <div id="manualDonorModal" class="modal-backdrop">
+    <div class="modal-content md" style="max-width: 540px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--color-olive-light); display: flex; align-items: center; justify-content: center; color: var(--color-olive-deep);">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 id="manualDonorModalTitle" style="font-size: 1.15rem; margin: 0; color: var(--color-olive-deep);">Gerenciar Quem Presenteou</h3>
+            <p style="font-size: 0.8rem; color: var(--color-olive-muted); margin: 0.15rem 0 0;">Defina ou atualize os dados de quem deu o presente e o status de aprovação</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" id="btnCloseManualDonorModal" aria-label="Fechar">&times;</button>
+      </div>
+      <form id="manualDonorForm">
+        <div class="modal-body" style="padding: 1.25rem;">
+          <input type="hidden" id="manualDonorOriginalGiftId">
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" for="manualDonorGiftSelect">Selecione o Presente / Item *</label>
+            <select id="manualDonorGiftSelect" class="form-select" required style="width: 100%;">
+              <option value="">-- Escolha um presente da lista --</option>
+            </select>
+          </div>
+
+          <div class="form-grid grid-2col" style="margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="manualDonorName">Nome de Quem Presenteou *</label>
+              <input type="text" id="manualDonorName" class="form-input" required placeholder="Ex.: Tia Maria e Tio José">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="manualDonorPhone">WhatsApp / Telefone</label>
+              <input type="tel" id="manualDonorPhone" class="form-input" placeholder="(64) 99999-0000">
+            </div>
+          </div>
+
+          <div class="form-grid grid-2col" style="margin-bottom: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="manualDonorStatus">Status do Presente *</label>
+              <select id="manualDonorStatus" class="form-select" required>
+                <option value="reserved">✅ Aprovado / Confirmado pelos Noivos</option>
+                <option value="pending_approval">⏳ Pendente de Aprovação (Aguardando)</option>
+                <option value="available">🔄 Liberar Item (Tornar Disponível na Lista)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="manualDonorDate">Data da Confirmação / Presente</label>
+              <input type="datetime-local" id="manualDonorDate" class="form-input">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.5rem;">
+            <label class="form-label" for="manualDonorMessage">Mensagem ou Observação dos Noivos</label>
+            <textarea id="manualDonorMessage" class="form-textarea" rows="3" placeholder="Mensagem carinhosa de felicitação ou anotação particular dos noivos..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="padding: 1rem 1.25rem; border-top: 1px solid var(--color-olive-border); display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" id="btnCancelManualDonor" class="btn btn-outline">Cancelar</button>
+          <button type="submit" id="btnSaveManualDonor" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+            <svg class="icon-line sm" viewBox="0 0 24 24">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span>Salvar Informações</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ==================== MODAL DE CONFIRMAÇÃO DE LOGOUT / SAÍDA NA TELA ==================== -->
   <div id="logoutModal" class="modal-backdrop">
     <div class="modal-content sm" style="max-width: 440px; text-align: center;">
@@ -713,7 +833,7 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.2.6</span>
+        <span id="app-footer-version">v.1.2.7</span>
       </div>
     </div>
   </footer>
