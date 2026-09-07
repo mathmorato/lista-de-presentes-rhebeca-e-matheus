@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.2.1
+   Versão: v.1.2.2
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -167,29 +167,62 @@ class WeddingDB {
 
       // 1. Sincronização de PRESENTES (gifts)
       const { data: remoteGifts, error: giftsError } = await this.supabaseClient.from('gifts').select('*');
-      if (giftsError) throw giftsError;
+      if (giftsError) {
+        if (giftsError.code === 'PGRST205' || (giftsError.message && giftsError.message.includes('Could not find the table'))) {
+          throw new Error('As tabelas do banco ainda não foram criadas no Supabase. Por favor, execute o script "supabase_schema.sql" no SQL Editor do Supabase.');
+        }
+        throw giftsError;
+      }
 
       const localGifts = await this.getAllGifts();
       const remoteMap = new Map((remoteGifts || []).map(rg => [rg.id, rg]));
-      const localMap = new Map((localGifts || []).map(lg => [lg.id, lg]));
 
-      // 1a. Upload: Presentes locais que ainda não estão no Supabase (ex.: novos itens cadastrados offline)
+      // 1a. Upload e Conciliação Bidirecional com base em timestamp (updatedAt)
+      let uploadCount = 0;
+      let downloadCount = 0;
+
       for (const localG of localGifts) {
-        if (!remoteMap.has(localG.id)) {
+        const remoteG = remoteMap.get(localG.id);
+        if (!remoteG) {
+          // Presente existe apenas localmente -> Enviar para o Supabase
           const payload = this._mapToSupabaseGift(localG);
           const { error: upErr } = await this.supabaseClient.from('gifts').upsert(payload);
           if (!upErr) {
             remoteMap.set(localG.id, payload);
+            uploadCount++;
           } else {
             console.warn('[WeddingDB] Falha ao enviar presente local para Supabase:', localG.id, upErr);
+          }
+        } else {
+          // Presente existe em ambos: comparar timestamps de modificação
+          const localTime = new Date(localG.updatedAt || 0).getTime();
+          const remoteTime = new Date(remoteG.updated_at || 0).getTime();
+
+          if (localTime > remoteTime) {
+            // Local foi modificado mais recentemente -> Enviar para nuvem
+            const payload = this._mapToSupabaseGift(localG);
+            const { error: upErr } = await this.supabaseClient.from('gifts').upsert(payload);
+            if (!upErr) {
+              remoteMap.set(localG.id, payload);
+              uploadCount++;
+            }
+          } else if (remoteTime > localTime) {
+            // Nuvem tem dados mais recentes (ex.: reserva de convidado) -> Atualizar local
+            const mappedRemote = this._mapFromSupabaseGift(remoteG);
+            await this._saveGiftLocalOnly(mappedRemote);
+            downloadCount++;
           }
         }
       }
 
-      // 1b. Download: Presentes remotos para o IndexedDB local (ex.: reservas feitas por convidados em outros dispositivos)
+      // 1b. Download de presentes remotos cadastrados na nuvem que não existem localmente
       for (const [rId, remoteG] of remoteMap.entries()) {
-        const mappedRemote = this._mapFromSupabaseGift(remoteG);
-        await this._saveGiftLocalOnly(mappedRemote);
+        const localExists = await this.getGiftById(rId);
+        if (!localExists) {
+          const mappedRemote = this._mapFromSupabaseGift(remoteG);
+          await this._saveGiftLocalOnly(mappedRemote);
+          downloadCount++;
+        }
       }
 
       // 2. Sincronização de MENSAGENS (messages)
@@ -400,16 +433,21 @@ class WeddingDB {
   }
 
   async saveGift(gift) {
-    if (!gift.updatedAt) {
-      gift.updatedAt = new Date().toISOString();
-    }
+    gift.updatedAt = new Date().toISOString();
     await this._saveGiftLocalOnly(gift);
 
     if (this.supabaseClient) {
       try {
         const payload = this._mapToSupabaseGift(gift);
         const { error } = await this.supabaseClient.from('gifts').upsert(payload);
-        if (error) console.warn('[WeddingDB Supabase Sync Error]:', error.message);
+        if (error) {
+          console.warn('[WeddingDB Supabase Sync Error]:', error.message);
+          if (error.code === 'PGRST205' || (error.message && error.message.includes('Could not find the table'))) {
+            console.error('[WeddingDB] ATENÇÃO: As tabelas do Supabase não existem. Execute o script "supabase_schema.sql" no SQL Editor do Supabase.');
+          }
+        } else {
+          console.log('[WeddingDB] Presente sincronizado com Supabase:', gift.title);
+        }
       } catch (err) {
         console.warn('[WeddingDB] Erro de sincronização com Supabase (saveGift):', err);
       }
