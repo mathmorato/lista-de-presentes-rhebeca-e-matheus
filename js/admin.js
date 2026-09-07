@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.4.4
+   Versão: v.1.4.5
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -270,6 +270,8 @@ const AdminDashboard = {
     const bar = document.getElementById('bulkActionsBar');
     const badge = document.getElementById('bulkSelectedCountBadge');
     const label = document.getElementById('btnBulkDeleteLabel');
+    const labelGifted = document.getElementById('btnBulkMarkGiftedLabel');
+    const labelAvailable = document.getElementById('btnBulkMarkAvailableLabel');
     const selectAllCb = document.getElementById('selectAllGiftsCheckbox');
     const count = this.selectedGiftIds.size;
 
@@ -277,7 +279,9 @@ const AdminDashboard = {
       if (count > 0) {
         bar.style.display = 'flex';
         badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
-        label.innerText = `Excluir Selecionados (${count})`;
+        label.innerText = `Excluir (${count})`;
+        if (labelGifted) labelGifted.innerText = `Marcar como Já Presenteado (${count})`;
+        if (labelAvailable) labelAvailable.innerText = `Tornar Disponível (${count})`;
       } else {
         bar.style.display = 'none';
       }
@@ -351,7 +355,7 @@ const AdminDashboard = {
     // 1. Inicializar Banco de Dados Híbrido com callback de tempo real protegido contra falha de rede
     try {
       await window.weddingDB.init((changeType) => {
-        console.log('[Admin v.1.4.4] Mudança em tempo real recebida:', changeType);
+        console.log('[Admin v.1.4.5] Mudança em tempo real recebida:', changeType);
         if (this.currentTab === 'gifts') {
           this.renderGiftsTable();
         } else if (this.currentTab === 'reservations') {
@@ -364,7 +368,7 @@ const AdminDashboard = {
         this.updateReservationsBadge().catch(() => {});
       });
     } catch (dbErr) {
-      console.error('[Admin v.1.4.4] Erro ao conectar/inicializar banco:', dbErr);
+      console.error('[Admin v.1.4.5] Erro ao conectar/inicializar banco:', dbErr);
     }
 
     // Configuração dos botões de classificação da tabela
@@ -707,6 +711,32 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       });
     }
 
+    // 11. Modal de Marcar como Já Presenteado em Lote (Checkbox Selection)
+    const bulkGiftedModal = document.getElementById('bulkGiftedModal');
+    const closeBulkGiftedModal = () => {
+      if (bulkGiftedModal) bulkGiftedModal.classList.remove('active');
+    };
+
+    const btnCloseBulkGifted = document.getElementById('btnCloseBulkGiftedModal');
+    if (btnCloseBulkGifted) btnCloseBulkGifted.addEventListener('click', closeBulkGiftedModal);
+
+    const btnCancelBulkGifted = document.getElementById('btnCancelBulkGifted');
+    if (btnCancelBulkGifted) btnCancelBulkGifted.addEventListener('click', closeBulkGiftedModal);
+
+    if (bulkGiftedModal) {
+      bulkGiftedModal.addEventListener('click', (e) => {
+        if (e.target === bulkGiftedModal) closeBulkGiftedModal();
+      });
+    }
+
+    const bulkGiftedForm = document.getElementById('bulkGiftedForm');
+    if (bulkGiftedForm) {
+      bulkGiftedForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.handleSaveBulkGifted();
+      });
+    }
+
     await this.render();
   },
 
@@ -976,6 +1006,30 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       };
     }
 
+    // Evento do botão "Marcar como Já Presenteado" (em lote na seleção de checkbox)
+    const btnBulkMarkGifted = document.getElementById('btnBulkMarkGifted');
+    if (btnBulkMarkGifted) {
+      btnBulkMarkGifted.onclick = () => {
+        if (this.selectedGiftIds.size === 0) {
+          showToast('Nenhum item selecionado.', 'warning');
+          return;
+        }
+        this.openBulkGiftedModal(Array.from(this.selectedGiftIds));
+      };
+    }
+
+    // Evento do botão "Tornar Disponível" (em lote na seleção de checkbox)
+    const btnBulkMarkAvailable = document.getElementById('btnBulkMarkAvailable');
+    if (btnBulkMarkAvailable) {
+      btnBulkMarkAvailable.onclick = async () => {
+        if (this.selectedGiftIds.size === 0) {
+          showToast('Nenhum item selecionado.', 'warning');
+          return;
+        }
+        await this.confirmBulkMarkAvailable(Array.from(this.selectedGiftIds));
+      };
+    }
+
     // Evento do botão "Excluir Selecionados"
     const btnBulkDelete = document.getElementById('btnBulkDeleteGifts');
     if (btnBulkDelete) {
@@ -1177,6 +1231,90 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       showToast(`${total} ${total === 1 ? 'item movido' : 'itens movidos'} para a Lixeira!`, 'success');
       await this.render();
     };
+  },
+
+  openBulkGiftedModal(giftIds) {
+    this.targetBulkGiftIds = giftIds;
+    const modal = document.getElementById('bulkGiftedModal');
+    const subtitle = document.getElementById('bulkGiftedSubtitle');
+    const nameInput = document.getElementById('bulkGiftedDonorName');
+    const phoneInput = document.getElementById('bulkGiftedDonorPhone');
+    const msgInput = document.getElementById('bulkGiftedDonorMessage');
+
+    if (subtitle) {
+      subtitle.innerText = `Atualizar ${giftIds.length} ${giftIds.length === 1 ? 'presente selecionado' : 'presentes selecionados'} para "Já Presenteado"`;
+    }
+    if (nameInput) nameInput.value = '';
+    if (phoneInput) phoneInput.value = '';
+    if (msgInput) msgInput.value = '';
+
+    if (modal) modal.classList.add('active');
+  },
+
+  closeBulkGiftedModal() {
+    const modal = document.getElementById('bulkGiftedModal');
+    if (modal) modal.classList.remove('active');
+    this.targetBulkGiftIds = [];
+  },
+
+  async handleSaveBulkGifted() {
+    if (!this.targetBulkGiftIds || this.targetBulkGiftIds.length === 0) return;
+
+    const nameInput = document.getElementById('bulkGiftedDonorName');
+    const phoneInput = document.getElementById('bulkGiftedDonorPhone');
+    const msgInput = document.getElementById('bulkGiftedDonorMessage');
+
+    const donorName = nameInput ? nameInput.value.trim() : '';
+    const donorPhone = phoneInput ? phoneInput.value.trim() : '';
+    const donorMsg = msgInput ? msgInput.value.trim() : '';
+    const nowIso = new Date().toISOString();
+
+    const idsToUpdate = [...this.targetBulkGiftIds];
+    let updatedCount = 0;
+
+    for (const id of idsToUpdate) {
+      const gift = await window.weddingDB.getGiftById(id);
+      if (gift) {
+        gift.status = 'reserved';
+        gift.reservedBy = donorName || null;
+        gift.guestPhone = donorPhone || null;
+        gift.guestMessage = donorMsg || null;
+        gift.reservedAt = nowIso;
+        await window.weddingDB.saveGift(gift);
+        updatedCount++;
+      }
+    }
+
+    this.closeBulkGiftedModal();
+    this.selectedGiftIds.clear();
+    showToast(`${updatedCount} ${updatedCount === 1 ? 'presente marcado' : 'presentes marcados'} como Já Presenteado com sucesso!`, 'success');
+    await this.render();
+    window.weddingDB.syncWithSupabase({ silent: true }).catch(() => {});
+  },
+
+  async confirmBulkMarkAvailable(giftIds) {
+    if (!confirm(`Deseja alterar e marcar como Disponível(is) o(s) ${giftIds.length} presente(s) selecionado(s) na vitrine pública?`)) {
+      return;
+    }
+
+    let updatedCount = 0;
+    for (const id of giftIds) {
+      const gift = await window.weddingDB.getGiftById(id);
+      if (gift) {
+        gift.status = 'available';
+        gift.reservedBy = null;
+        gift.guestPhone = null;
+        gift.guestMessage = null;
+        gift.reservedAt = null;
+        await window.weddingDB.saveGift(gift);
+        updatedCount++;
+      }
+    }
+
+    this.selectedGiftIds.clear();
+    showToast(`${updatedCount} ${updatedCount === 1 ? 'presente alterado' : 'presentes alterados'} para Disponível!`, 'success');
+    await this.render();
+    window.weddingDB.syncWithSupabase({ silent: true }).catch(() => {});
   },
 
   async updateTrashBadge() {
