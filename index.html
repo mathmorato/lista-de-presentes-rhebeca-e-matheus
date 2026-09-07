@@ -452,13 +452,13 @@
     </div>
   </div>
 
-  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.0) ==================== -->
+  <!-- ==================== PAINEL ADMINISTRATIVO DOS NOIVOS (v.1.1.1) ==================== -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-content lg">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <h3>Painel de Gestão dos Noivos</h3>
-          <span class="admin-badge">Versão: v.1.1.0</span>
+          <span class="admin-badge">Versão: v.1.1.1</span>
         </div>
         <button class="modal-close" aria-label="Fechar painel">
           <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -536,8 +536,17 @@
 
               <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                  <label class="form-label" for="adminGiftImage">URL da Foto do Produto</label>
-                  <input type="url" id="adminGiftImage" class="form-input" placeholder="https://exemplo.com/foto.jpg">
+                  <label class="form-label" for="adminGiftImage">Foto do Produto (Cole o Link ou Anexe a Imagem)</label>
+                  <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <input type="url" id="adminGiftImage" class="form-input" placeholder="https://exemplo.com/foto.jpg ou cole a URL aqui...">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--color-white); padding: 0.35rem 0.6rem; border: 1px solid var(--color-olive-border); border-radius: var(--radius-sm);">
+                      <span style="font-size: 0.8rem; color: var(--color-olive-deep); font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;">
+                        <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                        Anexar Imagem:
+                      </span>
+                      <input type="file" id="adminGiftImageFile" accept="image/*" class="form-input" style="padding: 0.2rem 0.4rem; font-size: 0.78rem; border: none; background: transparent;">
+                    </div>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Prévia da Imagem</label>
@@ -746,7 +755,7 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.1.0</span>
+          <span id="app-footer-version">v.1.1.1</span>
         </div>
       </div>
     </div>
