@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.3
+   Versão: v.1.1.4
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.1.3] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.1.4] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts') {
       CatalogController.refresh();
       AdminController.renderGiftsTable();
@@ -734,12 +734,36 @@ const AdminController = {
           </span>
         </td>
         <td>
-          ${g.productUrl ? `<a href="${escapeHTML(g.productUrl)}" target="_blank" title="Abrir link original" style="color: var(--color-olive-primary); font-size: 0.8rem; text-decoration: underline;">Loja</a>` : '-'}
+          ${g.productUrl ? `<a href="${escapeHTML(g.productUrl)}" target="_blank" title="Abrir loja original" class="btn-table-link"><svg class="icon-line sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Loja</a>` : '<span style="color: var(--color-olive-muted); font-size: 0.85rem;">-</span>'}
         </td>
         <td>
-          <button class="btn btn-outline btn-admin-edit" data-id="${g.id}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; margin-right: 0.3rem;">Editar</button>
-          ${(g.status === 'reserved' || g.status === 'completed' || (g.quotaCurrent && g.quotaCurrent > 0)) ? `<button class="btn btn-outline btn-admin-unreserve" data-id="${g.id}" title="Liberar item para ficar disponível novamente" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; margin-right: 0.3rem; color: var(--color-gold-accent); border-color: var(--color-gold-accent);">Liberar</button>` : ''}
-          <button class="btn btn-secondary btn-admin-del" data-id="${g.id}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; color: var(--color-error);">Excluir</button>
+          <div class="table-actions-wrapper">
+            <button class="btn-table-action btn-table-edit btn-admin-edit" data-id="${g.id}" title="Editar presente ou cota">
+              <svg class="icon-line sm" viewBox="0 0 24 24">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              <span>Editar</span>
+            </button>
+            ${(g.status === 'reserved' || g.status === 'completed' || (g.quotaCurrent && g.quotaCurrent > 0)) ? `
+              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Liberar item para ficar disponível novamente">
+                <svg class="icon-line sm" viewBox="0 0 24 24">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                <span>Liberar</span>
+              </button>
+            ` : ''}
+            <button class="btn-table-action btn-table-delete btn-admin-del" data-id="${g.id}" title="Excluir presente da lista">
+              <svg class="icon-line sm" viewBox="0 0 24 24">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              <span>Excluir</span>
+            </button>
+          </div>
         </td>
       </tr>
     `).join('');
@@ -1023,13 +1047,15 @@ const AdminController = {
           </td>
           <td>${progressDisplay}</td>
           <td>
-            <button class="btn btn-outline btn-admin-unreserve" data-id="${g.id}" title="Liberar este item para ficar disponível novamente na vitrine pública" style="padding: 0.4rem 0.85rem; font-size: 0.82rem; color: var(--color-gold-accent); border-color: var(--color-gold-accent);">
-              <svg class="icon-line sm" viewBox="0 0 24 24" style="margin-right: 0.25rem;">
-                <polyline points="1 4 1 10 7 10"></polyline>
-                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-              </svg>
-              Liberar Item
-            </button>
+            <div class="table-actions-wrapper">
+              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Liberar este item para ficar disponível novamente na vitrine pública">
+                <svg class="icon-line sm" viewBox="0 0 24 24">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                <span>Liberar Item</span>
+              </button>
+            </div>
           </td>
         </tr>
       `;

@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.1.3
+   Versão: v.1.1.4
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -1340,6 +1340,101 @@ a {
   background: var(--color-card-bg);
   color: var(--color-olive-deep);
   font-weight: 600;
+}
+
+/* Ações da Tabela de Gestão */
+.table-actions-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.btn-table-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-smooth);
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn-table-edit {
+  background: var(--color-white);
+  color: var(--color-olive-deep);
+  border-color: var(--color-olive-border);
+}
+
+.btn-table-edit:hover {
+  background: var(--color-olive-light);
+  border-color: var(--color-olive-frame);
+  color: var(--color-olive-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-table-edit .icon-line {
+  color: var(--color-olive-frame);
+}
+
+.btn-table-unreserve {
+  background: rgba(221, 161, 94, 0.12);
+  color: #9d6824;
+  border-color: rgba(221, 161, 94, 0.4);
+}
+
+.btn-table-unreserve:hover {
+  background: rgba(221, 161, 94, 0.22);
+  border-color: var(--color-gold-accent);
+  color: #7b4f17;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-table-delete {
+  background: rgba(188, 71, 73, 0.08);
+  color: var(--color-error);
+  border-color: rgba(188, 71, 73, 0.25);
+}
+
+.btn-table-delete:hover {
+  background: rgba(188, 71, 73, 0.16);
+  border-color: var(--color-error);
+  color: #931f1d;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-table-delete .icon-line {
+  color: var(--color-error);
+}
+
+.btn-table-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.6rem;
+  background: var(--color-cream);
+  border: 1px solid var(--color-olive-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-olive-deep);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+.btn-table-link:hover {
+  background: var(--color-white);
+  border-color: var(--color-olive-frame);
+  color: var(--color-olive-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ==========================================================================
