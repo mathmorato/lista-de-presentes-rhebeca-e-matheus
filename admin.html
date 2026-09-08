@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos Oficiais do Projeto -->
-  <link rel="stylesheet" href="css/styles.css?v=1.5.8">
+  <link rel="stylesheet" href="css/styles.css?v=1.5.9">
 
   <!-- Supabase JS Client Oficial -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -114,7 +114,7 @@
                 <h1 class="admin-topbar-heading">
                   Painel de Gestão dos Noivos
                 </h1>
-                <span class="admin-badge">Versão: v.1.5.8</span>
+                <span class="admin-badge">Versão: v.1.5.9</span>
               </div>
               <div class="admin-topbar-subtitle-row">
                 <span id="adminUserGreetingBadge">
@@ -451,9 +451,9 @@
               <svg class="icon-line sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <span id="btnBulkMarkGiftedLabel">Marcar como Já Presenteado</span>
             </button>
-            <button type="button" id="btnBulkMarkAvailable" class="btn btn-outline" style="font-size: 0.82rem; padding: 0.4rem 0.85rem; height: auto; display: inline-flex; align-items: center; gap: 0.45rem;" title="Alterar status para Disponível">
+            <button type="button" id="btnBulkMarkAvailable" class="btn btn-outline" style="font-size: 0.82rem; padding: 0.4rem 0.85rem; height: auto; display: none; align-items: center; gap: 0.45rem;" title="Retornar presentes selecionados para a lista de presentes">
               <svg class="icon-line sm" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
-              <span id="btnBulkMarkAvailableLabel">Tornar Disponível</span>
+              <span id="btnBulkMarkAvailableLabel">Retornar</span>
             </button>
             <button type="button" id="btnBulkDeleteGifts" class="btn btn-primary" style="background: var(--color-error); border-color: var(--color-error); font-size: 0.82rem; padding: 0.4rem 1rem; height: auto; display: inline-flex; align-items: center; gap: 0.45rem;">
               <svg class="icon-line sm" viewBox="0 0 24 24">
@@ -1046,14 +1046,14 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.5.8</span>
+        <span id="app-footer-version">v.1.5.9</span>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/extractor.js?v=1.5.8"></script>
-  <script src="js/db.js?v=1.5.8"></script>
-  <script src="js/admin.js?v=1.5.8"></script>
+  <script src="js/extractor.js?v=1.5.9"></script>
+  <script src="js/db.js?v=1.5.9"></script>
+  <script src="js/admin.js?v=1.5.9"></script>
 </body>
 </html>
