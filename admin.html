@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Folha de Estilos Principal (Design System Verde Oliva) -->
-  <link rel="stylesheet" href="css/styles.css?v=1.6.1">
+  <link rel="stylesheet" href="css/styles.css?v=1.6.2">
 
   <!-- Supabase JS Client Oficial -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,7 +22,7 @@
 
   <!-- ==================== TELA DE LOGIN (ESTADO NÃO AUTENTICADO) ==================== -->
   <main id="adminLoginView" class="login-page-wrapper" style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem;">
-    <div class="login-card" style="background: var(--color-white); border: 1.5px solid var(--color-olive-frame); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 460px; padding: 2.5rem 2rem; text-align: center;">
+    <div class="login-card" style="background: var(--color-white); border: 1.5px solid var(--color-olive-frame); border-radius: 0; box-shadow: var(--shadow-lg); width: 100%; max-width: 460px; padding: 2.5rem 2rem; text-align: center;">
       
       <!-- Monograma dos Noivos -->
       <div class="login-monogram" style="font-family: var(--font-serif); font-size: 2rem; color: var(--color-olive-deep); margin-bottom: 0.25rem;">
@@ -114,7 +114,7 @@
                 <h1 class="admin-topbar-heading">
                   Painel de Gestão dos Noivos
                 </h1>
-                <span class="admin-badge">Versão: v.1.6.1</span>
+                <span class="admin-badge">Versão: v.1.6.2</span>
               </div>
               <div class="admin-topbar-subtitle-row">
                 <span id="adminUserGreetingBadge">
@@ -177,7 +177,7 @@
               <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
             </svg>
             <span>Gerenciar Presentes</span>
-            <span id="giftsCountBadge" class="badge" style="font-size:0.75rem; padding:0.12rem 0.55rem; background:rgba(96, 108, 56, 0.15); color:var(--color-olive-deep); border-radius:999px; font-weight:700;">0</span>
+            <span id="giftsCountBadge" class="badge" style="font-size:0.75rem; padding:0.12rem 0.55rem; background:rgba(96, 108, 56, 0.15); color:var(--color-olive-deep); border-radius:0; font-weight:700;">0</span>
           </button>
           <button class="admin-tab-btn" data-tab="reservations">
             <svg class="icon-line sm" viewBox="0 0 24 24">
@@ -187,7 +187,7 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
             <span>Presenteados</span>
-            <span id="reservationsCountBadge" class="badge" style="font-size:0.75rem; padding:0.12rem 0.55rem; background:rgba(96, 108, 56, 0.15); color:var(--color-olive-deep); border-radius:999px; font-weight:700;">0</span>
+            <span id="reservationsCountBadge" class="badge" style="font-size:0.75rem; padding:0.12rem 0.55rem; background:rgba(96, 108, 56, 0.15); color:var(--color-olive-deep); border-radius:0; font-weight:700;">0</span>
           </button>
           <button class="admin-tab-btn" data-tab="trash" title="Lixeira de presentes excluídos">
             <svg class="icon-line sm" viewBox="0 0 24 24">
@@ -195,7 +195,7 @@
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
             <span>Lixeira</span>
-            <span id="trashCountBadge" class="badge" style="display:none; font-size:0.75rem; padding:0.12rem 0.55rem; background:rgba(188, 71, 73, 0.15); color:var(--color-error); border-radius:999px; font-weight:600;">0</span>
+            <span id="trashCountBadge" class="badge" style="display:none; font-size:0.75rem; padding:0.12rem 0.55rem; background:rgba(188, 71, 73, 0.15); color:var(--color-error); border-radius:0; font-weight:600;">0</span>
           </button>
           <button class="admin-tab-btn" data-tab="settings">
             <svg class="icon-line sm" viewBox="0 0 24 24">
@@ -603,13 +603,13 @@
 
       <!-- ABA 3: LIXEIRA DE PRESENTES -->
       <div id="adminTabTrash" class="admin-tab-content" style="display: none;">
-        <div style="background: var(--color-white); border: 1px solid var(--color-olive-border); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); margin-bottom: 1.25rem;">
+        <div style="background: var(--color-white); border: 1px solid var(--color-olive-border); border-radius: 0; padding: 1.5rem; box-shadow: var(--shadow-sm); margin-bottom: 1.25rem;">
           
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
               <div style="display: flex; align-items: center; gap: 0.6rem;">
                 <h3 style="font-size: 1.2rem; color: var(--color-olive-deep); margin: 0;">Lixeira de Presentes</h3>
-                <span id="trashTotalCountBadge" style="font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 999px; background: rgba(188, 71, 73, 0.12); color: var(--color-error);">0 itens</span>
+                <span id="trashTotalCountBadge" style="font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 0; background: rgba(188, 71, 73, 0.12); color: var(--color-error);">0 itens</span>
               </div>
               <p style="font-size: 0.85rem; color: var(--color-olive-muted); margin: 0.25rem 0 0 0;">
                 Itens excluídos da lista ficam salvos aqui. Você pode restaurá-los de volta à lista de presentes a qualquer momento ou excluí-los permanentemente.
@@ -1045,14 +1045,14 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.6.1</span>
+        <span id="app-footer-version">v.1.6.2</span>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/extractor.js?v=1.6.1"></script>
-  <script src="js/db.js?v=1.6.1"></script>
-  <script src="js/admin.js?v=1.6.1"></script>
+  <script src="js/extractor.js?v=1.6.2"></script>
+  <script src="js/db.js?v=1.6.2"></script>
+  <script src="js/admin.js?v=1.6.2"></script>
 </body>
 </html>

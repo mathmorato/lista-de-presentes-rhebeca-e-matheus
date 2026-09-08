@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.6.1
+   Versão: v.1.6.2
    Módulo: Aplicação Principal, Lista de Presentes e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.6.1] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.6.2] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -864,7 +864,7 @@ const AdminController = {
       previewBox.innerHTML = `
         <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
           <img src="${escapeHTML(url.trim())}" alt="Prévia do Presente" onerror="this.parentElement.innerHTML='<div style=\\'display: flex; flex-direction: column; align-items: center; gap: 0.35rem; color: var(--color-error); font-size: 0.8rem;\\'><svg class=\\'icon-line sm\\' viewBox=\\'0 0 24 24\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'></circle><line x1=\\'12\\' y1=\\'8\\' x2=\\'12\\' y2=\\'12\\'></line><line x1=\\'12\\' y1=\\'16\\' x2=\\'12.01\\' y2=\\'16\\'></line></svg><span>Falha ao carregar imagem</span></div>';">
-          <span style="position: absolute; bottom: 8px; right: 8px; background: rgba(40, 54, 24, 0.78); color: #ffffff; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; backdrop-filter: blur(2px); font-weight: 500;">Visão Completa</span>
+          <span style="position: absolute; bottom: 8px; right: 8px; background: rgba(40, 54, 24, 0.78); color: #ffffff; font-size: 0.72rem; padding: 2px 8px; border-radius: 0; backdrop-filter: blur(2px); font-weight: 500;">Visão Completa</span>
         </div>
       `;
     } else {
@@ -1224,10 +1224,10 @@ const AdminController = {
         <tr>
           <td>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-              ${g.imageUrl ? `<img src="${escapeHTML(g.imageUrl)}" alt="${escapeHTML(g.title)}" style="width: 40px; height: 40px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--color-olive-border);">` : ''}
+              ${g.imageUrl ? `<img src="${escapeHTML(g.imageUrl)}" alt="${escapeHTML(g.title)}" style="width: 40px; height: 40px; border-radius: 0; object-fit: cover; border: 1px solid var(--color-olive-border);">` : ''}
               <div>
                 <strong>${escapeHTML(g.title)}</strong>
-                ${g.isFeatured ? '<span style="font-size:0.72rem; background: var(--color-warning-light); color: var(--color-gold-accent); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.35rem;">Destaque</span>' : ''}
+                ${g.isFeatured ? '<span style="font-size:0.72rem; background: var(--color-warning-light); color: var(--color-gold-accent); padding: 0.15rem 0.4rem; border-radius: 0; margin-left: 0.35rem;">Destaque</span>' : ''}
               </div>
             </div>
           </td>
