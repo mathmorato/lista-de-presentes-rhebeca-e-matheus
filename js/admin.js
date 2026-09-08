@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.5.2
+   Versão: v.1.5.3
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -980,9 +980,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
               Pendente
             </span>
           ` : `
-            <span class="table-status-badge ${g.status === 'reserved' || g.status === 'completed' ? 'badge-reserved' : 'badge-available'}">
+            <span class="table-status-badge ${g.status === 'reserved' || g.status === 'completed' ? 'badge-reserved' : 'badge-available'}" ${g.reservedBy && g.reservedBy.trim() ? `title="Presenteado por: ${escapeHTML(g.reservedBy.trim())}"` : ''}>
               ${g.status === 'reserved' || g.status === 'completed' 
-                ? (g.reservedBy && g.reservedBy.trim() ? `Presenteado (${escapeHTML(g.reservedBy.trim())})` : 'Presenteado') 
+                ? 'Presenteado' 
                 : 'Disponível'}
             </span>
           `}
@@ -2236,12 +2236,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       let approvalStatusHtml = '';
       if (g.status === 'pending_approval') {
         approvalStatusHtml = `
-          <div style="display:inline-flex; flex-direction:column; gap:0.25rem;">
-            <span class="badge" style="background:#fff3cd; color:#856404; border:1.5px solid #ffeeba; padding:0.35rem 0.75rem; border-radius:var(--radius-full); font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+          <div style="display:inline-flex; align-items:center;">
+            <span class="badge" style="background:#fff3cd; color:#856404; border:1.5px solid #ffeeba; padding:0.35rem 0.75rem; border-radius:var(--radius-full); font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;" title="Aguardando liberação dos noivos">
               <svg class="icon-line xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              Pendente de Aprovação
+              Pendente
             </span>
-            <span style="font-size:0.75rem; color:var(--color-olive-muted);">Aguardando liberação dos noivos</span>
           </div>
         `;
       } else {

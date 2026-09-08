@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.5.2
+   Versão: v.1.5.3
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.5.2] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.5.3] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -916,9 +916,9 @@ const AdminController = {
         <td>${escapeHTML(g.category)}</td>
         <td>${g.isCota ? `${formatCurrency(g.quotaValue)}/cota (${g.quotaCurrent || 0}/${g.quotaTotal})` : formatCurrency(g.price)}</td>
         <td>
-          <span class="table-status-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}">
+          <span class="table-status-badge ${g.status === 'reserved' ? 'badge-reserved' : (g.status === 'completed' ? 'badge-cota' : 'badge-available')}" ${g.reservedBy && g.reservedBy.trim() ? `title="Presenteado por: ${escapeHTML(g.reservedBy.trim())}"` : ''}>
             ${g.status === 'reserved' 
-              ? (g.reservedBy && g.reservedBy.trim() ? `Presenteado (${escapeHTML(g.reservedBy.trim())})` : 'Presenteado') 
+              ? 'Presenteado' 
               : (g.status === 'completed' ? 'Concluído' : 'Disponível')}
           </span>
         </td>
