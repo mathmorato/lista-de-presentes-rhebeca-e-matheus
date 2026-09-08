@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.6.0
+   Versão: v.1.6.1
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -308,6 +308,7 @@ const AdminDashboard = {
     const bar = document.getElementById('bulkActionsBar');
     const badge = document.getElementById('bulkSelectedCountBadge');
     const label = document.getElementById('btnBulkDeleteLabel');
+    const btnGifted = document.getElementById('btnBulkMarkGifted');
     const labelGifted = document.getElementById('btnBulkMarkGiftedLabel');
     const btnAvailable = document.getElementById('btnBulkMarkAvailable');
     const labelAvailable = document.getElementById('btnBulkMarkAvailableLabel');
@@ -320,9 +321,7 @@ const AdminDashboard = {
         bar.classList.add('active');
         badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
         label.innerText = `Excluir (${count})`;
-        if (labelGifted) labelGifted.innerText = `Marcar como Presenteado (${count})`;
 
-        // O botão Retornar só deve estar visível e disponível para os itens selecionados que forem presenteados
         let giftedCount = 0;
         try {
           const gifts = await window.weddingDB.getAllGifts();
@@ -335,17 +334,35 @@ const AdminDashboard = {
           ).length;
         } catch (_) {}
 
-        if (btnAvailable) {
-          if (giftedCount > 0) {
+        const availableCount = count - giftedCount;
+
+        // Regras Estritas de Visibilidade da Barra de Ações:
+        // 1. Ao selecionar apenas itens presenteados: aparece somente Retornar e Excluir
+        // 2. Ao selecionar apenas itens disponíveis: aparece somente Marcar como Presenteado e Excluir
+        // 3. Ao selecionar itens mistos (disponível + presenteado): NÃO aparece nem Retornar nem Marcar como Presenteado, fica somente Excluir
+        if (giftedCount === count) {
+          // Todos são presenteados
+          if (btnGifted) btnGifted.style.display = 'none';
+          if (btnAvailable) {
             btnAvailable.style.display = 'inline-flex';
-            if (labelAvailable) labelAvailable.innerText = `Retornar (${giftedCount})`;
-          } else {
-            btnAvailable.style.display = 'none';
+            if (labelAvailable) labelAvailable.innerText = `Retornar (${count})`;
           }
+        } else if (availableCount === count) {
+          // Todos são disponíveis
+          if (btnGifted) {
+            btnGifted.style.display = 'inline-flex';
+            if (labelGifted) labelGifted.innerText = `Marcar como Presenteado (${count})`;
+          }
+          if (btnAvailable) btnAvailable.style.display = 'none';
+        } else {
+          // Seleção mista: oculta Retornar e Marcar como Presenteado
+          if (btnGifted) btnGifted.style.display = 'none';
+          if (btnAvailable) btnAvailable.style.display = 'none';
         }
       } else {
         bar.style.display = 'none';
         bar.classList.remove('active');
+        if (btnGifted) btnGifted.style.display = 'none';
         if (btnAvailable) btnAvailable.style.display = 'none';
       }
     }
@@ -1212,9 +1229,38 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
     if (!deleteModal) return;
 
-    deleteItemTitleText.innerHTML = `Deseja mover o item <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong> para a Lixeira?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">O item sairá da lista de presentes e poderá ser restaurado na aba Lixeira a qualquer momento.</span>`;
+    const isGifted = gift && (
+      gift.status === 'reserved' || 
+      gift.status === 'completed' || 
+      gift.status === 'pending_approval' || 
+      (gift.reservedBy && gift.reservedBy.trim() !== '')
+    );
 
-    btnConfirmDelete.innerText = 'Mover para Lixeira';
+    let warningGiftedHTML = '';
+    if (isGifted) {
+      const donorDetail = gift.reservedBy ? `Consta presenteado por: <strong>${escapeHTML(gift.reservedBy)}</strong>.<br>` : 'Este item já consta como presenteado na lista de casamento.<br>';
+      warningGiftedHTML = `
+        <div style="background: rgba(188, 71, 73, 0.08); border: 1.5px solid rgba(188, 71, 73, 0.35); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-top: 0.85rem; text-align: left;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-error); font-weight: 700; font-size: 0.88rem; margin-bottom: 0.35rem;">
+            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>Atenção: Este item consta como PRESENTEADO!</span>
+          </div>
+          <p style="margin: 0; font-size: 0.82rem; color: var(--color-olive-deep); line-height: 1.45;">
+            ${donorDetail}
+            Ao excluir, ele será movido para a Lixeira.
+            <strong style="display: block; margin-top: 0.35rem; color: var(--color-error);">Tem certeza de que realmente deseja confirmar a exclusão deste item já presenteado?</strong>
+          </p>
+        </div>
+      `;
+    }
+
+    deleteItemTitleText.innerHTML = `
+      Deseja mover o item <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong> para a Lixeira?<br>
+      <span style="font-size: 0.83rem; color: var(--color-olive-muted);">O item sairá da lista de presentes e poderá ser restaurado na aba Lixeira a qualquer momento.</span>
+      ${warningGiftedHTML}
+    `;
+
+    btnConfirmDelete.innerText = isGifted ? 'Sim, Confirmar e Excluir' : 'Mover para Lixeira';
     btnConfirmDelete.style.background = 'var(--color-error)';
     btnConfirmDelete.style.borderColor = 'var(--color-error)';
 
@@ -1286,9 +1332,39 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (!deleteModal) return;
 
     const total = ids.length;
-    deleteItemTitleText.innerHTML = `Deseja mover os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong> para a Lixeira?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os itens sairão da lista de presentes e poderão ser restaurados na aba Lixeira a qualquer momento.</span>`;
+    const allGifts = await Promise.all(ids.map(id => window.weddingDB.getGiftById(id)));
+    const giftedItems = allGifts.filter(g => g && (
+      g.status === 'reserved' || 
+      g.status === 'completed' || 
+      g.status === 'pending_approval' || 
+      (g.reservedBy && g.reservedBy.trim() !== '')
+    ));
 
-    btnConfirmDelete.innerText = 'Mover para Lixeira';
+    let warningGiftedHTML = '';
+    if (giftedItems.length > 0) {
+      const giftedNames = giftedItems.map(g => `"${g.title}"`).slice(0, 3).join(', ');
+      const moreCount = giftedItems.length > 3 ? ` e mais ${giftedItems.length - 3} itens` : '';
+      warningGiftedHTML = `
+        <div style="background: rgba(188, 71, 73, 0.08); border: 1.5px solid rgba(188, 71, 73, 0.35); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-top: 0.85rem; text-align: left;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-error); font-weight: 700; font-size: 0.88rem; margin-bottom: 0.35rem;">
+            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>Atenção: Há ${giftedItems.length} ${giftedItems.length === 1 ? 'presente que já consta como PRESENTEADO' : 'presentes que já constam como PRESENTEADOS'}!</span>
+          </div>
+          <p style="margin: 0; font-size: 0.82rem; color: var(--color-olive-deep); line-height: 1.45;">
+            Constam como presenteados: <strong>${escapeHTML(giftedNames + moreCount)}</strong>.<br>
+            <strong style="display: block; margin-top: 0.35rem; color: var(--color-error);">Tem certeza de que realmente deseja confirmar a exclusão destes presentes?</strong>
+          </p>
+        </div>
+      `;
+    }
+
+    deleteItemTitleText.innerHTML = `
+      Deseja mover os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong> para a Lixeira?<br>
+      <span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os itens sairão da lista de presentes e poderão ser restaurados na aba Lixeira a qualquer momento.</span>
+      ${warningGiftedHTML}
+    `;
+
+    btnConfirmDelete.innerText = giftedItems.length > 0 ? 'Sim, Confirmar e Excluir' : 'Mover para Lixeira';
     btnConfirmDelete.style.background = 'var(--color-error)';
     btnConfirmDelete.style.borderColor = 'var(--color-error)';
 
