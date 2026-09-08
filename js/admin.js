@@ -1,23 +1,52 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.4.9
+   Versão: v.1.5.0
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
    ========================================================================== */
 
-function updateAdminTopbarHeight() {
+function updateAdminStickyOffsets() {
   const topbar = document.getElementById('adminTopbar') || document.querySelector('.admin-topbar');
+  let topbarH = 68;
   if (topbar) {
     const h = topbar.getBoundingClientRect().height || topbar.offsetHeight;
     if (h > 0) {
-      document.documentElement.style.setProperty('--admin-topbar-height', `${Math.round(h)}px`);
+      topbarH = Math.round(h);
+      document.documentElement.style.setProperty('--admin-topbar-height', `${topbarH}px`);
     }
   }
+
+  const tabsWrapper = document.querySelector('.admin-tabs-sticky-wrapper');
+  let tabsH = 54;
+  if (tabsWrapper) {
+    const h = tabsWrapper.getBoundingClientRect().height || tabsWrapper.offsetHeight;
+    if (h > 0) {
+      tabsH = Math.round(h);
+      document.documentElement.style.setProperty('--admin-tabs-height', `${tabsH}px`);
+    }
+  }
+
+  const stickyHeaderOffset = topbarH + tabsH;
+  document.documentElement.style.setProperty('--admin-sticky-header-offset', `${stickyHeaderOffset}px`);
+
+  // Detectar se há alguma barra de ações em massa visível na aba atual
+  const activeTab = document.querySelector('.admin-tab-content:not([style*="display: none"])');
+  let bulkBarH = 0;
+  if (activeTab) {
+    const bulkBar = activeTab.querySelector('.admin-bulk-actions-bar');
+    if (bulkBar && bulkBar.style.display !== 'none' && bulkBar.offsetHeight > 0) {
+      bulkBarH = Math.round(bulkBar.offsetHeight + 10);
+    }
+  }
+  document.documentElement.style.setProperty('--admin-bulk-bar-height', `${bulkBarH}px`);
+  document.documentElement.style.setProperty('--admin-table-header-top', `${stickyHeaderOffset + bulkBarH}px`);
 }
-window.addEventListener('resize', updateAdminTopbarHeight);
-window.addEventListener('load', updateAdminTopbarHeight);
-document.addEventListener('DOMContentLoaded', updateAdminTopbarHeight);
+window.updateAdminTopbarHeight = updateAdminStickyOffsets;
+window.updateAdminStickyOffsets = updateAdminStickyOffsets;
+window.addEventListener('resize', updateAdminStickyOffsets);
+window.addEventListener('load', updateAdminStickyOffsets);
+document.addEventListener('DOMContentLoaded', updateAdminStickyOffsets);
 
 const AUTH_USERS = [
   { 
@@ -264,6 +293,7 @@ const AdminDashboard = {
       }
     });
     this.render();
+    setTimeout(updateAdminStickyOffsets, 30);
   },
 
   updateBulkActionsBar(totalGiftsCount) {
@@ -291,6 +321,7 @@ const AdminDashboard = {
       selectAllCb.checked = totalGiftsCount > 0 && count === totalGiftsCount;
       selectAllCb.indeterminate = count > 0 && count < totalGiftsCount;
     }
+    setTimeout(updateAdminStickyOffsets, 20);
   },
 
   updateBulkReservationsActionsBar(totalReservationsCount) {
@@ -314,6 +345,7 @@ const AdminDashboard = {
       selectAllCb.checked = totalReservationsCount > 0 && count === totalReservationsCount;
       selectAllCb.indeterminate = count > 0 && count < totalReservationsCount;
     }
+    setTimeout(updateAdminStickyOffsets, 20);
   },
 
   updateBulkTrashActionsBar(totalTrashCount) {
@@ -339,6 +371,7 @@ const AdminDashboard = {
       selectAllCb.checked = totalTrashCount > 0 && count === totalTrashCount;
       selectAllCb.indeterminate = count > 0 && count < totalTrashCount;
     }
+    setTimeout(updateAdminStickyOffsets, 20);
   },
 
   async init() {
