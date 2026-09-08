@@ -1,31 +1,32 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.5.6
+   Versão: v.1.5.7
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
    ========================================================================== */
 
 function updateAdminStickyOffsets() {
+  const isMobile = window.innerWidth <= 768;
   const topbar = document.getElementById('adminTopbar') || document.querySelector('.admin-topbar');
-  let topbarH = 68;
+  let topbarH = isMobile ? 46 : 68;
   if (topbar) {
     const h = topbar.getBoundingClientRect().height || topbar.offsetHeight;
     if (h > 0) {
       topbarH = Math.round(h);
-      document.documentElement.style.setProperty('--admin-topbar-height', `${topbarH}px`);
     }
   }
+  document.documentElement.style.setProperty('--admin-topbar-height', `${topbarH}px`);
 
   const tabsWrapper = document.querySelector('.admin-tabs-sticky-wrapper');
-  let tabsH = 54;
+  let tabsH = isMobile ? 44 : 54;
   if (tabsWrapper) {
     const h = tabsWrapper.getBoundingClientRect().height || tabsWrapper.offsetHeight;
     if (h > 0) {
       tabsH = Math.round(h);
-      document.documentElement.style.setProperty('--admin-tabs-height', `${tabsH}px`);
     }
   }
+  document.documentElement.style.setProperty('--admin-tabs-height', `${tabsH}px`);
 
   const stickyHeaderOffset = topbarH + tabsH;
   document.documentElement.style.setProperty('--admin-sticky-header-offset', `${stickyHeaderOffset}px`);
@@ -36,7 +37,6 @@ function updateAdminStickyOffsets() {
   if (activeTab) {
     const bulkBar = activeTab.querySelector('.admin-bulk-actions-bar');
     if (bulkBar && bulkBar.style.display !== 'none' && bulkBar.offsetHeight > 0) {
-      // Altura milimétrica exata da barra para encaixe contíguo com o thead
       bulkBarH = Math.round(bulkBar.getBoundingClientRect().height || bulkBar.offsetHeight);
     }
   }
@@ -173,6 +173,11 @@ function activateDashboard(user) {
   // Ativa a primeira aba imediatamente na tela
   const tabGifts = document.getElementById('adminTabGifts');
   if (tabGifts) tabGifts.style.display = 'block';
+
+  // Atualiza offsets sticky imediatamente e nos frames seguintes para o mobile calcular perfeitamente
+  updateAdminStickyOffsets();
+  requestAnimationFrame(updateAdminStickyOffsets);
+  setTimeout(updateAdminStickyOffsets, 60);
 
   if (window.AdminDashboard && typeof window.AdminDashboard.init === 'function') {
     window.AdminDashboard.init();
