@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.5.5
+   Versão: v.1.5.6
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.5.5] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.5.6] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -368,7 +368,6 @@ const CatalogController = {
         <div class="gift-card-body">
           <div class="gift-category">${escapeHTML(gift.category)}</div>
           <h3 class="gift-title">${escapeHTML(gift.title)}</h3>
-          <p class="gift-desc">${escapeHTML(gift.description || '')}</p>
           ${pricingHTML}
           <div class="card-actions-wrapper">
             ${actionBtnHTML}
