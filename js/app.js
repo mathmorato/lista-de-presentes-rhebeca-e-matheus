@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.5.3
+   Versão: v.1.5.4
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.5.3] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.5.4] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -459,15 +459,6 @@ const CatalogController = {
     if (copyBtnText) copyBtnText.innerText = 'Copiar Link';
 
     modal.classList.add('active');
-
-    // Tenta também abrir em nova aba automaticamente em navegadores que permitem
-    if (cleanUrl && cleanUrl !== '#') {
-      try {
-        window.open(cleanUrl, '_blank', 'noopener,noreferrer');
-      } catch (err) {
-        console.log('Abertura direta bloqueada pelo navegador; modal disponível com os botões.', err);
-      }
-    }
   }
 };
 
@@ -489,7 +480,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      const submitBtn = reserveForm.querySelector('button[type="submit"]');
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
       try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
+            <svg class="icon-line sm icon-spin" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span>Enviando...</span>
+          `;
+        }
+
         const gift = await window.weddingDB.getGiftById(giftId);
         let cleanUrl = gift ? (gift.productUrl || '').trim() : '';
         if (cleanUrl && !cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
@@ -523,15 +525,20 @@ document.addEventListener('DOMContentLoaded', () => {
           await MessagesController.refresh();
         }
 
-        // 2. Se o presente tiver link da loja virtual, abrir nova aba e mostrar tela de confirmação
+        // 2. Se o presente tiver link da loja virtual, mostrar tela de confirmação (onde o convidado pode abrir a loja em nova aba)
         if (cleanUrl) {
-          showToast(`Link copiado e presente confirmado com sucesso, ${guestName}! Redirecionando para a loja...`, 'success');
+          showToast(`Presente confirmado com sucesso, ${guestName}!`, 'success');
           CatalogController.openStoreRedirectModal(gift, guestName);
         } else {
           showToast(`Muito obrigado, ${guestName}! Sua escolha de presente para Rhebeca & Matheus foi registrada com sucesso.`, 'success');
         }
       } catch (err) {
         showToast(err.message || 'Erro ao reservar presente.', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
       }
     });
 
