@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.5.1
+   Versão: v.1.5.2
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -1465,22 +1465,32 @@ a {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.75rem;
-  background: var(--color-warm-white, #fbfbf8);
+  background: #ffffff;
   border: 1.5px solid var(--color-olive-primary);
-  border-radius: var(--radius-md);
+  border-bottom: 1px solid var(--color-olive-border);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   padding: 0.75rem 1.25rem;
-  margin-bottom: 0.75rem;
-  box-shadow: 0 4px 18px rgba(40, 54, 24, 0.12);
+  margin-bottom: 0;
+  box-shadow: 0 4px 14px rgba(40, 54, 24, 0.08);
   position: sticky;
   top: var(--admin-sticky-header-offset, 122px);
-  z-index: 92;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  z-index: 90;
+  box-sizing: border-box;
+  width: 100%;
   transition: top 0.15s ease, box-shadow 0.2s ease;
+}
+
+.admin-bulk-actions-bar[style*="display: flex"] + .admin-table-container,
+.admin-bulk-actions-bar[style*="display: block"] + .admin-table-container,
+.admin-bulk-actions-bar.active + .admin-table-container {
+  border-top: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .admin-table-container {
   overflow-x: auto;
+  overflow-y: visible;
   width: 100%;
   border: 1px solid var(--color-olive-border);
   border-radius: var(--radius-md);
@@ -1510,7 +1520,7 @@ a {
 }
 
 .admin-table th {
-  background: var(--color-card-bg);
+  background: #f4f5f0;
   color: var(--color-olive-deep);
   font-weight: 600;
   font-size: 0.85rem;
@@ -1519,7 +1529,7 @@ a {
   position: sticky;
   top: var(--admin-table-header-top, var(--admin-sticky-header-offset, 122px));
   z-index: 85;
-  border-top: 1px solid var(--color-olive-border);
+  border-top: none;
   border-bottom: 2px solid var(--color-olive-frame);
   box-shadow: 0 2px 6px rgba(40, 54, 24, 0.06);
   transition: top 0.15s ease;

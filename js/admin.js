@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.5.1
+   Versão: v.1.5.2
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -36,7 +36,8 @@ function updateAdminStickyOffsets() {
   if (activeTab) {
     const bulkBar = activeTab.querySelector('.admin-bulk-actions-bar');
     if (bulkBar && bulkBar.style.display !== 'none' && bulkBar.offsetHeight > 0) {
-      bulkBarH = Math.round(bulkBar.offsetHeight + 10);
+      // Altura milimétrica exata da barra para encaixe contíguo com o thead
+      bulkBarH = Math.round(bulkBar.getBoundingClientRect().height || bulkBar.offsetHeight);
     }
   }
   document.documentElement.style.setProperty('--admin-bulk-bar-height', `${bulkBarH}px`);
@@ -308,12 +309,14 @@ const AdminDashboard = {
     if (bar && badge && label) {
       if (count > 0) {
         bar.style.display = 'flex';
+        bar.classList.add('active');
         badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
         label.innerText = `Excluir (${count})`;
         if (labelGifted) labelGifted.innerText = `Marcar como Já Presenteado (${count})`;
         if (labelAvailable) labelAvailable.innerText = `Tornar Disponível (${count})`;
       } else {
         bar.style.display = 'none';
+        bar.classList.remove('active');
       }
     }
 
@@ -321,7 +324,8 @@ const AdminDashboard = {
       selectAllCb.checked = totalGiftsCount > 0 && count === totalGiftsCount;
       selectAllCb.indeterminate = count > 0 && count < totalGiftsCount;
     }
-    setTimeout(updateAdminStickyOffsets, 20);
+    updateAdminStickyOffsets();
+    requestAnimationFrame(updateAdminStickyOffsets);
   },
 
   updateBulkReservationsActionsBar(totalReservationsCount) {
@@ -334,10 +338,12 @@ const AdminDashboard = {
     if (bar && badge && label) {
       if (count > 0) {
         bar.style.display = 'flex';
+        bar.classList.add('active');
         badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
         label.innerText = `Retornar Selecionados (${count})`;
       } else {
         bar.style.display = 'none';
+        bar.classList.remove('active');
       }
     }
 
@@ -345,7 +351,8 @@ const AdminDashboard = {
       selectAllCb.checked = totalReservationsCount > 0 && count === totalReservationsCount;
       selectAllCb.indeterminate = count > 0 && count < totalReservationsCount;
     }
-    setTimeout(updateAdminStickyOffsets, 20);
+    updateAdminStickyOffsets();
+    requestAnimationFrame(updateAdminStickyOffsets);
   },
 
   updateBulkTrashActionsBar(totalTrashCount) {
@@ -359,11 +366,13 @@ const AdminDashboard = {
     if (bar && badge) {
       if (count > 0) {
         bar.style.display = 'flex';
+        bar.classList.add('active');
         badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
         if (restoreLabel) restoreLabel.innerText = `Restaurar Selecionados (${count})`;
         if (permDeleteLabel) permDeleteLabel.innerText = `Excluir Definitivo (${count})`;
       } else {
         bar.style.display = 'none';
+        bar.classList.remove('active');
       }
     }
 
@@ -371,7 +380,8 @@ const AdminDashboard = {
       selectAllCb.checked = totalTrashCount > 0 && count === totalTrashCount;
       selectAllCb.indeterminate = count > 0 && count < totalTrashCount;
     }
-    setTimeout(updateAdminStickyOffsets, 20);
+    updateAdminStickyOffsets();
+    requestAnimationFrame(updateAdminStickyOffsets);
   },
 
   async init() {
