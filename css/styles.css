@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.8
+   Versão: v.1.4.9
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -86,6 +86,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
   font-size: 16px;
 }
 
@@ -98,7 +99,7 @@ body {
   display: flex;
   flex-direction: column;
   transition: background-color 0.3s ease, color 0.3s ease;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Padrão Estrito de Linhas nos Ícones SVG */
@@ -165,9 +166,12 @@ a {
 
 /* Header & Navegação */
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1000;
   background-color: var(--color-surface-translucent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -295,7 +299,7 @@ a {
    CONVITE SAVE THE DATE PRINCIPAL (Design Fiel à Imagem)
    ========================================================================== */
 .wedding-invitation-hero {
-  padding: 3.5rem 0 4.5rem;
+  padding: calc(3.5rem + 76px) 0 4.5rem;
   display: flex;
   justify-content: center;
 }
@@ -1865,11 +1869,47 @@ a {
     flex-shrink: 0;
   }
 
+  html {
+    scroll-padding-top: 68px;
+  }
+
+  .site-header .container {
+    padding: 0 0.85rem;
+  }
+
+  .nav-wrapper {
+    height: 64px;
+  }
+
+  .brand-names .title {
+    font-size: 1.05rem;
+    white-space: nowrap;
+  }
+
+  .brand-names .subtitle {
+    font-size: 0.68rem;
+    letter-spacing: 1.5px;
+  }
+
+  .nav-actions {
+    gap: 0.45rem;
+  }
+
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  #btnOpenAdmin {
+    padding: 0.35rem 0.65rem !important;
+    font-size: 0.78rem !important;
+  }
+
   /* Navegação Header */
   .nav-links {
     display: none;
     position: absolute;
-    top: 76px;
+    top: 100%;
     left: 0;
     right: 0;
     background: var(--color-white);
@@ -1886,6 +1926,10 @@ a {
 
   .mobile-menu-toggle {
     display: flex;
+  }
+
+  .wedding-invitation-hero {
+    padding: calc(2rem + 64px) 0 3.5rem;
   }
 
   .save-the-date-frame {
@@ -1960,17 +2004,27 @@ a {
     padding: 1.1rem;
   }
 
+  .site-header .container {
+    padding: 0 0.55rem;
+  }
+
   .brand-names .title {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
+    white-space: nowrap;
   }
 
   .brand-names .subtitle {
-    font-size: 0.72rem;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+  }
+
+  .nav-actions {
+    gap: 0.35rem;
   }
 
   #btnOpenAdmin {
-    padding: 0.4rem 0.6rem !important;
-    font-size: 0.78rem !important;
+    padding: 0.3rem 0.55rem !important;
+    font-size: 0.75rem !important;
   }
 
   .toast-container {
