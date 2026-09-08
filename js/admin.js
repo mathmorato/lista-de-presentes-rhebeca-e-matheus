@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.5.8
+   Versão: v.1.5.9
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -304,11 +304,12 @@ const AdminDashboard = {
     setTimeout(updateAdminStickyOffsets, 30);
   },
 
-  updateBulkActionsBar(totalGiftsCount) {
+  async updateBulkActionsBar(totalGiftsCount) {
     const bar = document.getElementById('bulkActionsBar');
     const badge = document.getElementById('bulkSelectedCountBadge');
     const label = document.getElementById('btnBulkDeleteLabel');
     const labelGifted = document.getElementById('btnBulkMarkGiftedLabel');
+    const btnAvailable = document.getElementById('btnBulkMarkAvailable');
     const labelAvailable = document.getElementById('btnBulkMarkAvailableLabel');
     const selectAllCb = document.getElementById('selectAllGiftsCheckbox');
     const count = this.selectedGiftIds.size;
@@ -320,10 +321,32 @@ const AdminDashboard = {
         badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
         label.innerText = `Excluir (${count})`;
         if (labelGifted) labelGifted.innerText = `Marcar como Já Presenteado (${count})`;
-        if (labelAvailable) labelAvailable.innerText = `Tornar Disponível (${count})`;
+
+        // O botão Retornar só deve estar visível e disponível para os itens selecionados que já forem presenteados
+        let giftedCount = 0;
+        try {
+          const gifts = await window.weddingDB.getAllGifts();
+          const selectedGifts = gifts.filter(g => this.selectedGiftIds.has(g.id));
+          giftedCount = selectedGifts.filter(g => 
+            g.status === 'reserved' || 
+            g.status === 'completed' || 
+            g.status === 'pending_approval' || 
+            (g.reservedBy && g.reservedBy.trim() !== '')
+          ).length;
+        } catch (_) {}
+
+        if (btnAvailable) {
+          if (giftedCount > 0) {
+            btnAvailable.style.display = 'inline-flex';
+            if (labelAvailable) labelAvailable.innerText = `Retornar (${giftedCount})`;
+          } else {
+            btnAvailable.style.display = 'none';
+          }
+        }
       } else {
         bar.style.display = 'none';
         bar.classList.remove('active');
+        if (btnAvailable) btnAvailable.style.display = 'none';
       }
     }
 
@@ -1093,7 +1116,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       };
     }
 
-    // Evento do botão "Tornar Disponível" (em lote na seleção de checkbox)
+    // Evento do botão "Retornar" (em lote na seleção de checkbox - apenas para itens já presenteados)
     const btnBulkMarkAvailable = document.getElementById('btnBulkMarkAvailable');
     if (btnBulkMarkAvailable) {
       btnBulkMarkAvailable.onclick = async () => {
@@ -1101,7 +1124,20 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           showToast('Nenhum item selecionado.', 'warning');
           return;
         }
-        await this.confirmBulkMarkAvailable(Array.from(this.selectedGiftIds));
+        const gifts = await window.weddingDB.getAllGifts();
+        const selectedGifts = gifts.filter(g => this.selectedGiftIds.has(g.id));
+        const giftedIds = selectedGifts.filter(g => 
+          g.status === 'reserved' || 
+          g.status === 'completed' || 
+          g.status === 'pending_approval' || 
+          (g.reservedBy && g.reservedBy.trim() !== '')
+        ).map(g => g.id);
+
+        if (giftedIds.length === 0) {
+          showToast('Nenhum dos itens selecionados está marcado como presenteado para ser retornado.', 'info');
+          return;
+        }
+        await this.confirmBulkUnreserveReservations(giftedIds);
       };
     }
 
@@ -1368,28 +1404,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
   },
 
   async confirmBulkMarkAvailable(giftIds) {
-    if (!confirm(`Deseja alterar e marcar como Disponível(is) o(s) ${giftIds.length} presente(s) selecionado(s) na lista de presentes?`)) {
-      return;
-    }
-
-    let updatedCount = 0;
-    for (const id of giftIds) {
-      const gift = await window.weddingDB.getGiftById(id);
-      if (gift) {
-        gift.status = 'available';
-        gift.reservedBy = null;
-        gift.guestPhone = null;
-        gift.guestMessage = null;
-        gift.reservedAt = null;
-        await window.weddingDB.saveGift(gift);
-        updatedCount++;
-      }
-    }
-
-    this.selectedGiftIds.clear();
-    showToast(`${updatedCount} ${updatedCount === 1 ? 'presente alterado' : 'presentes alterados'} para Disponível!`, 'success');
-    await this.render();
-    window.weddingDB.syncWithSupabase({ silent: true }).catch(() => {});
+    await this.confirmBulkUnreserveReservations(giftIds);
   },
 
   async updateTrashBadge() {
@@ -2404,67 +2419,70 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
   async confirmBulkUnreserveReservations(ids) {
     if (!Array.isArray(ids) || ids.length === 0) return;
 
-    const deleteModal = document.getElementById('deleteModal');
-    const deleteItemTitleText = document.getElementById('deleteItemTitleText');
-    const deleteProgressBox = document.getElementById('deleteProgressBox');
-    const deleteProgressBar = document.getElementById('deleteProgressBar');
-    const deleteProgressStatusText = document.getElementById('deleteProgressStatusText');
-    const deleteProgressPercent = document.getElementById('deleteProgressPercent');
-    const deleteModalActions = document.getElementById('deleteModalActions');
-    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
-    const btnCancelDelete = document.getElementById('btnCancelDelete');
+    const unreserveModal = document.getElementById('unreserveModal');
+    const unreserveItemTitleText = document.getElementById('unreserveItemTitleText');
+    const unreserveProgressBox = document.getElementById('unreserveProgressBox');
+    const unreserveProgressBar = document.getElementById('unreserveProgressBar');
+    const unreserveProgressStatusText = document.getElementById('unreserveProgressStatusText');
+    const unreserveProgressPercent = document.getElementById('unreserveProgressPercent');
+    const unreserveModalActions = document.getElementById('unreserveModalActions');
+    const btnConfirmUnreserve = document.getElementById('btnConfirmUnreserve');
+    const btnCancelUnreserve = document.getElementById('btnCancelUnreserve');
 
-    if (!deleteModal) return;
+    if (!unreserveModal) return;
 
     const total = ids.length;
-    deleteItemTitleText.innerHTML = `Deseja retornar os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os dados de quem presenteou serão limpos e os itens voltarão a ficar disponíveis na lista de presentes para outros convidados.</span>`;
+    unreserveItemTitleText.innerHTML = `Deseja retornar os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os dados de quem presenteou serão limpos e os itens voltarão a ficar disponíveis na lista de presentes para outros convidados.</span>`;
 
-    btnConfirmDelete.innerText = 'Retornar Selecionados';
-    btnConfirmDelete.style.background = 'var(--color-olive-primary)';
-    btnConfirmDelete.style.borderColor = 'var(--color-olive-primary)';
+    btnConfirmUnreserve.innerText = 'Retornar Selecionados';
+    btnConfirmUnreserve.style.background = 'var(--color-olive-primary)';
+    btnConfirmUnreserve.style.borderColor = 'var(--color-olive-primary)';
 
-    deleteProgressBox.style.display = 'none';
-    deleteProgressBar.style.width = '0%';
-    deleteProgressPercent.innerText = '0%';
-    deleteProgressStatusText.innerText = 'Iniciando retorno...';
-    deleteModalActions.style.display = 'flex';
+    unreserveProgressBox.style.display = 'none';
+    unreserveProgressBar.style.width = '0%';
+    unreserveProgressPercent.innerText = '0%';
+    unreserveProgressStatusText.innerText = 'Iniciando retorno...';
+    unreserveModalActions.style.display = 'flex';
 
-    deleteModal.classList.add('active');
+    unreserveModal.classList.add('active');
 
     const closeModal = () => {
-      deleteModal.classList.remove('active');
-      deleteModal.removeEventListener('click', onBackdropClick);
+      unreserveModal.classList.remove('active');
+      unreserveModal.removeEventListener('click', onBackdropClick);
     };
 
     const onBackdropClick = (e) => {
-      if (e.target === deleteModal && deleteModalActions.style.display !== 'none') {
+      if (e.target === unreserveModal && unreserveModalActions.style.display !== 'none') {
         closeModal();
       }
     };
 
-    deleteModal.addEventListener('click', onBackdropClick);
-    btnCancelDelete.onclick = closeModal;
+    unreserveModal.addEventListener('click', onBackdropClick);
+    btnCancelUnreserve.onclick = closeModal;
 
-    btnConfirmDelete.onclick = async () => {
-      deleteModalActions.style.display = 'none';
-      deleteProgressBox.style.display = 'block';
+    btnConfirmUnreserve.onclick = async () => {
+      unreserveModalActions.style.display = 'none';
+      unreserveProgressBox.style.display = 'block';
 
-      deleteProgressBar.style.width = '35%';
-      deleteProgressPercent.innerText = '35%';
-      deleteProgressStatusText.innerText = `Retornando ${total} presentes...`;
+      unreserveProgressBar.style.width = '35%';
+      unreserveProgressPercent.innerText = '35%';
+      unreserveProgressStatusText.innerText = `Retornando ${total} presentes...`;
 
       await new Promise(r => setTimeout(r, 150));
       await window.weddingDB.unreserveMultipleGifts(ids);
 
-      deleteProgressBar.style.width = '100%';
-      deleteProgressPercent.innerText = '100%';
-      deleteProgressStatusText.innerText = `${total} itens retornados com sucesso!`;
+      unreserveProgressBar.style.width = '100%';
+      unreserveProgressPercent.innerText = '100%';
+      unreserveProgressStatusText.innerText = `${total} itens retornados com sucesso!`;
 
       await new Promise(r => setTimeout(r, 150));
 
       closeModal();
-      this.selectedReservationIds.clear();
-      showToast(`${total} presentes retornados com sucesso!`, 'success');
+      ids.forEach(id => {
+        this.selectedReservationIds.delete(id);
+        this.selectedGiftIds.delete(id);
+      });
+      showToast(`${total} ${total === 1 ? 'presente retornado' : 'presentes retornados'} com sucesso!`, 'success');
       await this.render();
     };
   },
