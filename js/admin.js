@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.5.7
+   Versão: v.1.5.8
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -1176,7 +1176,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
     if (!deleteModal) return;
 
-    deleteItemTitleText.innerHTML = `Deseja mover o item <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong> para a Lixeira?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">O item sairá da vitrine pública de presentes e poderá ser restaurado na aba Lixeira a qualquer momento.</span>`;
+    deleteItemTitleText.innerHTML = `Deseja mover o item <strong style="color: var(--color-olive-deep);">"${escapeHTML(itemTitle)}"</strong> para a Lixeira?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">O item sairá da lista de presentes e poderá ser restaurado na aba Lixeira a qualquer momento.</span>`;
 
     btnConfirmDelete.innerText = 'Mover para Lixeira';
     btnConfirmDelete.style.background = 'var(--color-error)';
@@ -1250,7 +1250,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (!deleteModal) return;
 
     const total = ids.length;
-    deleteItemTitleText.innerHTML = `Deseja mover os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong> para a Lixeira?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os itens sairão da vitrine de presentes e poderão ser restaurados na aba Lixeira a qualquer momento.</span>`;
+    deleteItemTitleText.innerHTML = `Deseja mover os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong> para a Lixeira?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os itens sairão da lista de presentes e poderão ser restaurados na aba Lixeira a qualquer momento.</span>`;
 
     btnConfirmDelete.innerText = 'Mover para Lixeira';
     btnConfirmDelete.style.background = 'var(--color-error)';
@@ -1368,7 +1368,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
   },
 
   async confirmBulkMarkAvailable(giftIds) {
-    if (!confirm(`Deseja alterar e marcar como Disponível(is) o(s) ${giftIds.length} presente(s) selecionado(s) na vitrine pública?`)) {
+    if (!confirm(`Deseja alterar e marcar como Disponível(is) o(s) ${giftIds.length} presente(s) selecionado(s) na lista de presentes?`)) {
       return;
     }
 
@@ -1640,7 +1640,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       const gift = res && res.gift ? res.gift : res;
       const title = gift ? gift.title : 'Presente';
       const cloudMsg = res && res.supabaseSynced ? ' (sincronizado na nuvem)' : '';
-      showToast(`Item "${title}" restaurado com sucesso para a vitrine pública!${cloudMsg}`, 'success');
+      showToast(`Item "${title}" restaurado com sucesso para a lista de presentes!${cloudMsg}`, 'success');
       await this.render();
     } catch (err) {
       showToast(err.message || 'Erro ao restaurar presente.', 'error');
@@ -1726,7 +1726,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     try {
       await window.weddingDB.restoreMultipleGifts(ids);
       this.selectedTrashIds.clear();
-      showToast(`${total} ${total === 1 ? 'item restaurado' : 'itens restaurados'} com sucesso para a vitrine pública!`, 'success');
+      showToast(`${total} ${total === 1 ? 'item restaurado' : 'itens restaurados'} com sucesso para a lista de presentes!`, 'success');
       await this.render();
     } catch (err) {
       showToast('Erro ao restaurar itens selecionados: ' + (err.message || err), 'error');
@@ -2208,7 +2208,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (reservedItems.length === 0) {
       this.selectedReservationIds.clear();
       this.updateBulkReservationsActionsBar(0);
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum presente reservado ou aguardando aprovação no momento. Clique em "+ Lançar Quem Deu Manualmente" acima para adicionar!</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--color-olive-muted);">Nenhum presente reservado ou aguardando aprovação no momento. Clique em "Lançar Quem Deu Manualmente" acima para adicionar!</td></tr>`;
       return;
     }
 
@@ -2300,7 +2300,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
                 </svg>
                 <span>Quem Deu</span>
               </button>
-              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Retornar este item para ficar disponível novamente na vitrine pública">
+              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Retornar este item para ficar disponível novamente na lista de presentes">
                 <svg class="icon-line sm" viewBox="0 0 24 24">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
@@ -2417,7 +2417,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (!deleteModal) return;
 
     const total = ids.length;
-    deleteItemTitleText.innerHTML = `Deseja retornar os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os dados de quem presenteou serão limpos e os itens voltarão a ficar disponíveis na vitrine pública para outros convidados.</span>`;
+    deleteItemTitleText.innerHTML = `Deseja retornar os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os dados de quem presenteou serão limpos e os itens voltarão a ficar disponíveis na lista de presentes para outros convidados.</span>`;
 
     btnConfirmDelete.innerText = 'Retornar Selecionados';
     btnConfirmDelete.style.background = 'var(--color-olive-primary)';

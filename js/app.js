@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.5.7
-   Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
+   Versão: v.1.5.8
+   Módulo: Aplicação Principal, Lista de Presentes e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.5.7] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.5.8] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -116,7 +116,7 @@ const CountdownController = {
 };
 
 /* ==========================================================================
-   VITRINE PÚBLICA PARA CONVIDADOS (Busca, Filtros Avançados e Ordenação)
+   LISTA DE PRESENTES PARA CONVIDADOS (Busca, Filtros Avançados e Ordenação)
    ========================================================================== */
 const CatalogController = {
   currentCategory: 'all',
@@ -1243,7 +1243,7 @@ const AdminController = {
           <td>${progressDisplay}</td>
           <td>
             <div class="table-actions-wrapper">
-              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Retornar este item para ficar disponível novamente na vitrine pública">
+              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Retornar este item para ficar disponível novamente na lista de presentes">
                 <svg class="icon-line sm" viewBox="0 0 24 24">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
