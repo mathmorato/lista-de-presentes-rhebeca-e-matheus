@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.5.0
+   Versão: v.1.5.1
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -926,14 +926,14 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
         <td style="vertical-align: middle; width: 70px;">
           ${this.renderItemThumbnail(g.imageUrl, g.title)}
         </td>
-        <td style="vertical-align: middle;">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <button class="btn-icon btn-admin-star" data-id="${g.id}" title="${g.isFeatured ? 'Remover dos Mais Desejados' : 'Marcar como Mais Desejado'}" style="width: 28px; height: 28px; border: none; background: none; color: ${g.isFeatured ? 'var(--color-gold-accent)' : 'var(--color-olive-muted)'}; cursor: pointer;">
+        <td class="col-title" style="vertical-align: middle;">
+          <div class="admin-item-title-wrapper">
+            <button class="btn-icon btn-admin-star" data-id="${g.id}" title="${g.isFeatured ? 'Remover dos Mais Desejados' : 'Marcar como Mais Desejado'}" style="width: 28px; height: 28px; border: none; background: none; color: ${g.isFeatured ? 'var(--color-gold-accent)' : 'var(--color-olive-muted)'}; cursor: pointer; flex-shrink: 0;">
               <svg class="icon-line sm" viewBox="0 0 24 24" style="${g.isFeatured ? 'fill: var(--color-gold-accent);' : ''}">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
             </button>
-            <strong>${escapeHTML(g.title)}</strong>
+            <span class="admin-item-title-text" title="${escapeHTML(g.title)}">${escapeHTML(g.title)}</span>
           </div>
         </td>
         <td>
@@ -1481,9 +1481,13 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           <td style="vertical-align: middle; width: 70px;">
             ${this.renderItemThumbnail(g.imageUrl, g.title)}
           </td>
-          <td style="vertical-align: middle;">
-            <strong style="color: var(--color-olive-deep); font-size: 0.95rem;">${escapeHTML(g.title)}</strong>
-            ${donorBadge}
+          <td class="col-title" style="vertical-align: middle;">
+            <div class="admin-item-title-wrapper">
+              <div style="min-width: 0; flex: 1;">
+                <span class="admin-item-title-text" title="${escapeHTML(g.title)}">${escapeHTML(g.title)}</span>
+                ${donorBadge}
+              </div>
+            </div>
           </td>
           <td style="vertical-align: middle; text-transform: capitalize;">${escapeHTML(g.category)}</td>
           <td style="vertical-align: middle; font-weight: 600; color: var(--color-olive-primary);">${priceText}</td>
@@ -2250,10 +2254,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           <td style="vertical-align: middle; width: 70px;">
             ${this.renderItemThumbnail(g.imageUrl, g.title)}
           </td>
-          <td style="vertical-align: middle;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <div>
-                <strong style="color: var(--color-olive-deep); font-size: 0.95rem;">${escapeHTML(g.title)}</strong>
+          <td class="col-title" style="vertical-align: middle;">
+            <div class="admin-item-title-wrapper">
+              <div style="min-width: 0; flex: 1;">
+                <span class="admin-item-title-text" title="${escapeHTML(g.title)}">${escapeHTML(g.title)}</span>
                 ${g.isFeatured ? '<div style="margin-top:0.2rem;"><span class="badge-featured" style="display:inline-flex; align-items:center; gap:0.3rem; font-size:0.72rem; padding:0.15rem 0.5rem;"><svg class="icon-line xs" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Mais Desejado</span></div>' : ''}
               </div>
             </div>
