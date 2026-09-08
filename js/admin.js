@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.4.7
+   Versão: v.1.4.8
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -304,7 +304,7 @@ const AdminDashboard = {
       if (count > 0) {
         bar.style.display = 'flex';
         badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
-        label.innerText = `Liberar Selecionados (${count})`;
+        label.innerText = `Retornar Selecionados (${count})`;
       } else {
         bar.style.display = 'none';
       }
@@ -903,7 +903,32 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
             <strong>${escapeHTML(g.title)}</strong>
           </div>
         </td>
-        <td><span style="text-transform: capitalize;">${escapeHTML(g.category)}</span></td>
+        <td>
+          <div class="category-tags-list">
+            ${(() => {
+              let cats = [];
+              if (Array.isArray(g.categories) && g.categories.length > 0) {
+                cats = g.categories;
+              } else if (g.category) {
+                cats = String(g.category).split(',').map(s => s.trim());
+              }
+              if (cats.length === 0) return '<span style="color:var(--color-olive-muted); font-size:0.82rem;">-</span>';
+              const mapL = {
+                'cozinha': 'Cozinha',
+                'eletro': 'Eletro',
+                'mesa': 'Mesa Posta',
+                'casa': 'Cama & Banho',
+                'sala': 'Sala',
+                'decoracao': 'Decoração',
+                'churrasco': 'Gourmet',
+                'lavanderia': 'Lavanderia',
+                'bar_cafe': 'Bar & Café',
+                'viagem': 'Lua de Mel'
+              };
+              return cats.map(c => `<span class="category-tag-badge">${escapeHTML(mapL[c.toLowerCase()] || c)}</span>`).join('');
+            })()}
+          </div>
+        </td>
         <td>${formatCurrency(g.price)}</td>
         <td>
           ${g.status === 'pending_approval' ? `
@@ -1808,12 +1833,12 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     const gift = await window.weddingDB.getGiftById(id);
     const itemTitle = gift ? gift.title : 'este item';
 
-    unreserveItemTitleText.innerHTML = `Tem certeza que deseja liberar <strong>"${escapeHTML(itemTitle)}"</strong>?<br><span style="font-size:0.83rem; color:var(--color-olive-muted);">O item ficará disponível novamente para todos os convidados na lista pública.</span>`;
+    unreserveItemTitleText.innerHTML = `Tem certeza que deseja retornar <strong>"${escapeHTML(itemTitle)}"</strong>?<br><span style="font-size:0.83rem; color:var(--color-olive-muted);">O item ficará disponível novamente para todos os convidados na lista pública.</span>`;
 
     unreserveProgressBox.style.display = 'none';
     unreserveProgressBar.style.width = '0%';
     unreserveProgressPercent.innerText = '0%';
-    unreserveProgressStatusText.innerText = 'Liberando item...';
+    unreserveProgressStatusText.innerText = 'Retornando item...';
     unreserveModalActions.style.display = 'flex';
 
     unreserveModal.classList.add('active');
@@ -1851,12 +1876,12 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
       unreserveProgressBar.style.width = '100%';
       unreserveProgressPercent.innerText = '100%';
-      unreserveProgressStatusText.innerText = 'Item liberado com sucesso!';
+      unreserveProgressStatusText.innerText = 'Item retornado com sucesso!';
 
       await new Promise(r => setTimeout(r, 200));
 
       closeModal();
-      showToast(`"${itemTitle}" foi liberado e está disponível novamente!`, 'success');
+      showToast(`"${itemTitle}" foi retornado e está disponível novamente!`, 'success');
       await this.render();
     };
   },
@@ -1877,7 +1902,31 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
     document.getElementById('adminGiftId').value = gift.id;
     document.getElementById('adminGiftTitle').value = gift.title;
-    document.getElementById('adminGiftCategory').value = gift.category;
+
+    // Configuração dos checkboxes de múltiplas categorias
+    const categoryCheckboxes = document.querySelectorAll('input[name="adminGiftCategory"]');
+    categoryCheckboxes.forEach(cb => cb.checked = false);
+
+    let catsToSelect = [];
+    if (Array.isArray(gift.categories) && gift.categories.length > 0) {
+      catsToSelect = gift.categories.map(c => String(c).trim().toLowerCase());
+    } else if (gift.category) {
+      catsToSelect = String(gift.category).split(',').map(s => s.trim().toLowerCase());
+    }
+    if (catsToSelect.length === 0) catsToSelect = ['cozinha'];
+
+    categoryCheckboxes.forEach(cb => {
+      const val = cb.value.toLowerCase();
+      if (catsToSelect.includes(val) || 
+          (val === 'casa' && (catsToSelect.includes('cama') || catsToSelect.includes('banho'))) ||
+          (val === 'cozinha' && catsToSelect.includes('eletrodomésticos'))) {
+        cb.checked = true;
+      }
+    });
+
+    const hiddenCatInput = document.getElementById('adminGiftCategory');
+    if (hiddenCatInput) hiddenCatInput.value = catsToSelect[0] || 'cozinha';
+
     document.getElementById('adminGiftPrice').value = gift.price;
     document.getElementById('adminGiftDesc').value = gift.description || '';
     document.getElementById('adminGiftImage').value = gift.imageUrl || '';
@@ -1898,6 +1947,14 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     const form = document.getElementById('adminGiftForm');
     if (form) form.reset();
     document.getElementById('adminGiftId').value = '';
+
+    // Reseta checkboxes marcando Cozinha como padrão
+    document.querySelectorAll('input[name="adminGiftCategory"]').forEach(cb => {
+      cb.checked = (cb.value === 'cozinha');
+    });
+    const hiddenCatInput = document.getElementById('adminGiftCategory');
+    if (hiddenCatInput) hiddenCatInput.value = 'cozinha';
+
     document.getElementById('adminGiftSubmitBtn').innerText = 'Adicionar à Lista';
     document.getElementById('adminGiftCancelBtn').style.display = 'none';
     document.getElementById('adminGiftFormTitle').innerText = 'Novo Presente';
@@ -1907,7 +1964,14 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
   async handleSaveGift() {
     const id = document.getElementById('adminGiftId').value || ('gift_' + Date.now());
     const title = document.getElementById('adminGiftTitle').value.trim();
-    const category = document.getElementById('adminGiftCategory').value;
+
+    // Ler todas as categorias selecionadas nos checkboxes
+    const selectedCats = Array.from(document.querySelectorAll('input[name="adminGiftCategory"]:checked')).map(cb => cb.value);
+    if (selectedCats.length === 0) {
+      selectedCats.push('cozinha');
+    }
+    const category = selectedCats.join(', ');
+
     const price = parseFloat(document.getElementById('adminGiftPrice').value) || 0;
     const description = document.getElementById('adminGiftDesc').value.trim();
     const imageUrl = document.getElementById('adminGiftImage').value.trim();
@@ -1929,6 +1993,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
     giftData.title = title;
     giftData.category = category;
+    giftData.categories = selectedCats;
     giftData.price = price;
     giftData.description = description;
     giftData.imageUrl = imageUrl;
@@ -2182,12 +2247,12 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
                 </svg>
                 <span>Quem Deu</span>
               </button>
-              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Liberar este item para ficar disponível novamente na vitrine pública">
+              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Retornar este item para ficar disponível novamente na vitrine pública">
                 <svg class="icon-line sm" viewBox="0 0 24 24">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                 </svg>
-                <span>Liberar</span>
+                <span>Retornar</span>
               </button>
             </div>
           </td>
@@ -2249,12 +2314,12 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       };
     }
 
-    // Botão Liberar Selecionados em lote
+    // Botão Retornar Selecionados em lote
     const btnBulkUnreserve = document.getElementById('btnBulkUnreserveReservations');
     if (btnBulkUnreserve) {
       btnBulkUnreserve.onclick = async () => {
         if (this.selectedReservationIds.size === 0) {
-          showToast('Nenhum item selecionado para liberar.', 'warning');
+          showToast('Nenhum item selecionado para retornar.', 'warning');
           return;
         }
         await this.confirmBulkUnreserveReservations(Array.from(this.selectedReservationIds));
@@ -2299,16 +2364,16 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     if (!deleteModal) return;
 
     const total = ids.length;
-    deleteItemTitleText.innerHTML = `Deseja liberar os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os dados de quem presenteou serão limpos e os itens voltarão a ficar disponíveis na vitrine pública para outros convidados.</span>`;
+    deleteItemTitleText.innerHTML = `Deseja retornar os <strong style="color: var(--color-olive-deep);">${total} presentes selecionados</strong>?<br><span style="font-size: 0.83rem; color: var(--color-olive-muted);">Os dados de quem presenteou serão limpos e os itens voltarão a ficar disponíveis na vitrine pública para outros convidados.</span>`;
 
-    btnConfirmDelete.innerText = 'Liberar Selecionados';
+    btnConfirmDelete.innerText = 'Retornar Selecionados';
     btnConfirmDelete.style.background = 'var(--color-olive-primary)';
     btnConfirmDelete.style.borderColor = 'var(--color-olive-primary)';
 
     deleteProgressBox.style.display = 'none';
     deleteProgressBar.style.width = '0%';
     deleteProgressPercent.innerText = '0%';
-    deleteProgressStatusText.innerText = 'Iniciando liberação...';
+    deleteProgressStatusText.innerText = 'Iniciando retorno...';
     deleteModalActions.style.display = 'flex';
 
     deleteModal.classList.add('active');
@@ -2333,20 +2398,20 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
       deleteProgressBar.style.width = '35%';
       deleteProgressPercent.innerText = '35%';
-      deleteProgressStatusText.innerText = `Liberando ${total} presentes...`;
+      deleteProgressStatusText.innerText = `Retornando ${total} presentes...`;
 
       await new Promise(r => setTimeout(r, 150));
       await window.weddingDB.unreserveMultipleGifts(ids);
 
       deleteProgressBar.style.width = '100%';
       deleteProgressPercent.innerText = '100%';
-      deleteProgressStatusText.innerText = `${total} itens liberados com sucesso!`;
+      deleteProgressStatusText.innerText = `${total} itens retornados com sucesso!`;
 
       await new Promise(r => setTimeout(r, 150));
 
       closeModal();
       this.selectedReservationIds.clear();
-      showToast(`${total} presentes liberados com sucesso!`, 'success');
+      showToast(`${total} presentes retornados com sucesso!`, 'success');
       await this.render();
     };
   },
