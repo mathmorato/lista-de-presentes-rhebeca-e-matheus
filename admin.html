@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos Oficiais do Projeto -->
-  <link rel="stylesheet" href="css/styles.css?v=1.4.9">
+  <link rel="stylesheet" href="css/styles.css?v=1.5.0">
 
   <!-- Supabase JS Client Oficial -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -113,7 +113,7 @@
               <h1 style="font-family: var(--font-serif); font-size: 1.35rem; color: var(--color-olive-deep); margin: 0;">
                 Painel de Gestão dos Noivos
               </h1>
-              <span class="admin-badge">Versão: v.1.4.9</span>
+              <span class="admin-badge">Versão: v.1.5.0</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.15rem; flex-wrap: wrap;">
               <span id="adminUserGreetingBadge" style="font-size: 0.8rem; color: var(--color-olive-frame); font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -429,7 +429,7 @@
         </div>
 
         <!-- Barra de Ações em Lote (Ativada ao selecionar 1 ou mais itens) -->
-        <div id="bulkActionsBar" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; background: var(--color-warm-white); border: 1.5px solid var(--color-olive-primary); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(96, 108, 56, 0.08);">
+        <div id="bulkActionsBar" class="admin-bulk-actions-bar" style="display: none;">
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span id="bulkSelectedCountBadge" class="badge" style="background: var(--color-olive-deep); color: var(--color-white); font-weight: 600; padding: 0.35rem 0.8rem; border-radius: var(--radius-full); font-size: 0.85rem;">
               0 selecionados
@@ -547,7 +547,7 @@
         </div>
 
         <!-- Barra de Ações em Lote para Já Presenteados -->
-        <div id="bulkReservationsActionsBar" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; background: var(--color-warm-white); border: 1.5px solid var(--color-olive-primary); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(96, 108, 56, 0.08);">
+        <div id="bulkReservationsActionsBar" class="admin-bulk-actions-bar" style="display: none;">
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span id="bulkReservationsSelectedCountBadge" class="badge" style="background: var(--color-olive-deep); color: var(--color-white); font-weight: 600; padding: 0.35rem 0.8rem; border-radius: var(--radius-full); font-size: 0.85rem;">
               0 selecionados
@@ -631,7 +631,7 @@
           </div>
 
           <!-- Barra de Ações em Lote para a Lixeira (Ativada ao selecionar 1 ou mais itens) -->
-          <div id="bulkTrashActionsBar" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; background: var(--color-warm-white); border: 1.5px solid var(--color-olive-primary); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(96, 108, 56, 0.08);">
+          <div id="bulkTrashActionsBar" class="admin-bulk-actions-bar" style="display: none;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               <span id="bulkTrashSelectedCountBadge" class="badge" style="background: var(--color-olive-deep); color: var(--color-white); font-weight: 600; padding: 0.35rem 0.8rem; border-radius: var(--radius-full); font-size: 0.85rem;">
                 0 selecionados
@@ -1038,14 +1038,14 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.4.9</span>
+        <span id="app-footer-version">v.1.5.0</span>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/extractor.js?v=1.4.9"></script>
-  <script src="js/db.js?v=1.4.9"></script>
-  <script src="js/admin.js?v=1.4.9"></script>
+  <script src="js/extractor.js?v=1.5.0"></script>
+  <script src="js/db.js?v=1.5.0"></script>
+  <script src="js/admin.js?v=1.5.0"></script>
 </body>
 </html>
