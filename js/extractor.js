@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.5.5
+   Versão: v.1.5.6
    Módulo: Extrator Inteligente Resiliente com Heurística de URLs e Metadados
    ========================================================================== */
 
@@ -53,7 +53,7 @@ const LinkExtractor = {
     let storeName = heuristic.storeName;
     let imageUrl = '';
     let price = 0;
-    let description = `Produto da loja ${storeName}. Presente para o novo lar de Rhebeca & Matheus.`;
+    let description = '';
 
     // 2. Tentar enriquecer dados via API de metadados pública (Microlink e AllOrigins) com timeout controlado
     try {
@@ -67,9 +67,6 @@ const LinkExtractor = {
         }
         if (enriched.price && enriched.price > 0) {
           price = enriched.price;
-        }
-        if (enriched.description && enriched.description.length > 10) {
-          description = enriched.description.substring(0, 200);
         }
       }
     } catch (err) {
