@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.6.1
+   Versão: v.1.6.2
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -34,14 +34,14 @@
   --color-error: #bc6c25;
   --color-error-light: #faece5;
 
-  /* Sombras e Molduras */
+  /* Sombras e Molduras (Cantos Estritamente Quadrados) */
   --shadow-sm: 0 2px 10px rgba(29, 42, 18, 0.05);
   --shadow-md: 0 8px 24px rgba(29, 42, 18, 0.08);
   --shadow-lg: 0 16px 40px rgba(29, 42, 18, 0.12);
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-full: 9999px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-full: 0px;
 
   /* Tipografia */
   --font-script: 'Great Vibes', 'Alex Brush', cursive;
@@ -2688,9 +2688,94 @@ a {
   gap: 0.25rem;
   font-size: 0.74rem;
   padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-full);
+  border-radius: 0;
   background: var(--color-cream);
   color: var(--color-olive-frame);
   border: 1px solid var(--color-olive-border);
   font-weight: 500;
+}
+
+/* ==========================================================================
+   Design Estritamente Quadrado (Bordas Retas em Todo o Site Conforme Solicitação)
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  --radius-sm: 0px !important;
+  --radius-md: 0px !important;
+  --radius-lg: 0px !important;
+  --radius-full: 0px !important;
+}
+
+button,
+input,
+select,
+textarea,
+.btn,
+.btn-sm,
+.btn-primary,
+.btn-secondary,
+.btn-outline,
+.btn-whatsapp,
+.admin-tab-btn,
+.admin-tabs,
+.admin-tabs-nav,
+.admin-tabs-sticky-wrapper,
+.admin-bulk-actions-bar,
+.admin-table-container,
+.admin-table th,
+.admin-table td,
+.badge,
+.admin-badge,
+.gift-badge,
+.badge-featured,
+.badge-reserved,
+.badge-available,
+.badge-cota,
+.table-status-badge,
+.tag-badge,
+.section-tag,
+.chip-btn,
+.search-box-wrapper,
+.search-input-wrapper,
+.advanced-filters-panel,
+.gift-card,
+.gift-card-media,
+.gift-card-media img,
+.gift-card-placeholder,
+.card,
+.modal-content,
+.modal-dialog,
+.form-input,
+.form-select,
+.form-textarea,
+.filter-select,
+.filter-input,
+.filter-group,
+.sync-card-panel,
+.stat-card,
+.countdown-item,
+.delete-icon-circle,
+.footer-version-badge,
+.admin-item-thumb,
+.admin-item-thumb img,
+.nav-btn,
+.toast,
+.progress-track,
+.progress-fill,
+.progress-bar-container,
+.category-tag-badge,
+.category-checkbox-chip .chip-content,
+.custom-check-box,
+#deleteProgressBar,
+#syncStatusBadge,
+#adminUserGreetingBadge,
+#giftsCountBadge,
+#reservationsCountBadge,
+#trashCountBadge,
+#trashTotalCountBadge,
+#bulkSelectedCountBadge,
+#bulkReservationsSelectedCountBadge,
+#bulkTrashSelectedCountBadge {
+  border-radius: 0 !important;
 }

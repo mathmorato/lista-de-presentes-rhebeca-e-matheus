@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.6.1
+   Versão: v.1.6.2
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -865,14 +865,14 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     const safeTitle = escapeHTML(title || '');
 
     if (!imageUrl || !imageUrl.trim()) {
-      return `<div style="width: ${size}px; height: ${size}px; background: var(--color-cream); border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); display: flex; align-items: center; justify-content: center; color: var(--color-olive-muted); flex-shrink: 0;">${lineIconSvg}</div>`;
+      return `<div style="width: ${size}px; height: ${size}px; background: var(--color-cream); border-radius: 0; border: 1px solid var(--color-olive-border); display: flex; align-items: center; justify-content: center; color: var(--color-olive-muted); flex-shrink: 0;">${lineIconSvg}</div>`;
     }
 
     const safeUrl = escapeHTML(imageUrl.trim());
     return `
       <div style="width: ${size}px; height: ${size}px; position: relative; flex-shrink: 0; display: inline-block;">
-        <img src="${safeUrl}" alt="${safeTitle}" style="width: ${size}px; height: ${size}px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); display: block;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-        <div style="display: none; width: ${size}px; height: ${size}px; background: var(--color-cream); border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); align-items: center; justify-content: center; color: var(--color-olive-muted);">${lineIconSvg}</div>
+        <img src="${safeUrl}" alt="${safeTitle}" style="width: ${size}px; height: ${size}px; object-fit: cover; border-radius: 0; border: 1px solid var(--color-olive-border); display: block;" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+        <div style="display: none; width: ${size}px; height: ${size}px; background: var(--color-cream); border-radius: 0; border: 1px solid var(--color-olive-border); align-items: center; justify-content: center; color: var(--color-olive-muted);">${lineIconSvg}</div>
       </div>
     `;
   },
@@ -1600,7 +1600,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           <td style="vertical-align: middle; text-transform: capitalize;">${escapeHTML(g.category)}</td>
           <td style="vertical-align: middle; font-weight: 600; color: var(--color-olive-primary);">${priceText}</td>
           <td style="vertical-align: middle;">
-            <span class="badge" style="background: rgba(96, 108, 56, 0.12); color: var(--color-olive-deep); border: 1px solid rgba(96, 108, 56, 0.28); font-size: 0.74rem; padding: 0.2rem 0.55rem; border-radius: 999px; display: inline-flex; align-items: center; gap: 0.3rem;">
+            <span class="badge" style="background: rgba(96, 108, 56, 0.12); color: var(--color-olive-deep); border: 1px solid rgba(96, 108, 56, 0.28); font-size: 0.74rem; padding: 0.2rem 0.55rem; border-radius: 0; display: inline-flex; align-items: center; gap: 0.3rem;">
               <svg class="icon-line xs" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
               <span>Supabase Integrado</span>
             </span>
@@ -1609,14 +1609,14 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
           <td style="vertical-align: middle; font-size: 0.85rem; color: var(--color-olive-muted);">${deletedDateText}</td>
           <td style="vertical-align: middle; text-align: right;">
             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap;">
-              <button class="btn btn-sm btn-outline btn-restore-gift" data-id="${g.id}" title="Restaurar de volta à lista ativa" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--color-olive-primary); border-color: var(--color-olive-primary); font-size: 0.8rem; padding: 0.35rem 0.75rem; border-radius: var(--radius-sm);">
+              <button class="btn btn-sm btn-outline btn-restore-gift" data-id="${g.id}" title="Restaurar de volta à lista ativa" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--color-olive-primary); border-color: var(--color-olive-primary); font-size: 0.8rem; padding: 0.35rem 0.75rem; border-radius: 0;">
                 <svg class="icon-line xs" viewBox="0 0 24 24">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                 </svg>
                 <span>Restaurar</span>
               </button>
-              <button class="btn btn-sm btn-perm-delete-gift" data-id="${g.id}" title="Excluir permanentemente" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(188, 71, 73, 0.1); color: var(--color-error); border: 1px solid rgba(188, 71, 73, 0.3); font-size: 0.8rem; padding: 0.35rem 0.75rem; border-radius: var(--radius-sm);">
+              <button class="btn btn-sm btn-perm-delete-gift" data-id="${g.id}" title="Excluir permanentemente" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(188, 71, 73, 0.1); color: var(--color-error); border: 1px solid rgba(188, 71, 73, 0.3); font-size: 0.8rem; padding: 0.35rem 0.75rem; border-radius: 0;">
                 <svg class="icon-line xs" viewBox="0 0 24 24">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -2321,7 +2321,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
         contactHtml = `
           <div style="display: inline-flex; align-items: center; gap: 0.45rem;">
             <span style="font-weight: 500; font-size: 0.88rem;">${escapeHTML(g.guestPhone.trim())}</span>
-            <a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--radius-sm); border: 1px solid var(--color-olive-border); color: var(--color-olive-primary); padding: 0;" title="Conversar no WhatsApp" aria-label="WhatsApp">
+            <a href="https://wa.me/${wa}" target="_blank" class="btn-table-link" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 0; border: 1px solid var(--color-olive-border); color: var(--color-olive-primary); padding: 0;" title="Conversar no WhatsApp" aria-label="WhatsApp">
               <svg class="icon-line xs" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
             </a>
           </div>
@@ -2335,7 +2335,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       if (g.status === 'pending_approval') {
         approvalStatusHtml = `
           <div style="display:inline-flex; align-items:center;">
-            <span class="badge" style="background:#fff3cd; color:#856404; border:1.5px solid #ffeeba; padding:0.35rem 0.75rem; border-radius:var(--radius-full); font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;" title="Aguardando liberação dos noivos">
+            <span class="badge" style="background:#fff3cd; color:#856404; border:1.5px solid #ffeeba; padding:0.35rem 0.75rem; border-radius:0; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;" title="Aguardando liberação dos noivos">
               <svg class="icon-line xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               Pendente
             </span>
@@ -2344,7 +2344,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       } else {
         approvalStatusHtml = `
           <div style="display:inline-flex; flex-direction:column; gap:0.25rem;">
-            <span class="badge" style="background:#d4edda; color:#155724; border:1.5px solid #c3e6cb; padding:0.35rem 0.75rem; border-radius:var(--radius-full); font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+            <span class="badge" style="background:#d4edda; color:#155724; border:1.5px solid #c3e6cb; padding:0.35rem 0.75rem; border-radius:0; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
               <svg class="icon-line xs" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
               Confirmado
             </span>
