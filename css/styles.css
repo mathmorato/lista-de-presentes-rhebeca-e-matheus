@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.6.2
+   Versão: v.1.6.3
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -1737,11 +1737,20 @@ a {
 }
 
 @media (max-width: 991px) {
+  .admin-table-container {
+    overflow: auto;
+    max-height: calc(100vh - var(--admin-table-header-top, var(--admin-sticky-header-offset, 90px)) - 16px);
+    max-height: calc(100dvh - var(--admin-table-header-top, var(--admin-sticky-header-offset, 90px)) - 16px);
+    -webkit-overflow-scrolling: touch;
+  }
+
   .admin-table th {
-    position: static !important;
-    top: auto !important;
-    box-shadow: none !important;
-    z-index: 1 !important;
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 85 !important;
+    background: #f4f5f0 !important;
+    box-shadow: 0 2px 6px rgba(40, 54, 24, 0.08) !important;
   }
 }
 
@@ -2318,12 +2327,14 @@ a {
     font-size: 0.78rem;
   }
 
-  /* Cabeçalho de Tabela no Mobile - NUNCA flutua no meio dos dados */
+  /* Cabeçalho de Tabela no Mobile - Fixo no topo do container ao rolar */
   .admin-table th {
-    position: static !important;
-    top: auto !important;
-    z-index: 1 !important;
-    box-shadow: none !important;
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 85 !important;
+    background: #f4f5f0 !important;
+    box-shadow: 0 2px 6px rgba(40, 54, 24, 0.08) !important;
     font-size: 0.74rem;
     padding: 0.5rem 0.6rem;
   }
