@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.5.4
+   Versão: v.1.5.5
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -46,6 +46,7 @@ function updateAdminStickyOffsets() {
 window.updateAdminTopbarHeight = updateAdminStickyOffsets;
 window.updateAdminStickyOffsets = updateAdminStickyOffsets;
 window.addEventListener('resize', updateAdminStickyOffsets);
+window.addEventListener('orientationchange', updateAdminStickyOffsets);
 window.addEventListener('load', updateAdminStickyOffsets);
 document.addEventListener('DOMContentLoaded', updateAdminStickyOffsets);
 
@@ -164,7 +165,8 @@ function activateDashboard(user) {
   if (userGreetingBadge && user) {
     userGreetingBadge.innerHTML = `
       <svg class="icon-line xs" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-      <span>${escapeHTML(user.name)} (${escapeHTML(user.email)})</span>
+      <span style="font-weight:600;">${escapeHTML(user.name)}</span>
+      <span class="hide-on-mobile" style="opacity:0.85;">(${escapeHTML(user.email)})</span>
     `;
   }
 
