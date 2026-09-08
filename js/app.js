@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.5.9
+   Versão: v.1.6.0
    Módulo: Aplicação Principal, Lista de Presentes e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.5.9] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.6.0] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -254,14 +254,14 @@ const CatalogController = {
     });
 
     filtered.sort((a, b) => {
-      // 1. Regra Oficial: Itens já presenteados / reservados SEMPRE ficam no fim da lista
+      // 1. Regra Oficial: Itens presenteados / reservados SEMPRE ficam no fim da lista
       const isReservedA = a.status === 'reserved' || a.status === 'completed' || a.status === 'pending_approval' || (a.reservedBy && a.reservedBy.trim() !== '');
       const isReservedB = b.status === 'reserved' || b.status === 'completed' || b.status === 'pending_approval' || (b.reservedBy && b.reservedBy.trim() !== '');
 
       if (!isReservedA && isReservedB) return -1;
       if (isReservedA && !isReservedB) return 1;
 
-      // 2. Ordenação interna do grupo (disponíveis ou já presenteados)
+      // 2. Ordenação interna do grupo (disponíveis ou presenteados)
       const priceA = a.price || 0;
       const priceB = b.price || 0;
 
@@ -309,13 +309,14 @@ const CatalogController = {
     const isReserved = gift.status === 'reserved';
     const isCompleted = gift.status === 'completed';
     const isPending = gift.status === 'pending_approval';
+    const isGifted = isReserved || isCompleted || isPending;
 
     let statusBadgeHTML = '';
-    if (isReserved || isCompleted || isPending) {
-      statusBadgeHTML = `<span class="gift-badge badge-reserved">Já Presenteado</span>`;
+    if (isGifted) {
+      statusBadgeHTML = `<span class="gift-badge badge-reserved">Presenteado</span>`;
     }
 
-    const featuredBadgeHTML = gift.isFeatured 
+    const featuredBadgeHTML = (gift.isFeatured && !isGifted) 
       ? `<span class="badge-featured">
            <svg class="icon-line sm" style="width: 14px; height: 14px;" viewBox="0 0 24 24">
              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -331,11 +332,11 @@ const CatalogController = {
     `;
 
     let actionBtnHTML = '';
-    if (isReserved || isCompleted || isPending) {
+    if (isGifted) {
       actionBtnHTML = `
         <button class="btn btn-secondary btn-block" disabled>
           <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
-          Já Presenteado
+          Presenteado
         </button>
       `;
     } else {
@@ -359,7 +360,7 @@ const CatalogController = {
       : fallbackImg;
 
     return `
-      <div class="gift-card" id="card_${gift.id}">
+      <div class="gift-card ${isGifted ? 'gift-card-reserved' : ''}" id="card_${gift.id}">
         <div class="gift-card-media">
           ${imgTag}
           ${featuredBadgeHTML}

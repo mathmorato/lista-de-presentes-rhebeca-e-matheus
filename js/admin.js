@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.5.9
+   Versão: v.1.6.0
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -320,9 +320,9 @@ const AdminDashboard = {
         bar.classList.add('active');
         badge.innerText = `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`;
         label.innerText = `Excluir (${count})`;
-        if (labelGifted) labelGifted.innerText = `Marcar como Já Presenteado (${count})`;
+        if (labelGifted) labelGifted.innerText = `Marcar como Presenteado (${count})`;
 
-        // O botão Retornar só deve estar visível e disponível para os itens selecionados que já forem presenteados
+        // O botão Retornar só deve estar visível e disponível para os itens selecionados que forem presenteados
         let giftedCount = 0;
         try {
           const gifts = await window.weddingDB.getAllGifts();
@@ -784,7 +784,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       });
     }
 
-    // 11. Modal de Marcar como Já Presenteado em Lote (Checkbox Selection)
+    // 11. Modal de Marcar como Presenteado em Lote (Checkbox Selection)
     const bulkGiftedModal = document.getElementById('bulkGiftedModal');
     const closeBulkGiftedModal = () => {
       if (bulkGiftedModal) bulkGiftedModal.classList.remove('active');
@@ -1104,7 +1104,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       };
     }
 
-    // Evento do botão "Marcar como Já Presenteado" (em lote na seleção de checkbox)
+    // Evento do botão "Marcar como Presenteado" (em lote na seleção de checkbox)
     const btnBulkMarkGifted = document.getElementById('btnBulkMarkGifted');
     if (btnBulkMarkGifted) {
       btnBulkMarkGifted.onclick = () => {
@@ -1116,7 +1116,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       };
     }
 
-    // Evento do botão "Retornar" (em lote na seleção de checkbox - apenas para itens já presenteados)
+    // Evento do botão "Retornar" (em lote na seleção de checkbox - apenas para itens presenteados)
     const btnBulkMarkAvailable = document.getElementById('btnBulkMarkAvailable');
     if (btnBulkMarkAvailable) {
       btnBulkMarkAvailable.onclick = async () => {
@@ -1353,7 +1353,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
     const msgInput = document.getElementById('bulkGiftedDonorMessage');
 
     if (subtitle) {
-      subtitle.innerText = `Atualizar ${giftIds.length} ${giftIds.length === 1 ? 'presente selecionado' : 'presentes selecionados'} para "Já Presenteado"`;
+      subtitle.innerText = `Atualizar ${giftIds.length} ${giftIds.length === 1 ? 'presente selecionado' : 'presentes selecionados'} para "Presenteado"`;
     }
     if (nameInput) nameInput.value = '';
     if (phoneInput) phoneInput.value = '';
@@ -1398,7 +1398,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
 
     this.closeBulkGiftedModal();
     this.selectedGiftIds.clear();
-    showToast(`${updatedCount} ${updatedCount === 1 ? 'presente marcado' : 'presentes marcados'} como Já Presenteado com sucesso!`, 'success');
+    showToast(`${updatedCount} ${updatedCount === 1 ? 'presente marcado' : 'presentes marcados'} como Presenteado com sucesso!`, 'success');
     await this.render();
     window.weddingDB.syncWithSupabase({ silent: true }).catch(() => {});
   },
@@ -2328,7 +2328,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       `;
     }).join('');
 
-    // Atualiza barra de ações em lote para já presenteados
+    // Atualiza barra de ações em lote para presenteados
     this.updateBulkReservationsActionsBar(reservedItems.length);
 
     // Eventos dos checkboxes individuais
@@ -2347,7 +2347,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       });
     });
 
-    // Evento do checkbox mestre (Selecionar Todos de Já Presenteados)
+    // Evento do checkbox mestre (Selecionar Todos de Presenteados)
     const selectAllResCb = document.getElementById('selectAllReservationsCheckbox');
     if (selectAllResCb) {
       selectAllResCb.onchange = () => {
@@ -2368,7 +2368,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, pub
       };
     }
 
-    // Botão Desmarcar Todos de Já Presenteados
+    // Botão Desmarcar Todos de Presenteados
     const btnDeselectAllRes = document.getElementById('btnDeselectAllReservations');
     if (btnDeselectAllRes) {
       btnDeselectAllRes.onclick = () => {

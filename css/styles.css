@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.5.9
+   Versão: v.1.6.0
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -836,6 +836,94 @@ a {
   background: var(--color-warning-light);
   color: var(--color-warning);
   border: 1px solid rgba(221, 161, 94, 0.4);
+}
+
+/* ==========================================================================
+   Card de Presente Presenteado (Estilo Elegante em Tons de Cinza)
+   ========================================================================== */
+.gift-card.gift-card-reserved {
+  background: #f7f7f5;
+  border-color: #dcded6;
+  box-shadow: none;
+}
+
+.gift-card.gift-card-reserved:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-color: #c9cdc2;
+}
+
+.gift-card.gift-card-reserved .gift-card-media {
+  background-color: #ebece7;
+}
+
+.gift-card.gift-card-reserved .gift-card-media img {
+  filter: grayscale(100%) contrast(90%) brightness(95%);
+  opacity: 0.65;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.gift-card.gift-card-reserved:hover .gift-card-media img {
+  transform: none;
+  opacity: 0.75;
+}
+
+.gift-card.gift-card-reserved .gift-category {
+  color: #8c9384;
+}
+
+.gift-card.gift-card-reserved .gift-title {
+  color: #555d4c;
+}
+
+.gift-card.gift-card-reserved .price-main {
+  color: #6e7665;
+}
+
+.gift-card.gift-card-reserved .badge-reserved {
+  background: #e2e5dc;
+  color: #4a5240;
+  border: 1px solid #c5c9be;
+  box-shadow: none;
+}
+
+.gift-card.gift-card-reserved .badge-featured {
+  background: #b5baa9;
+  box-shadow: none;
+}
+
+.gift-card.gift-card-reserved .btn-secondary,
+.gift-card.gift-card-reserved button[disabled] {
+  background: #e2e5dc !important;
+  color: #616a56 !important;
+  border-color: #c5c9be !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* Modo Escuro para Card Presenteado */
+[data-theme="dark"] .gift-card.gift-card-reserved {
+  background: #171d14;
+  border-color: #273322;
+}
+
+[data-theme="dark"] .gift-card.gift-card-reserved .gift-card-media {
+  background-color: #12180f;
+}
+
+[data-theme="dark"] .gift-card.gift-card-reserved .gift-card-media img {
+  filter: grayscale(100%) contrast(90%) brightness(70%);
+  opacity: 0.55;
+}
+
+[data-theme="dark"] .gift-card.gift-card-reserved .gift-title {
+  color: #9aa392;
+}
+
+[data-theme="dark"] .gift-card.gift-card-reserved .badge-reserved {
+  background: #253120;
+  color: #b5bead;
+  border-color: #384630;
 }
 
 .badge-cota {
