@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.8
+   Versão: v.1.4.9
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 

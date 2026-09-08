@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.8
+   Versão: v.1.4.9
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.4.8] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.4.9] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -254,6 +254,14 @@ const CatalogController = {
     });
 
     filtered.sort((a, b) => {
+      // 1. Regra Oficial: Itens já presenteados / reservados SEMPRE ficam no fim da lista
+      const isReservedA = a.status === 'reserved' || a.status === 'completed' || a.status === 'pending_approval' || (a.reservedBy && a.reservedBy.trim() !== '');
+      const isReservedB = b.status === 'reserved' || b.status === 'completed' || b.status === 'pending_approval' || (b.reservedBy && b.reservedBy.trim() !== '');
+
+      if (!isReservedA && isReservedB) return -1;
+      if (isReservedA && !isReservedB) return 1;
+
+      // 2. Ordenação interna do grupo (disponíveis ou já presenteados)
       const priceA = a.price || 0;
       const priceB = b.price || 0;
 
@@ -266,9 +274,9 @@ const CatalogController = {
       } else if (this.currentSort === 'price_desc') {
         return priceB - priceA;
       } else if (this.currentSort === 'name_asc') {
-        return a.title.localeCompare(b.title);
+        return (a.title || '').localeCompare(b.title || '', 'pt-BR');
       } else if (this.currentSort === 'name_desc') {
-        return b.title.localeCompare(a.title);
+        return (b.title || '').localeCompare(a.title || '', 'pt-BR');
       }
       return 0;
     });
@@ -401,18 +409,18 @@ const CatalogController = {
     if (cleanUrl) {
       if (urlBox) urlBox.style.display = 'flex';
       if (urlInput) urlInput.value = cleanUrl;
-      if (submitBtnText) submitBtnText.innerText = 'Copiar Link e Ir para a Loja';
+      if (submitBtnText) submitBtnText.innerText = 'Enviar';
       if (submitBtn) {
         submitBtn.className = 'btn btn-primary';
-        submitBtn.title = 'Salvar escolha, copiar link da loja e abrir o produto';
+        submitBtn.title = 'Enviar escolha, copiar link da loja e abrir o produto';
       }
     } else {
       if (urlBox) urlBox.style.display = 'none';
       if (urlInput) urlInput.value = '';
-      if (submitBtnText) submitBtnText.innerText = 'Confirmar Escolha do Presente';
+      if (submitBtnText) submitBtnText.innerText = 'Enviar';
       if (submitBtn) {
         submitBtn.className = 'btn btn-primary';
-        submitBtn.title = 'Confirmar que você irá presentear este item';
+        submitBtn.title = 'Enviar confirmação de presente';
       }
     }
 
