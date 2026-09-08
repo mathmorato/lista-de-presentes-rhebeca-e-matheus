@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos Oficiais do Projeto -->
-  <link rel="stylesheet" href="css/styles.css?v=1.4.7">
+  <link rel="stylesheet" href="css/styles.css?v=1.4.8">
 
   <!-- Supabase JS Client Oficial -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -239,26 +239,114 @@
                 <input type="text" id="adminGiftTitle" class="form-input" required placeholder="Ex.: Jogo de Taças de Cristal">
               </div>
               <div class="form-group">
-                <label class="form-label" for="adminGiftCategory">Categoria</label>
-                <select id="adminGiftCategory" class="form-select">
-                  <option value="cozinha">Cozinha & Eletrodomésticos</option>
-                  <option value="mesa">Mesa Posta & Jantar</option>
-                  <option value="casa">Cama, Mesa & Banho</option>
-                  <option value="decoracao">Sala & Decoração</option>
-                  <option value="viagem">Lua de Mel & Viagem</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-grid grid-2col">
-              <div class="form-group">
                 <label class="form-label" for="adminGiftPrice">Valor (R$) *</label>
                 <input type="number" id="adminGiftPrice" class="form-input" required min="1" step="0.01" placeholder="0.00">
               </div>
-              <div class="form-group">
-                <label class="form-label" for="adminGiftProductUrl">Link da Loja Original (URL)</label>
-                <input type="url" id="adminGiftProductUrl" class="form-input" placeholder="https://loja.com/produto">
+            </div>
+
+            <!-- Seleção Múltipla de Categorias (Checkboxes elegantes) -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                <span>Categorias do Presente * <small style="font-weight: 400; color: var(--color-olive-muted);">(Marque uma ou mais opções)</small></span>
+              </label>
+              <input type="hidden" id="adminGiftCategory" value="cozinha">
+              <div id="adminGiftCategoriesContainer" class="categories-checkbox-grid">
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="cozinha" checked>
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Cozinha & Utensílios</span>
+                  </span>
+                </label>
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="eletro">
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Eletrodomésticos</span>
+                  </span>
+                </label>
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="mesa">
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Mesa Posta & Jantar</span>
+                  </span>
+                </label>
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="casa">
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Cama, Mesa & Banho</span>
+                  </span>
+                </label>
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="sala">
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Sala & Conforto</span>
+                  </span>
+                </label>
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="decoracao">
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Decoração & Quadros</span>
+                  </span>
+                </label>
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="churrasco">
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Gourmet & Churrasco</span>
+                  </span>
+                </label>
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="lavanderia">
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Lavanderia & Organização</span>
+                  </span>
+                </label>
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="bar_cafe">
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Bar, Vinhos & Cafeteria</span>
+                  </span>
+                </label>
+                <label class="category-checkbox-chip">
+                  <input type="checkbox" name="adminGiftCategory" value="viagem">
+                  <span class="chip-content">
+                    <span class="custom-check-box">
+                      <svg class="icon-line check-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="chip-label">Lua de Mel & Cotas</span>
+                  </span>
+                </label>
               </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="adminGiftProductUrl">Link da Loja Original (URL)</label>
+              <input type="url" id="adminGiftProductUrl" class="form-input" placeholder="https://loja.com/produto">
             </div>
 
             <div class="form-grid grid-2col" style="align-items: start; margin-bottom: 0.5rem;">
@@ -477,7 +565,7 @@
                 <polyline points="1 4 1 10 7 10"></polyline>
                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
               </svg>
-              <span id="btnBulkUnreserveLabel">Liberar Selecionados</span>
+              <span id="btnBulkUnreserveLabel">Retornar Selecionados</span>
             </button>
           </div>
         </div>
@@ -757,15 +845,15 @@
         </div>
       </div>
       <div class="modal-body" style="padding-top: 0.5rem;">
-        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-olive-deep);">Liberar Item para a Lista?</h3>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-olive-deep);">Retornar Item para a Lista?</h3>
         <p id="unreserveItemTitleText" style="font-size: 0.9rem; color: var(--color-olive-muted); margin-bottom: 1.25rem; line-height: 1.4;">
-          Tem certeza que deseja liberar este item? Ele ficará disponível novamente para todos os convidados na lista.
+          Tem certeza que deseja retornar este item? Ele ficará disponível novamente para todos os convidados na lista.
         </p>
 
-        <!-- Barra de Carregamento da Liberação -->
+        <!-- Barra de Carregamento do Retorno -->
         <div id="unreserveProgressBox" style="display: none; margin-bottom: 1.25rem;">
           <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--color-olive-muted); margin-bottom: 0.4rem; font-weight: 500;">
-            <span id="unreserveProgressStatusText">Liberando item no cache e na nuvem...</span>
+            <span id="unreserveProgressStatusText">Retornando item no cache e na nuvem...</span>
             <span id="unreserveProgressPercent">0%</span>
           </div>
           <div class="progress-bar-container" style="width: 100%; height: 10px; background: var(--color-cream); border-radius: 999px; overflow: hidden; border: 1px solid var(--color-olive-border);">
@@ -776,7 +864,7 @@
         <div id="unreserveModalActions" style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
           <button type="button" id="btnCancelUnreserve" class="btn btn-outline" style="flex: 1;">Cancelar</button>
           <button type="button" id="btnConfirmUnreserve" class="btn btn-gold" style="flex: 1;">
-            Sim, Liberar
+            Sim, Retornar
           </button>
         </div>
       </div>
@@ -831,7 +919,7 @@
               <select id="manualDonorStatus" class="form-select" required>
                 <option value="reserved">Confirmado pelos Noivos</option>
                 <option value="pending_approval">Pendente de Aprovação (Aguardando)</option>
-                <option value="available">Liberar Item (Tornar Disponível na Lista)</option>
+                <option value="available">Retornar Item (Tornar Disponível na Lista)</option>
               </select>
             </div>
             <div class="form-group">
@@ -950,14 +1038,14 @@
       </div>
       <div class="footer-version-badge" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-olive-muted); background: var(--color-cream); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
         <span>Versão:</span>
-        <span id="app-footer-version">v.1.4.7</span>
+        <span id="app-footer-version">v.1.4.8</span>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/extractor.js?v=1.4.7"></script>
-  <script src="js/db.js?v=1.4.7"></script>
-  <script src="js/admin.js?v=1.4.7"></script>
+  <script src="js/extractor.js?v=1.4.8"></script>
+  <script src="js/db.js?v=1.4.8"></script>
+  <script src="js/admin.js?v=1.4.8"></script>
 </body>
 </html>

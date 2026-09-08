@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.4.7
+   Versão: v.1.4.8
    Módulo: Aplicação Principal, Vitrine Pública e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.4.7] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.4.8] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -214,7 +214,18 @@ const CatalogController = {
 
     let filtered = this.allGifts.filter(gift => {
       if (gift.status === 'trash') return false;
-      const matchCat = this.currentCategory === 'all' || gift.category === this.currentCategory;
+
+      let giftCats = [];
+      if (Array.isArray(gift.categories) && gift.categories.length > 0) {
+        giftCats = gift.categories.map(c => String(c).trim().toLowerCase());
+      } else if (gift.category) {
+        giftCats = String(gift.category).split(',').map(c => String(c).trim().toLowerCase());
+      }
+      const matchCat = this.currentCategory === 'all' || 
+        giftCats.includes(this.currentCategory) ||
+        (this.currentCategory === 'casa' && (giftCats.includes('cama_banho') || giftCats.includes('cama') || giftCats.includes('banho'))) ||
+        (this.currentCategory === 'cozinha' && (giftCats.includes('eletro') || giftCats.includes('cozinha')));
+
       const matchSearch = !this.searchQuery || 
         gift.title.toLowerCase().includes(this.searchQuery) ||
         (gift.description && gift.description.toLowerCase().includes(this.searchQuery));
@@ -916,12 +927,12 @@ const AdminController = {
               <span>Editar</span>
             </button>
             ${(g.status === 'reserved' || g.status === 'completed' || (g.quotaCurrent && g.quotaCurrent > 0)) ? `
-              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Liberar item para ficar disponível novamente">
+              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Retornar item para ficar disponível novamente">
                 <svg class="icon-line sm" viewBox="0 0 24 24">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                 </svg>
-                <span>Liberar</span>
+                <span>Retornar</span>
               </button>
             ` : ''}
             <button class="btn-table-action btn-table-delete btn-admin-del" data-id="${g.id}" title="Excluir presente da lista">
@@ -1062,13 +1073,13 @@ const AdminController = {
     const gift = await window.weddingDB.getGiftById(id);
     const itemTitle = gift ? gift.title : 'este presente';
 
-    unreserveItemTitleText.innerHTML = `Tem certeza que deseja liberar <strong>"${escapeHTML(itemTitle)}"</strong>?<br><span style="font-size:0.83rem; color:var(--color-olive-muted);">O item ficará disponível novamente para todos os convidados na lista pública.</span>`;
+    unreserveItemTitleText.innerHTML = `Tem certeza que deseja retornar <strong>"${escapeHTML(itemTitle)}"</strong>?<br><span style="font-size:0.83rem; color:var(--color-olive-muted);">O item ficará disponível novamente para todos os convidados na lista pública.</span>`;
 
     // Resetar estado do modal
     unreserveProgressBox.style.display = 'none';
     unreserveProgressBar.style.width = '0%';
     unreserveProgressPercent.innerText = '0%';
-    unreserveProgressStatusText.innerText = 'Liberando item no cache e na nuvem...';
+    unreserveProgressStatusText.innerText = 'Retornando item no cache e na nuvem...';
     unreserveModalActions.style.display = 'flex';
 
     unreserveModal.classList.add('active');
@@ -1091,14 +1102,14 @@ const AdminController = {
       unreserveModalActions.style.display = 'none';
       unreserveProgressBox.style.display = 'block';
 
-      // Etapa 1: Início da liberação (30%)
+      // Etapa 1: Início do retorno (30%)
       unreserveProgressBar.style.width = '30%';
       unreserveProgressPercent.innerText = '30%';
       unreserveProgressStatusText.innerText = 'Limpando dados de reserva no cache local...';
 
       await new Promise(r => setTimeout(r, 200));
 
-      // Executar liberação IndexedDB + Supabase
+      // Executar retorno IndexedDB + Supabase
       await window.weddingDB.unreserveGift(id);
 
       // Etapa 2: Sincronização na nuvem (75%)
@@ -1111,12 +1122,12 @@ const AdminController = {
       // Etapa 3: Conclusão (100%)
       unreserveProgressBar.style.width = '100%';
       unreserveProgressPercent.innerText = '100%';
-      unreserveProgressStatusText.innerText = 'Item liberado com sucesso!';
+      unreserveProgressStatusText.innerText = 'Item retornado com sucesso!';
 
       await new Promise(r => setTimeout(r, 200));
 
       closeModal();
-      showToast(`"${itemTitle}" foi liberado e está disponível novamente!`, 'success');
+      showToast(`"${itemTitle}" foi retornado e está disponível novamente!`, 'success');
       await this.renderGiftsTable();
       await this.renderReservationsTable();
       await CatalogController.refresh();
@@ -1218,12 +1229,12 @@ const AdminController = {
           <td>${progressDisplay}</td>
           <td>
             <div class="table-actions-wrapper">
-              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Liberar este item para ficar disponível novamente na vitrine pública">
+              <button class="btn-table-action btn-table-unreserve btn-admin-unreserve" data-id="${g.id}" title="Retornar este item para ficar disponível novamente na vitrine pública">
                 <svg class="icon-line sm" viewBox="0 0 24 24">
                   <polyline points="1 4 1 10 7 10"></polyline>
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                 </svg>
-                <span>Liberar Item</span>
+                <span>Retornar Item</span>
               </button>
             </div>
           </td>
@@ -1308,8 +1319,8 @@ const AdminController = {
 
   async handleSaveGift() {
     const id = document.getElementById('adminGiftId').value || ('gift_' + Date.now());
-    const title = document.getElementById('adminGiftTitle').value.trim();
-    const category = document.getElementById('adminGiftCategory').value;
+    const selectedCats = Array.from(document.querySelectorAll('input[name="adminGiftCategory"]:checked')).map(cb => cb.value);
+    const category = selectedCats.length > 0 ? selectedCats.join(', ') : (document.getElementById('adminGiftCategory')?.value || 'cozinha');
     const price = parseFloat(document.getElementById('adminGiftPrice').value) || 0;
     const description = document.getElementById('adminGiftDesc').value.trim();
     const imageUrl = document.getElementById('adminGiftImage').value.trim();
