@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.6.6
+   Versão: v.1.6.7
    Design System: Baseado estritamente no Save The Date Oficial
    Paleta: Off-White/Pérola, Verde Oliva Nobre Botânico e Dourado Sutil
    ========================================================================== */
@@ -391,9 +391,9 @@ a {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 5rem 1rem 2.4rem;
+  padding: 6rem 1rem 2.2rem;
   text-align: center;
-  background: linear-gradient(to top, rgba(29, 42, 18, 0.72) 0%, rgba(29, 42, 18, 0.35) 55%, rgba(29, 42, 18, 0) 100%);
+  background: linear-gradient(to top, rgba(29, 42, 18, 0.8) 0%, rgba(29, 42, 18, 0.45) 55%, rgba(29, 42, 18, 0) 100%);
   z-index: 1;
 }
 
@@ -406,6 +406,29 @@ a {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
+.hero-cover-details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.6rem;
+  margin-top: 0.7rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.hero-cover-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.hero-cover-detail .icon-line {
+  color: #e5b376;
+}
+
 .hero-cover-date .dot {
   color: #e5b376;
   font-size: 0.6em;
@@ -415,7 +438,7 @@ a {
 
 /* Seção de Fotos */
 .photos-section {
-  padding: 4rem 0 4.5rem;
+  padding: 4rem 0 5rem;
   background: var(--color-white);
   border-top: 1px solid var(--color-olive-border);
 }
@@ -571,7 +594,15 @@ a {
   }
 
   .hero-cover-date {
-    padding: 4rem 1rem 1.9rem;
+    padding: 5rem 1rem 1.6rem;
+  }
+
+  .hero-cover-details {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.4rem;
+    font-size: 0.82rem;
   }
 
   .hero-cover-date time {

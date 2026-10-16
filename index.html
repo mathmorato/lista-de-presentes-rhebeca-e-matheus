@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos da Aplicação -->
-  <link rel="stylesheet" href="css/styles.css?v=1.6.6">
+  <link rel="stylesheet" href="css/styles.css?v=1.6.7">
 
   <!-- Supabase JS Client (Carregamento para persistência em nuvem) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -32,8 +32,8 @@
 
         <ul class="nav-links" id="navLinks">
           <li><a href="#inicio" class="nav-link active">Início</a></li>
-          <li><a href="#fotos" class="nav-link">Fotos</a></li>
           <li><a href="#catalogo" class="nav-link">Lista de Presentes</a></li>
+          <li><a href="#fotos" class="nav-link">Fotos</a></li>
         </ul>
 
         <div class="nav-actions">
@@ -85,7 +85,21 @@
       <figure class="hero-cover-photo">
         <img src="assets/fotos/pre-wedding/pre-wedding-04.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-04-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-04.jpg 2000w" sizes="(max-width: 1200px) 100vw, 1140px" alt="Rhebeca e Matheus sorrindo juntos entre folhagens" width="2000" height="1333" fetchpriority="high">
         <figcaption class="hero-cover-date">
-          <time datetime="2027-01-09">09 <span class="dot">•</span> 01 <span class="dot">•</span> 2027</time>
+          <time datetime="2027-01-09T17:00">09 <span class="dot">•</span> 01 <span class="dot">•</span> 2027</time>
+          <div class="hero-cover-details">
+            <span class="hero-cover-detail">
+              <svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"></circle><polyline points="12 6.5 12 12 15.5 14"></polyline></svg>
+              17:00
+            </span>
+            <span class="hero-cover-detail">
+              <svg class="icon-line sm" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="5"></line><line x1="10" y1="3.5" x2="14" y2="3.5"></line><path d="M12 5L7 9.5v12.5h10V9.5L12 5z"></path><path d="M10 22v-5a2 2 0 0 1 4 0v5"></path></svg>
+              Igreja Batista Shalom
+            </span>
+            <span class="hero-cover-detail">
+              <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              São Luís de Montes Belos - GO
+            </span>
+          </div>
         </figcaption>
       </figure>
 
@@ -111,28 +125,6 @@
         </div>
       </div>
 
-    </div>
-  </section>
-
-  <!-- ==================== GALERIA DE FOTOS ==================== -->
-  <section id="fotos" class="photos-section">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Fotos</span>
-      </div>
-
-      <!-- Galeria (clique para ampliar) -->
-      <div class="prewedding-gallery" id="preweddingGallery">
-        <button type="button" class="prewedding-photo is-portrait" data-index="0" aria-label="Ampliar foto 1">
-          <img src="assets/fotos/pre-wedding/pre-wedding-01-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-01-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-01.jpg 2000w" sizes="(max-width: 768px) 50vw, 290px" data-full="assets/fotos/pre-wedding/pre-wedding-01.jpg" alt="Rhebeca e Matheus abraçados em jardim com palmeiras" width="900" height="1350" loading="lazy">
-        </button>
-        <button type="button" class="prewedding-photo is-landscape" data-index="1" aria-label="Ampliar foto 2">
-          <img src="assets/fotos/pre-wedding/pre-wedding-03-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-03-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-03.jpg 2000w" sizes="(max-width: 768px) 100vw, 570px" data-full="assets/fotos/pre-wedding/pre-wedding-03.jpg" alt="Matheus abraça Rhebeca à beira da piscina" width="900" height="600" loading="lazy">
-        </button>
-        <button type="button" class="prewedding-photo is-portrait" data-index="2" aria-label="Ampliar foto 3">
-          <img src="assets/fotos/pre-wedding/pre-wedding-02-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-02-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-02.jpg 2000w" sizes="(max-width: 768px) 50vw, 290px" data-full="assets/fotos/pre-wedding/pre-wedding-02.jpg" alt="Rhebeca e Matheus sorrindo lado a lado no jardim" width="900" height="1350" loading="lazy">
-        </button>
-      </div>
     </div>
   </section>
 
@@ -263,6 +255,28 @@
   </section>
 
 
+
+  <!-- ==================== GALERIA DE FOTOS ==================== -->
+  <section id="fotos" class="photos-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Fotos</span>
+      </div>
+
+      <!-- Galeria (clique para ampliar) -->
+      <div class="prewedding-gallery" id="preweddingGallery">
+        <button type="button" class="prewedding-photo is-portrait" data-index="0" aria-label="Ampliar foto 1">
+          <img src="assets/fotos/pre-wedding/pre-wedding-01-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-01-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-01.jpg 2000w" sizes="(max-width: 768px) 50vw, 290px" data-full="assets/fotos/pre-wedding/pre-wedding-01.jpg" alt="Rhebeca e Matheus abraçados em jardim com palmeiras" width="900" height="1350" loading="lazy">
+        </button>
+        <button type="button" class="prewedding-photo is-landscape" data-index="1" aria-label="Ampliar foto 2">
+          <img src="assets/fotos/pre-wedding/pre-wedding-03-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-03-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-03.jpg 2000w" sizes="(max-width: 768px) 100vw, 570px" data-full="assets/fotos/pre-wedding/pre-wedding-03.jpg" alt="Matheus abraça Rhebeca à beira da piscina" width="900" height="600" loading="lazy">
+        </button>
+        <button type="button" class="prewedding-photo is-portrait" data-index="2" aria-label="Ampliar foto 3">
+          <img src="assets/fotos/pre-wedding/pre-wedding-02-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-02-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-02.jpg 2000w" sizes="(max-width: 768px) 50vw, 290px" data-full="assets/fotos/pre-wedding/pre-wedding-02.jpg" alt="Rhebeca e Matheus sorrindo lado a lado no jardim" width="900" height="1350" loading="lazy">
+        </button>
+      </div>
+    </div>
+  </section>
 
   <!-- ==================== MODAL DE RESERVA DE PRESENTE FÍSICO ==================== -->
   <div id="reserveModal" class="modal-backdrop">
@@ -452,15 +466,15 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.6.6</span>
+          <span id="app-footer-version">v.1.6.7</span>
         </div>
       </div>
     </div>
   </footer>
 
   <!-- Scripts da Aplicação -->
-  <script src="js/extractor.js?v=1.6.6"></script>
-  <script src="js/db.js?v=1.6.6"></script>
-  <script src="js/app.js?v=1.6.6"></script>
+  <script src="js/extractor.js?v=1.6.7"></script>
+  <script src="js/db.js?v=1.6.7"></script>
+  <script src="js/app.js?v=1.6.7"></script>
 </body>
 </html>
