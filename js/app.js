@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.6.3
+   Versão: v.1.6.4
    Módulo: Aplicação Principal, Lista de Presentes e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.6.3] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.6.4] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -73,6 +73,94 @@ const ThemeController = {
     }
   }
 };
+
+/* ==========================================================================
+   GALERIA DO ENSAIO PRÉ-WEDDING (Lightbox com teclado e gesto de deslizar)
+   ========================================================================== */
+const GalleryController = {
+  photos: [],
+  currentIndex: 0,
+  touchStartX: null,
+
+  init() {
+    const gallery = document.getElementById('preweddingGallery');
+    this.lightbox = document.getElementById('preweddingLightbox');
+    this.image = document.getElementById('lightboxImage');
+    this.counter = document.getElementById('lightboxCounter');
+    if (!gallery || !this.lightbox || !this.image) return;
+
+    // Ordem de navegação segue o data-index de cada foto
+    this.photos = Array.from(gallery.querySelectorAll('.prewedding-photo'))
+      .sort((a, b) => Number(a.dataset.index) - Number(b.dataset.index))
+      .map(btn => {
+        const img = btn.querySelector('img');
+        return { src: img.dataset.full || img.src, alt: img.alt };
+      });
+
+    gallery.addEventListener('click', (e) => {
+      const btn = e.target.closest('.prewedding-photo');
+      if (btn) this.open(Number(btn.dataset.index));
+    });
+
+    document.getElementById('lightboxClose').addEventListener('click', () => this.close());
+    document.getElementById('lightboxPrev').addEventListener('click', () => this.step(-1));
+    document.getElementById('lightboxNext').addEventListener('click', () => this.step(1));
+
+    this.lightbox.addEventListener('click', (e) => {
+      if (e.target === this.lightbox) this.close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!this.lightbox.classList.contains('active')) return;
+      if (e.key === 'Escape') this.close();
+      else if (e.key === 'ArrowLeft') this.step(-1);
+      else if (e.key === 'ArrowRight') this.step(1);
+    });
+
+    this.lightbox.addEventListener('touchstart', (e) => {
+      this.touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    this.lightbox.addEventListener('touchend', (e) => {
+      if (this.touchStartX === null) return;
+      const deltaX = e.changedTouches[0].clientX - this.touchStartX;
+      this.touchStartX = null;
+      if (Math.abs(deltaX) > 50) this.step(deltaX < 0 ? 1 : -1);
+    });
+  },
+
+  show(index) {
+    const total = this.photos.length;
+    this.currentIndex = (index + total) % total;
+    const photo = this.photos[this.currentIndex];
+    this.image.src = photo.src;
+    this.image.alt = photo.alt;
+    this.counter.textContent = `${this.currentIndex + 1} / ${total}`;
+
+    // Pré-carrega a próxima foto para navegação fluida
+    new Image().src = this.photos[(this.currentIndex + 1) % total].src;
+  },
+
+  open(index) {
+    this.lastFocused = document.activeElement;
+    this.show(index);
+    this.lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('lightboxClose').focus();
+  },
+
+  close() {
+    this.lightbox.classList.remove('active');
+    document.body.style.overflow = '';
+    if (this.lastFocused) this.lastFocused.focus();
+  },
+
+  step(direction) {
+    this.show(this.currentIndex + direction);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => GalleryController.init());
 
 /* ==========================================================================
    CONTAGEM REGRESSIVA DO CASAMENTO (09/01/2027 às 17:00)
