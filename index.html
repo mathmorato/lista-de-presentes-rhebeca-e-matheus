@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <!-- Estilos da Aplicação -->
-  <link rel="stylesheet" href="css/styles.css?v=1.6.4">
+  <link rel="stylesheet" href="css/styles.css?v=1.6.5">
 
   <!-- Supabase JS Client (Carregamento para persistência em nuvem) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -31,7 +31,7 @@
         </a>
 
         <ul class="nav-links" id="navLinks">
-          <li><a href="#inicio" class="nav-link active">Pré-Wedding</a></li>
+          <li><a href="#inicio" class="nav-link active">Início</a></li>
           <li><a href="#catalogo" class="nav-link">Lista de Presentes</a></li>
         </ul>
 
@@ -76,51 +76,22 @@
     </div>
   </header>
 
-  <!-- ==================== HERO SECTION COM ENSAIO PRÉ-WEDDING ==================== -->
+  <!-- ==================== HERO SECTION COM GALERIA DE FOTOS ==================== -->
   <section id="inicio" class="wedding-invitation-hero prewedding-hero">
     <div class="container" style="display: flex; flex-direction: column; align-items: center;">
 
-      <!-- Cabeçalho do Ensaio -->
-      <div class="prewedding-header">
-        <span class="section-tag">Ensaio Pré-Wedding</span>
-        <div class="std-tagline">VAMOS NOS CASAR!</div>
-        <h1 class="std-couple-names">Rhebeca <span class="ampersand">&</span> Matheus</h1>
-
-        <div class="heart-divider">
-          <span class="line"></span>
-          <span class="heart-icon"><svg class="icon-line xs" style="color: var(--color-gold-accent);" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></span>
-          <span class="line"></span>
-        </div>
-
-        <!-- Informações da Cerimônia em linha -->
-        <div class="prewedding-info">
-          <span class="prewedding-info-item">
-            <svg class="icon-line sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            09/01/2027
-          </span>
-          <span class="prewedding-info-item">
-            <svg class="icon-line sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"></circle><polyline points="12 6.5 12 12 15.5 14"></polyline></svg>
-            17:00
-          </span>
-          <span class="prewedding-info-item">
-            <svg class="icon-line sm" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            Igreja Batista Shalom • São Luís de Montes Belos - GO
-          </span>
-        </div>
-      </div>
-
-      <!-- Galeria do Ensaio Pré-Wedding (clique para ampliar) -->
+      <!-- Galeria de Fotos (clique para ampliar) -->
       <div class="prewedding-gallery" id="preweddingGallery">
-        <button type="button" class="prewedding-photo is-portrait" data-index="0" aria-label="Ampliar foto 1 do ensaio pré-wedding">
+        <button type="button" class="prewedding-photo is-portrait" data-index="0" aria-label="Ampliar foto 1">
           <img src="assets/fotos/pre-wedding/pre-wedding-01-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-01-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-01.jpg 2000w" sizes="(max-width: 768px) 50vw, 380px" data-full="assets/fotos/pre-wedding/pre-wedding-01.jpg" alt="Rhebeca e Matheus abraçados em jardim com palmeiras" width="900" height="1350" fetchpriority="high">
         </button>
-        <button type="button" class="prewedding-photo is-landscape" data-index="1" aria-label="Ampliar foto 2 do ensaio pré-wedding">
+        <button type="button" class="prewedding-photo is-landscape" data-index="1" aria-label="Ampliar foto 2">
           <img src="assets/fotos/pre-wedding/pre-wedding-03-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-03-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-03.jpg 2000w" sizes="(max-width: 768px) 100vw, 760px" data-full="assets/fotos/pre-wedding/pre-wedding-03.jpg" alt="Matheus abraça Rhebeca à beira da piscina" width="900" height="600">
         </button>
-        <button type="button" class="prewedding-photo is-landscape" data-index="2" aria-label="Ampliar foto 3 do ensaio pré-wedding">
+        <button type="button" class="prewedding-photo is-landscape" data-index="2" aria-label="Ampliar foto 3">
           <img src="assets/fotos/pre-wedding/pre-wedding-04-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-04-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-04.jpg 2000w" sizes="(max-width: 768px) 100vw, 760px" data-full="assets/fotos/pre-wedding/pre-wedding-04.jpg" alt="Rhebeca e Matheus sorrindo juntos entre folhagens" width="900" height="600" loading="lazy">
         </button>
-        <button type="button" class="prewedding-photo is-portrait" data-index="3" aria-label="Ampliar foto 4 do ensaio pré-wedding">
+        <button type="button" class="prewedding-photo is-portrait" data-index="3" aria-label="Ampliar foto 4">
           <img src="assets/fotos/pre-wedding/pre-wedding-02-thumb.jpg" srcset="assets/fotos/pre-wedding/pre-wedding-02-thumb.jpg 900w, assets/fotos/pre-wedding/pre-wedding-02.jpg 2000w" sizes="(max-width: 768px) 50vw, 380px" data-full="assets/fotos/pre-wedding/pre-wedding-02.jpg" alt="Rhebeca e Matheus sorrindo lado a lado no jardim" width="900" height="1350" loading="lazy">
         </button>
       </div>
@@ -435,8 +406,8 @@
     </div>
   </div>
 
-  <!-- ==================== LIGHTBOX DO ENSAIO PRÉ-WEDDING ==================== -->
-  <div id="preweddingLightbox" class="modal-backdrop prewedding-lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada do ensaio pré-wedding">
+  <!-- ==================== LIGHTBOX DA GALERIA DE FOTOS ==================== -->
+  <div id="preweddingLightbox" class="modal-backdrop prewedding-lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
     <button type="button" class="lightbox-btn lightbox-close" id="lightboxClose" aria-label="Fechar foto">
       <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     </button>
@@ -466,15 +437,15 @@
         <!-- Versão visível oficial v.X.Y.Z com id app-footer-version -->
         <div class="footer-version-badge">
           <span>Versão:</span>
-          <span id="app-footer-version">v.1.6.4</span>
+          <span id="app-footer-version">v.1.6.5</span>
         </div>
       </div>
     </div>
   </footer>
 
   <!-- Scripts da Aplicação -->
-  <script src="js/extractor.js?v=1.6.4"></script>
-  <script src="js/db.js?v=1.6.4"></script>
-  <script src="js/app.js?v=1.6.4"></script>
+  <script src="js/extractor.js?v=1.6.5"></script>
+  <script src="js/db.js?v=1.6.5"></script>
+  <script src="js/app.js?v=1.6.5"></script>
 </body>
 </html>

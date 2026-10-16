@@ -1,13 +1,13 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.6.4
+   Versão: v.1.6.5
    Módulo: Aplicação Principal, Lista de Presentes e Extrator Inteligente
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Inicializar Banco de Dados Híbrido com listener de mudanças em tempo real
   await window.weddingDB.init((changeType) => {
-    console.log('[App v.1.6.4] Mudança em tempo real recebida:', changeType);
+    console.log('[App v.1.6.5] Mudança em tempo real recebida:', changeType);
     if (changeType === 'gifts' || changeType === 'all') {
       CatalogController.refresh();
       if (document.getElementById('adminModal') && typeof AdminController !== 'undefined') {
@@ -75,7 +75,7 @@ const ThemeController = {
 };
 
 /* ==========================================================================
-   GALERIA DO ENSAIO PRÉ-WEDDING (Lightbox com teclado e gesto de deslizar)
+   GALERIA DE FOTOS (Lightbox com teclado e gesto de deslizar)
    ========================================================================== */
 const GalleryController = {
   photos: [],
