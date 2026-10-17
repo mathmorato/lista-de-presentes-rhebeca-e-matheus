@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.6.8
+   Versão: v.1.6.9
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -50,103 +50,81 @@ window.addEventListener('orientationchange', updateAdminStickyOffsets);
 window.addEventListener('load', updateAdminStickyOffsets);
 document.addEventListener('DOMContentLoaded', updateAdminStickyOffsets);
 
-const AUTH_USERS = [
-  { 
-    email: 'matheus.h.h@hotmail.com', 
-    password: '***REMOVIDO***', 
-    name: 'Matheus',
-    aliases: ['matheus', 'matheus.h.h', 'matheus.h.h@hotmail.com', 'matheus morato', 'noivo', 'admin', 'adm', 'administrador'],
-    passwords: ['***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***']
-  },
-  { 
-    email: 'rhebecamendonca@gmail.com', 
-    password: '***REMOVIDO***', 
-    name: 'Rhebeca',
-    aliases: ['rhebeca', 'rhebecamendonca', 'rhebecamendonca@gmail.com', 'rhebeca mendonca', 'rebeca', 'noiva', 'admin', 'adm', 'administrador'],
-    passwords: ['***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***', '***REMOVIDO***']
-  }
-];
+// Login dos noivos via Supabase Auth (as senhas ficam somente no Supabase, nunca no código)
+const ADMIN_ALIASES = {
+  'matheus.h.h@hotmail.com': { name: 'Matheus', aliases: ['matheus', 'matheus.h.h', 'matheus morato', 'noivo'] },
+  'rhebecamendonca@gmail.com': { name: 'Rhebeca', aliases: ['rhebeca', 'rhebecamendonca', 'rhebeca mendonca', 'rebeca', 'noiva'] }
+};
 
-const AUTH_STORAGE_KEY = 'wedding_admin_auth_session';
+let adminAuthClient = null;
+function getAdminAuthClient() {
+  if (adminAuthClient) return adminAuthClient;
+  if (window.weddingDB && window.weddingDB.supabaseClient) {
+    adminAuthClient = window.weddingDB.supabaseClient;
+  } else if (window.supabase && typeof SUPABASE_CONFIG !== 'undefined') {
+    adminAuthClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+  }
+  return adminAuthClient;
+}
+
+function resolveAdminEmail(identifier) {
+  const id = (identifier || '').trim().toLowerCase();
+  if (id.includes('@')) return id;
+  const entry = Object.entries(ADMIN_ALIASES).find(([, v]) => v.aliases.includes(id));
+  return entry ? entry[0] : id;
+}
+
+function toAdminUser(authUser) {
+  const email = (authUser.email || '').toLowerCase();
+  const name = (authUser.user_metadata && authUser.user_metadata.name) ||
+    (ADMIN_ALIASES[email] && ADMIN_ALIASES[email].name) || email;
+  return { email, name };
+}
 
 const AuthController = {
-  getCurrentUser() {
+  async getCurrentUser() {
+    const client = getAdminAuthClient();
+    if (!client) return null;
     try {
-      const data = sessionStorage.getItem(AUTH_STORAGE_KEY) || localStorage.getItem(AUTH_STORAGE_KEY);
-      return data ? JSON.parse(data) : null;
+      const { data } = await client.auth.getSession();
+      return data && data.session ? toAdminUser(data.session.user) : null;
     } catch (_) {
       return null;
     }
   },
 
-  isAuthenticated() {
-    const user = this.getCurrentUser();
-    if (!user || !user.email) return false;
-    const cleanEmail = (user.email || '').trim().toLowerCase();
-    return AUTH_USERS.some(u => 
-      u.email.toLowerCase() === cleanEmail || 
-      (u.aliases && u.aliases.some(a => a.toLowerCase() === cleanEmail))
-    );
+  async isAuthenticated() {
+    return !!(await this.getCurrentUser());
   },
 
-  login(identifier, password) {
-    const cleanId = (identifier || '').trim().toLowerCase();
+  async login(identifier, password) {
     const cleanPass = (password || '').trim();
-
     if (!cleanPass) {
       throw new Error('Por favor, informe a sua senha de acesso.');
     }
-
-    const matchesPassword = (user, pass) => {
-      if (!pass) return false;
-      if (user.password === pass) return true;
-      if (user.passwords && user.passwords.includes(pass)) return true;
-      if (user.password.toLowerCase() === pass.toLowerCase()) return true;
-      if (user.passwords && user.passwords.some(p => p.toLowerCase() === pass.toLowerCase())) return true;
-      const unbracketed = pass.replace(/^\[|\]$/g, '');
-      if (user.password === unbracketed || (user.passwords && user.passwords.includes(unbracketed))) return true;
-      if (user.password.toLowerCase() === unbracketed.toLowerCase()) return true;
-      return false;
-    };
-
-    const matchesUser = (user, id) => {
-      if (!id) return true; // Se o usuário não preencheu o campo de login mas acertou a senha, permite acesso
-      if (user.email.toLowerCase() === id) return true;
-      if (user.aliases && user.aliases.some(a => a.toLowerCase() === id)) return true;
-      if (id === 'admin' || id === 'adm' || id === 'administrador') return true;
-      return false;
-    };
-
-    // 1. Tentar encontrar usuário que combine identificador e senha
-    let found = AUTH_USERS.find(u => matchesUser(u, cleanId) && matchesPassword(u, cleanPass));
-
-    // 2. Se o identificador não bater mas a senha for a de Matheus ou Rhebeca, autorizar diretamente
-    if (!found) {
-      found = AUTH_USERS.find(u => matchesPassword(u, cleanPass));
+    const email = resolveAdminEmail(identifier);
+    if (!email) {
+      throw new Error('Por favor, informe o seu e-mail ou usuário de acesso.');
     }
 
-    if (!found) {
+    const client = getAdminAuthClient();
+    if (!client) {
+      throw new Error('Não foi possível conectar ao servidor de autenticação. Verifique sua conexão.');
+    }
+
+    const { data, error } = await client.auth.signInWithPassword({ email, password: cleanPass });
+    if (error || !data || !data.user) {
       throw new Error('E-mail, usuário ou senha incorretos. Acesso restrito aos noivos Rhebeca & Matheus.');
     }
-
-    const sessionData = {
-      email: found.email,
-      name: found.name,
-      loggedAt: new Date().toISOString()
-    };
-
-    try {
-      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionData));
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionData));
-    } catch (_) {}
-
-    return sessionData;
+    return toAdminUser(data.user);
   },
 
-  logout() {
+  async logout() {
+    const client = getAdminAuthClient();
     try {
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      if (client) await client.auth.signOut();
+      localStorage.removeItem('wedding_admin_auth_session');
+      sessionStorage.removeItem('wedding_admin_auth_session');
     } catch (_) {}
     window.location.href = 'admin.html?logout=' + Date.now();
   }
@@ -204,18 +182,22 @@ function handleAdminLoginSubmit(event) {
     errBox.innerText = '';
   }
 
-  try {
-    const user = AuthController.login(identifier, password);
+  const submitBtn = document.getElementById('btnAdminLoginSubmit');
+  if (submitBtn) submitBtn.disabled = true;
+
+  AuthController.login(identifier, password).then((user) => {
     showToast(`Bem-vindo(a), ${user.name}! Acesso liberado.`, 'success');
     activateDashboard(user);
-  } catch (err) {
+  }).catch((err) => {
     if (errBox) {
       errBox.innerText = err.message || 'Credenciais inválidas.';
       errBox.style.display = 'block';
     } else {
       alert(err.message || 'Credenciais inválidas.');
     }
-  }
+  }).finally(() => {
+    if (submitBtn) submitBtn.disabled = false;
+  });
   return false;
 }
 window.handleAdminLoginSubmit = handleAdminLoginSubmit;
@@ -2658,13 +2640,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (AuthController.isAuthenticated()) {
-    const user = AuthController.getCurrentUser();
-    activateDashboard(user);
-  } else {
-    loginView.style.display = 'flex';
-    dashboardView.style.display = 'none';
-  }
+  AuthController.getCurrentUser().then((user) => {
+    if (user) {
+      activateDashboard(user);
+    } else {
+      loginView.style.display = 'flex';
+      dashboardView.style.display = 'none';
+    }
+  });
 
   if (loginForm) {
     loginForm.addEventListener('submit', handleAdminLoginSubmit);
