@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.6.9
+   Versão: v.1.7.0
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -694,10 +694,7 @@ ALTER TABLE public.gifts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rsvps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public full access on gifts" ON public.gifts FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Public full access on messages" ON public.messages FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Public full access on rsvps" ON public.rsvps FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Public full access on settings" ON public.settings FOR ALL USING (true) WITH CHECK (true);
+-- Políticas de acesso (RLS): execute também supabase/migrations/20261017010000_secure_rls_admin.sql
 GRANT ALL ON TABLE public.gifts, public.messages, public.rsvps, public.settings TO anon, authenticated, service_role;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.gifts, public.messages, public.rsvps;`;
         }

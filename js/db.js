@@ -1,6 +1,6 @@
 /* ==========================================================================
    LISTA DE PRESENTES - RHEBECA & MATHEUS
-   Versão: v.1.6.9
+   Versão: v.1.7.0
    Módulo: Banco de Dados Híbrido (IndexedDB Local + Supabase Sincronizado)
    ========================================================================== */
 
@@ -290,6 +290,7 @@ class WeddingDB {
       // 1a. Upload e Conciliação Bidirecional com base em timestamp (updatedAt)
       let uploadCount = 0;
       let downloadCount = 0;
+      const isAdmin = await this._hasAdminSession();
 
       for (const localG of localGifts) {
         if (tombstones.has(localG.id)) {
@@ -299,6 +300,8 @@ class WeddingDB {
 
         const remoteG = remoteMap.get(localG.id);
         if (!remoteG) {
+          // Somente os noivos podem cadastrar presentes novos na nuvem
+          if (!isAdmin) continue;
           // Presente existe apenas localmente -> Enviar para o Supabase
           const payload = this._mapToSupabaseGift(localG);
           const { error: upErr } = await this.supabaseClient.from('gifts').upsert(payload);
@@ -316,10 +319,14 @@ class WeddingDB {
           if (localTime > remoteTime) {
             // Local foi modificado mais recentemente -> Enviar para nuvem
             const payload = this._mapToSupabaseGift(localG);
-            const { error: upErr } = await this.supabaseClient.from('gifts').upsert(payload);
+            const { error: upErr } = await this._pushGiftRemote(payload);
             if (!upErr) {
               remoteMap.set(localG.id, payload);
               uploadCount++;
+            } else if (!isAdmin) {
+              // Alteração recusada pelo banco (ex.: item já reservado por outro convidado) -> prevalece a nuvem
+              await this._saveGiftLocalOnly(this._mapFromSupabaseGift(remoteG));
+              downloadCount++;
             }
           } else if (remoteTime > localTime) {
             // Nuvem tem dados mais recentes (ex.: reserva de convidado) -> Atualizar local
@@ -388,7 +395,9 @@ class WeddingDB {
       let rsvpsSyncedCount = 0;
       let rsvpsChanged = 0;
       try {
-        const { data: remoteRsvps, error: rsvpErr } = await this.supabaseClient.from('rsvps').select('*');
+        const { data: remoteRsvps, error: rsvpErr } = isAdmin
+          ? await this.supabaseClient.from('rsvps').select('*')
+          : { data: null, error: null }; // Dados de convidados visíveis apenas aos noivos
         if (!rsvpErr && Array.isArray(remoteRsvps)) {
           rsvpsSyncedCount = remoteRsvps.length;
           const localRsvps = await this.getAllRsvps();
@@ -530,6 +539,51 @@ class WeddingDB {
       updatedAt: remote.updated_at || null,
       deletedAt: remote.deleted_at || (remote.status === 'trash' ? remote.updated_at : null)
     };
+  }
+
+  /**
+   * Indica se há sessão autenticada dos noivos (Supabase Auth).
+   * Convidados (anônimos) só podem atualizar campos de reserva/cota; o banco bloqueia o resto.
+   */
+  async _hasAdminSession() {
+    try {
+      if (!this.supabaseClient) return false;
+      const { data } = await this.supabaseClient.auth.getSession();
+      return !!(data && data.session);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /**
+   * Envia um presente para o Supabase: upsert para os noivos, update para convidados.
+   */
+  async _pushGiftRemote(payload) {
+    if (await this._hasAdminSession()) {
+      return await this.supabaseClient.from('gifts').upsert(payload);
+    }
+    // Convidados enviam apenas os campos de reserva/cota (o banco recusa os demais)
+    const guestFields = ['status', 'reserved_by', 'guest_phone', 'guest_message', 'reserved_at',
+      'quota_current', 'amount_raised', 'contributions', 'updated_at'];
+    const id = payload.id;
+    const fields = {};
+    guestFields.forEach(k => { if (k in payload) fields[k] = payload[k]; });
+    const { data, error } = await this.supabaseClient.from('gifts').update(fields).eq('id', id).select('id');
+    if (error) return { error };
+    if (!data || data.length === 0) return { error: { message: 'Presente não encontrado ou sem permissão de alteração.' } };
+    return { error: null };
+  }
+
+  /**
+   * Atualiza o presente local com a versão da nuvem antes de uma reserva/contribuição,
+   * evitando conflitos com outro convidado que tenha agido segundos antes.
+   */
+  async _refreshGiftFromRemote(id) {
+    if (!this.supabaseClient) return;
+    try {
+      const { data, error } = await this.supabaseClient.from('gifts').select('*').eq('id', id).maybeSingle();
+      if (!error && data) await this._saveGiftLocalOnly(this._mapFromSupabaseGift(data));
+    } catch (_) {}
   }
 
   _mapToSupabaseGift(local) {
@@ -743,12 +797,18 @@ class WeddingDB {
     gift.updatedAt = new Date().toISOString();
     await this._saveGiftLocalOnly(gift);
 
+    let blockedError = null;
     if (this.supabaseClient) {
       try {
         const payload = this._mapToSupabaseGift(gift);
-        const { error } = await this.supabaseClient.from('gifts').upsert(payload);
+        const { error } = await this._pushGiftRemote(payload);
         if (error) {
           console.warn('[WeddingDB Supabase Sync Error]:', error.message);
+          if (error.code === '42501') {
+            // Recusado pelas regras de segurança: restaura a versão da nuvem e informa o chamador
+            await this._refreshGiftFromRemote(gift.id);
+            blockedError = new Error(error.message || 'Operação não permitida.');
+          }
           if (error.code === 'PGRST205' || (error.message && error.message.includes('Could not find the table'))) {
             console.error('[WeddingDB] ATENÇÃO: As tabelas do Supabase não existem. Execute o script "supabase_schema.sql" no SQL Editor do Supabase.');
           }
@@ -759,6 +819,7 @@ class WeddingDB {
         console.warn('[WeddingDB] Erro de sincronização com Supabase (saveGift):', err);
       }
     }
+    if (blockedError) throw blockedError;
 
     return gift;
   }
@@ -1048,6 +1109,7 @@ class WeddingDB {
   }
 
   async reserveGift(id, reservationData) {
+    await this._refreshGiftFromRemote(id);
     const gift = await this.getGiftById(id);
     if (!gift) throw new Error('Presente não encontrado.');
 
@@ -1123,6 +1185,7 @@ class WeddingDB {
   }
 
   async contributeCota(id, amount, quotaCount, guestData) {
+    await this._refreshGiftFromRemote(id);
     const gift = await this.getGiftById(id);
     if (!gift) throw new Error('Cota não encontrada.');
 

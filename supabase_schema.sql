@@ -90,18 +90,8 @@ DROP POLICY IF EXISTS "Acesso público total a messages" ON public.messages;
 DROP POLICY IF EXISTS "Acesso público total a rsvps" ON public.rsvps;
 DROP POLICY IF EXISTS "Acesso público total a settings" ON public.settings;
 
--- Criar políticas universais para anon e authenticated
-CREATE POLICY "Acesso público total a gifts" ON public.gifts 
-    FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Acesso público total a messages" ON public.messages 
-    FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Acesso público total a rsvps" ON public.rsvps 
-    FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Acesso público total a settings" ON public.settings 
-    FOR ALL USING (true) WITH CHECK (true);
+-- Políticas de acesso (RLS): ver supabase/migrations/20261017010000_secure_rls_admin.sql
+-- (convidados só reservam/contribuem; edição restrita aos noivos via Supabase Auth)
 
 -- Conceder privilégios aos papéis da API Supabase
 GRANT ALL ON TABLE public.gifts TO anon, authenticated, service_role;

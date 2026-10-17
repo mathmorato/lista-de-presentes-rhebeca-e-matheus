@@ -1,6 +1,6 @@
 // ==========================================================================
 // LISTA DE PRESENTES - RHEBECA & MATHEUS
-// Versão: v.1.6.9
+// Versão: v.1.7.0
 // Edge Function: notifica os noivos por e-mail (Gmail SMTP) a cada presente
 // ou cota recebida. Disparada pelo trigger public.notify_gift_event.
 // Secrets necessários: GMAIL_USER, GMAIL_APP_PASSWORD, NOTIFY_TO, NOTIFY_SECRET
