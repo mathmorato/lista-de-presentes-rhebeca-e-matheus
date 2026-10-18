@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.7.0
+   Versão: v.1.7.1
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -114,7 +114,15 @@ const AuthController = {
 
     const { data, error } = await client.auth.signInWithPassword({ email, password: cleanPass });
     if (error || !data || !data.user) {
-      throw new Error('E-mail, usuário ou senha incorretos. Acesso restrito aos noivos Rhebeca & Matheus.');
+      const code = (error && (error.code || error.message)) || '';
+      console.warn('[Admin Auth] Falha no login:', error);
+      if (/email_not_confirmed|not confirmed/i.test(code)) {
+        throw new Error('E-mail ainda não confirmado. Confirme o usuário no painel do Supabase (Authentication → Users).');
+      }
+      if (/invalid_credentials|invalid login/i.test(code)) {
+        throw new Error('E-mail, usuário ou senha incorretos. Acesso restrito aos noivos Rhebeca & Matheus.');
+      }
+      throw new Error('Não foi possível entrar: ' + (error && error.message ? error.message : 'erro desconhecido') + '.');
     }
     return toAdminUser(data.user);
   },
