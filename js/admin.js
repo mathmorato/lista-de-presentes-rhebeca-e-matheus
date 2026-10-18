@@ -1,6 +1,6 @@
 /* ==========================================================================
    Painel Administrativo de Gerenciamento - Rhebeca & Matheus
-   Versão: v.1.7.1
+   Versão: v.1.7.2
    Identidade visual: Branco e Verde Oliva
    Ícones: Linha/Outline SVG Inline Puro
    Página Exclusiva dos Noivos
@@ -2635,15 +2635,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-
-  // 3. Alternar visualização da senha de login
-  if (togglePasswordBtn && passwordInput) {
-    togglePasswordBtn.addEventListener('click', () => {
-      const isPass = passwordInput.type === 'password';
-      passwordInput.type = isPass ? 'text' : 'password';
-      togglePasswordBtn.setAttribute('title', isPass ? 'Ocultar senha' : 'Ver senha');
-    });
-  }
 
   AuthController.getCurrentUser().then((user) => {
     if (user) {
